@@ -1,0 +1,20 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Crushed&display=swap');
+@import "tailwindcss";
+
+
+@theme {
+  --color-daluzed-bg: #FDF8ED;
+  --color-daluzed-dark: #432A2B;
+  --color-daluzed-pink: #F3D9DD;
+  --color-daluzed-red: #EB6073;
+
+
+  --font-crushed: "Crushed", system-ui;
+  --font-montserrat: "Montserrat", sans-serif;
+}
+
+body {
+  @apply bg-daluzed-bg;
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+}

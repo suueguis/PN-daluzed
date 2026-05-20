@@ -1,0 +1,75 @@
+# ── Docs / context files ──────────────────────────────────────────
+Contexto Daluzed COMPLETO.docx
+
+# ── Python ────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+.Python
+
+# ── Virtual environment ───────────────────────────────────────────
+venv/
+.venv/
+env/
+.env/
+ENV/
+
+# ── Environment variables (secrets!) ─────────────────────────────
+.env
+.env.*
+!.env.example
+
+# ── Django ────────────────────────────────────────────────────────
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+/staticfiles/
+/mediafiles/
+/media/
+
+# ── Migrations (keep these — they track DB schema changes) ───────
+# (intentionally not ignored)
+
+# ── Distribution / packaging ──────────────────────────────────────
+dist/
+build/
+*.egg-info/
+*.egg
+.eggs/
+wheels/
+
+# ── Testing & coverage ────────────────────────────────────────────
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+.pytest_cache/
+.tox/
+nosetests.xml
+
+# ── Type checkers / linters ───────────────────────────────────────
+.mypy_cache/
+.dmypy.json
+.ruff_cache/
+
+# ── Jupyter ───────────────────────────────────────────────────────
+.ipynb_checkpoints/
+
+# ── OS files ──────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Editors ───────────────────────────────────────────────────────
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.suo
+*.sw?
+
+# ── Frontend (handled by frontend/.gitignore too) ─────────────────
+frontend/node_modules/
+frontend/dist/
