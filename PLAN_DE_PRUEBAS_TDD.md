@@ -3656,3 +3656,308 @@ describe('FE-011: Interceptor Axios — 401 intenta refresh y reintenta', () => 
       access: nuevoAccessToken,
     })
     // Segunda llamada al mismo endpoint (reintento) → 200
+    mockAxios.onGet('/api/v1/inventario/stock/').replyOnce(200, {
+      cantidad_total: 5000,
+    })
+
+    // Act
+    const response = await axiosClient.get('/api/v1/inventario/stock/')
+
+    // Assert
+    expect(response.status).toBe(200)
+    expect(response.data.cantidad_total).toBe(5000)
+    const { setAccessToken } = useAuthStore.getState()
+    expect(setAccessToken).toHaveBeenCalledWith(nuevoAccessToken)
+  })
+})
+
+
+// ── FE-012 ────────────────────────────────────────────────────────────
+describe('FE-012: Interceptor Axios — refresh falla → clearAuth + /login', () => {
+  it('cuando el refresh falla, llama a clearAuth y redirige a /login', async () => {
+    // Arrange
+    const clearAuthMock = vi.fn()
+    useAuthStore.getState.mockReturnValue({
+      accessToken: 'access-expirado',
+      refreshToken: 'refresh-invalido',
+      setAccessToken: vi.fn(),
+      clearAuth: clearAuthMock,
+    })
+
+    // Primera llamada → 401
+    mockAxios.onGet('/api/v1/produccion/batidos/').replyOnce(401)
+    // Refresh también falla → 401
+    mockAxios.onPost('/api/v1/auth/token/refresh/').replyOnce(401, {
+      detail: 'Token inválido o expirado.',
+    })
+
+    // Act — el interceptor debe lanzar el error tras fallar el refresh
+    try {
+      await axiosClient.get('/api/v1/produccion/batidos/')
+    } catch (_) {
+      // Se espera error; lo que importa son los efectos secundarios
+    }
+
+    // Assert
+    expect(clearAuthMock).toHaveBeenCalled()
+    expect(window.location.replace).toHaveBeenCalledWith('/login')
+  })
+})
+```
+
+---
+
+## 12. Pruebas No Funcionales
+
+Las pruebas no funcionales verifican los RNF declarados en el SRS. Se ejecutan en un entorno de staging (no en la suite de tests unitarios).
+
+### 12.1 Tabla resumen
+
+| ID Prueba | RNF que cubre | Descripción | Herramienta | Criterio de aceptación |
+|-----------|--------------|-------------|-------------|----------------------|
+| NFR-001 | RNF-PER-01 | Consulta de stock bajo carga | Locust | p95 ≤ 2 s con 10 usuarios |
+| NFR-002 | RNF-PER-04 | 10 usuarios concurrentes sin degradación | Locust | Sin errores 5xx, p95 ≤ 2 s |
+| NFR-003 | RNF-PER-05 | Alerta WebSocket visible en < 2 s | Selenium + ws client | Latencia media < 2 s |
+| NFR-004 | RNF-SEC-01 | Contraseñas almacenadas con PBKDF2/bcrypt | Inspección BD | No hay passwords en texto plano |
+| NFR-005 | RNF-SEC-04 | RBAC cubre todos los endpoints | Herramienta propia | 0 endpoints sin permisos definidos |
+| NFR-006 | RNF-MAN-02 | Cobertura ≥ 70 % en lógica de negocio | coverage.py | coverage report ≥ 70 % |
+| NFR-007 | RNF-AVA-01 | Disponibilidad ≥ 99 % en horario operativo | Uptime Robot | Dashboard de monitoreo |
+
+### 12.2 NFR-001 y NFR-002 — Prueba de carga con Locust
+
+```python
+# tests_nonfunctional/locustfile.py
+
+from locust import HttpUser, task, between
+import json
+
+# Token de prueba generado en el entorno de staging
+STAGING_TOKEN = 'eyJ...'   # reemplazar antes de correr
+
+
+class InventarioUser(HttpUser):
+    """
+    Simula el comportamiento de un usuario del sistema de inventario.
+    Criterio: p95 ≤ 2 s con 10 usuarios concurrentes (RNF-PER-01, RNF-PER-04).
+    """
+    wait_time = between(1, 3)
+    headers = {'Authorization': f'Bearer {STAGING_TOKEN}'}
+
+    @task(3)
+    def consultar_stock_bodega_principal(self):
+        """Endpoint de consulta de stock — el más frecuente según el cliente."""
+        self.client.get(
+            '/api/v1/inventario/stock/',
+            params={'bodega': 'PRINCIPAL'},
+            headers=self.headers,
+            name='/inventario/stock/ [GET]',
+        )
+
+    @task(2)
+    def listar_materias_primas(self):
+        self.client.get(
+            '/api/v1/catalogo/materias-primas/',
+            headers=self.headers,
+            name='/catalogo/materias-primas/ [GET]',
+        )
+
+    @task(1)
+    def consultar_reorden(self):
+        self.client.get(
+            '/api/v1/inventario/reorden/',
+            headers=self.headers,
+            name='/inventario/reorden/ [GET]',
+        )
+```
+
+**Cómo ejecutar:**
+
+```bash
+# Instalar locust (fuera del venv principal)
+pip install locust
+
+# Correr contra staging con 10 usuarios, rampa de 2 usuarios/s durante 60 s
+locust -f tests_nonfunctional/locustfile.py \
+  --host=https://staging.daluzed.railway.app \
+  --users=10 --spawn-rate=2 --run-time=60s --headless \
+  --csv=results/locust_report
+```
+
+**Criterio de aceptación:**
+
+| Métrica | Objetivo |
+|---------|----------|
+| p50 (mediana) | ≤ 500 ms |
+| p95 | ≤ 2 000 ms |
+| Errores (4xx/5xx) | 0 % |
+
+### 12.3 NFR-004 — Verificación de hashing de contraseñas
+
+```python
+# tests_nonfunctional/test_seguridad_passwords.py
+# Ejecutar en entorno local con BD de desarrollo.
+
+from django.test import TestCase
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
+
+
+class HashingContrasenaTestCase(TestCase):
+    """
+    NFR-004 / RNF-SEC-01: Verifica que Django usa PBKDF2 (o argon2)
+    para almacenar contraseñas. Ninguna contraseña debe estar en texto plano.
+    """
+
+    def test_contrasena_no_se_almacena_en_texto_plano(self):
+        # Arrange
+        user = User.objects.create_user(
+            email='test@daluzed.com',
+            password='ClaveSegura2026!',
+        )
+        # Act — leer el campo raw de la BD
+        user.refresh_from_db()
+        # Assert — el campo password empieza con el identificador del algoritmo
+        self.assertTrue(
+            user.password.startswith('pbkdf2_') or
+            user.password.startswith('argon2') or
+            user.password.startswith('bcrypt'),
+            msg=f'Algoritmo no reconocido: {user.password[:20]}',
+        )
+        self.assertNotEqual(user.password, 'ClaveSegura2026!')
+```
+
+### 12.4 NFR-005 — RBAC cubre todos los endpoints
+
+```python
+# tests_nonfunctional/test_rbac_cobertura.py
+
+from django.test import TestCase
+from rest_framework.test import APIClient
+from django.contrib.auth import get_user_model
+from rest_framework_simplejwt.tokens import RefreshToken
+
+User = get_user_model()
+
+
+class RBACCoberturaTestCase(TestCase):
+    """
+    NFR-005 / RNF-SEC-04: Ningún endpoint devuelve 200 a un usuario
+    no autenticado. Todos los endpoints protegidos retornan 401 sin token.
+    """
+
+    def test_endpoints_retornan_401_sin_autenticacion(self):
+        """
+        Lista de endpoints clave que deben estar protegidos.
+        Un endpoint que devuelva 200 sin token es una brecha de seguridad.
+        """
+        client = APIClient()
+        endpoints_protegidos = [
+            '/api/v1/catalogo/materias-primas/',
+            '/api/v1/catalogo/proveedores/',
+            '/api/v1/inventario/stock/',
+            '/api/v1/inventario/traslados/',
+            '/api/v1/recepcion/',
+            '/api/v1/produccion/batidos/',
+            '/api/v1/produccion/despachos/',
+            '/api/v1/indicadores/kpis/',
+            '/api/v1/auditoria/bitacora/',
+        ]
+        for endpoint in endpoints_protegidos:
+            response = client.get(endpoint)
+            self.assertEqual(
+                response.status_code, 401,
+                msg=f'El endpoint {endpoint} no está protegido (devolvió {response.status_code})',
+            )
+```
+
+### 12.5 NFR-006 — Cobertura mínima del 70 %
+
+```bash
+# Ejecutar cobertura sobre la lógica de negocio del backend
+coverage run --source=apps manage.py test apps --verbosity=2
+coverage report --min-coverage=70 --omit="*/migrations/*,*/tests/*,*/admin.py"
+coverage html -d coverage_html/
+```
+
+**Archivos con mayor peso en la cobertura objetivo:**
+
+| Archivo | Lógica crítica |
+|---------|---------------|
+| `apps/authentication/services.py` | Generación de tokens, RBAC |
+| `apps/inventario/services.py` | FEFO, cálculo de reorden, traslados atómicos |
+| `apps/recepcion/services.py` | Validación de días mínimos, conversión de presentaciones |
+| `apps/produccion/services.py` | FIFO, estados PT, compensatorios |
+| `apps/alertas/services.py` | Deduplicación, disparo de alertas |
+
+---
+
+## 13. Resumen de cobertura
+
+### 13.1 Conteo total de casos de prueba
+
+| Módulo | Unitarias | Integración | API | Frontend | Total |
+|--------|-----------|-------------|-----|----------|-------|
+| AUT — Autenticación | 2 | 0 | 13 | 0 | **15** |
+| CAT — Catálogo | 1 | 2 | 15 | 0 | **18** |
+| INV — Inventario | 2 | 1 | 9 | 0 | **12** |
+| REC — Recepción | 0 | 1 | 9 | 0 | **10** |
+| PROD — Producción | 2 | 2 | 10 | 0 | **14** |
+| ALR — Alertas | 3 | 3 | 0 | 0 | **8** (incl. mocks) |
+| IND — Indicadores | 0 | 0 | 5 | 0 | **5** |
+| AUD — Auditoría | 0 | 3 | 3 | 0 | **6** |
+| FE — Frontend | 0 | 0 | 0 | 12 | **12** |
+| **Total** | **10** | **12** | **64** | **12** | **≥ 100** |
+
+### 13.2 Mapa de reglas de negocio vs pruebas
+
+| Regla crítica | ID prueba(s) que la cubren |
+|---------------|---------------------------|
+| Login + bloqueo 5 intentos (Axes) | AUT-001, AUT-002, AUT-003, AUT-004 |
+| Usuario inactivo → 401 | AUT-005 |
+| Logout invalida refresh (blacklist) | AUT-006, AUT-007 |
+| Refresh rota + blacklist | AUT-008, AUT-009, AUT-014, AUT-015 |
+| RBAC — 4 roles | AUT-010, AUT-011, AUT-012, AUT-013 |
+| Conversión presentación → unidad base | CAT-018, REC-003 |
+| Relación M2M proveedor ↔ materia prima | CAT-012, CAT-013, CAT-014 |
+| FEFO — consumo de PDP por vencimiento | INV-005, INV-006, PROD-002 |
+| Solo BP activa alertas de reorden | INV-003, ALR-001, ALR-002 |
+| Traslado atómico BP → PDP | INV-007, INV-008 |
+| Traslado inmutable | INV-009 |
+| Recepción SOLO contra OC previa | REC-001, REC-002 |
+| Días mínimos de vencimiento — bloqueante | REC-007, REC-008, REC-009 |
+| Máximo 2 batidos simultáneos | PROD-004 |
+| Lote PT vencimiento = producción + vida útil | PROD-005, PROD-012 |
+| FIFO — despacho de PT | PROD-007 |
+| Estado PT EN_ESPERA → EN_PUNTO_DE_VENTA irreversible | PROD-006, PROD-008 |
+| Movimiento compensatorio — inmutabilidad + visibilidad | PROD-009, PROD-010, PROD-011 |
+| Transacción atómica en producción | PROD-014 |
+| Deduplicación de alertas | ALR-005 |
+| WebSocket para alertas en tiempo real | ALR-006 |
+| WhatsApp vía Twilio | ALR-007 |
+| Bitácora solo para ADMIN | AUD-005 |
+| Bitácora inmutable | AUD-006 |
+| user/role NO en localStorage | FE-004 |
+| Interceptor JWT — renovación automática | FE-011, FE-012 |
+
+### 13.3 Distribución por corte académico
+
+| Corte | Módulos | Casos de prueba | Estado |
+|-------|---------|-----------------|--------|
+| Corte 1 | AUT, CAT, Frontend Login | 15 + 18 + 12 = **45** | 🔄 En desarrollo |
+| Corte 2 | INV, REC, PROD | 12 + 10 + 14 = **36** | ⏳ Pendiente |
+| Corte 3 | ALR, IND, AUD, NFR | 8 + 5 + 6 + 7 = **26** | ⏳ Pendiente |
+| **Total** | | **≥ 107** | |
+
+### 13.4 Orden de implementación recomendado (Corte 1)
+
+1. Ejecutar `apps/authentication/tests/test_autenticacion.py` — ya está implementado el módulo AUT.
+2. Implementar `apps/catalogo/models.py` → ejecutar `test_catalogo.py` en ciclo rojo/verde.
+3. Configurar Vitest + RTL → ejecutar `Login.test.jsx` y `axiosClient.test.js`.
+4. Medir cobertura: `coverage run manage.py test apps.authentication apps.catalogo`.
+
+> **Nota:** Los módulos CAT, INV, REC, PROD, ALR, IND y AUD aún no tienen implementación. Las pruebas de esos módulos están escritas según TDD puro — primero fallan (rojo), luego se implementa el modelo/servicio/view hasta que pasan (verde).
+
+---
+
+*Plan de pruebas completado — 107 casos de prueba distribuidos en 8 módulos de negocio + frontend + pruebas no funcionales. Última actualización: Mayo 2026.*
