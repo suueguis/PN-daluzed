@@ -1,0 +1,38 @@
+{
+  "name": "Daluzed Project Settings",
+  "description": "Project-specific configuration for Claude Code on Daluzed",
+  "version": "1.0.0",
+  "claudeMd": "AGENTS.md",
+  "attribution": {
+    "commit": "Co-Authored-By: Claude Code <noreply@anthropic.com>"
+  },
+  "permissions": {
+    "allow": [
+      "Bash(git *)",
+      "Bash(python *)",
+      "Bash(npm *)",
+      "Bash(/validate-pr)",
+      "Read",
+      "Write(.claude)",
+      "Edit"
+    ]
+  },
+  "workflow_settings": {
+    "branch_naming": "feature/*, bugfix/*, refactor/*, test/*",
+    "commit_convention": "conventional (via /commit skill - required)",
+    "validation_required": "Always run /validate-pr before git push",
+    "test_requirement": "All tests must pass (21 backend + 11 frontend)",
+    "approval_required": "1 team lead review",
+    "ci_checks_required": "All GitHub Actions must pass",
+    "merge_strategy": "Only via PR on GitHub (never local merge)"
+  },
+  "team": {
+    "lead_role": "Approves PRs + merges to main",
+    "developer_role": "Creates PRs from feature branches",
+    "protection_level": "Strict - branch protection prevents direct main pushes"
+  },
+  "skills_enabled": {
+    "commit": "Always use for all commits (conventional + co-author)",
+    "validate-pr": "Always run before git push"
+  }
+}
