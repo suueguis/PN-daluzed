@@ -65,6 +65,8 @@ TEMPLATES = [
 WSGI_APPLICATION = 'core.wsgi.application'
 
 
+import os
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
@@ -75,6 +77,13 @@ DATABASES = {
         'PORT': '5432',
     }
 }
+
+# Use SQLite for testing (faster, no external dependencies)
+if 'test' in os.sys.argv:
+    DATABASES['default'] = {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': ':memory:',
+    }
 
 
 AUTH_USER_MODEL = 'authentication.User'

@@ -1,0 +1,14 @@
+# Django & REST API
+Django==4.2.0
+djangorestframework==3.14.0
+djangorestframework-simplejwt==5.3.0
+
+# PostgreSQL driver (for production; tests use SQLite)
+psycopg2-binary==2.9.6
+
+# Security & CORS
+django-cors-headers==4.2.0
+django-axes==6.1.1
+
+# API Documentation
+drf-spectacular==0.26.0
