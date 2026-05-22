@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git *)",
+      "Bash(python manage.py *)",
+      "Bash(python -m *)",
+      "Bash(pip *)",
+      "Bash(npm *)",
+      "Bash(coverage *)",
+      "Bash(find *)",
+      "Bash(grep *)",
+      "Read",
+      "Write",
+      "Edit"
+    ]
+  }
+}

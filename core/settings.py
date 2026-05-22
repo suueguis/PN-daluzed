@@ -1,10 +1,14 @@
 # core/settings.py  — versión corregida completa
+import os
 from pathlib import Path
 from datetime import timedelta
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-du%@q$=_rmt$=9d%(-5w+3exfi34b@nz*e8ch#7y%7mea!hwm&'
+SECRET_KEY = os.environ.get(
+    'DJANGO_SECRET_KEY',
+    'django-insecure-du%@q$=_rmt$=9d%(-5w+3exfi34b@nz*e8ch#7y%7mea!hwm&',
+)
 
 DEBUG = True
 
@@ -68,11 +72,11 @@ WSGI_APPLICATION = 'core.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'daluzed_db',
-        'USER': 'postgres',
-        'PASSWORD': '1234',
-        'HOST': 'localhost',
-        'PORT': '5432',
+        'NAME':     os.environ.get('DB_NAME',     'daluzed_db'),
+        'USER':     os.environ.get('DB_USER',     'postgres'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', '1234'),
+        'HOST':     os.environ.get('DB_HOST',     'localhost'),
+        'PORT':     os.environ.get('DB_PORT',     '5432'),
     }
 }
 
