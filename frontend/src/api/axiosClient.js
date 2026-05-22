@@ -55,7 +55,7 @@ axiosClient.interceptors.response.use(
       isRefreshing = true
 
       try {
-        const { refreshToken, setAccessToken, clearAuth, user } = useAuthStore.getState()
+        const { refreshToken, setAccessToken } = useAuthStore.getState()
         const { data } = await axios.post('/api/v1/auth/token/refresh/', {
           refresh: refreshToken,
         })

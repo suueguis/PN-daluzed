@@ -27,14 +27,14 @@ jobs:
     runs-on: ubuntu-latest
 
     # Servicio PostgreSQL idéntico al stack de producción (Railway).
-    # Los tests corren contra una BD real, no SQLite.
+    # Credenciales y nombre de BD coinciden exactamente con settings.py.
     services:
       postgres:
         image: postgres:15
         env:
-          POSTGRES_DB: daluzed_test
+          POSTGRES_DB: daluzed_db
           POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
+          POSTGRES_PASSWORD: "1234"
         ports:
           - 5432:5432
         options: >-
@@ -42,15 +42,6 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-
-    # Variables de entorno que settings.py lee con os.environ.get()
-    env:
-      DJANGO_SECRET_KEY: ci-only-secret-key-not-used-in-production
-      DB_NAME:     daluzed_test
-      DB_USER:     postgres
-      DB_PASSWORD: postgres
-      DB_HOST:     localhost
-      DB_PORT:     5432
 
     steps:
       - name: Checkout código
