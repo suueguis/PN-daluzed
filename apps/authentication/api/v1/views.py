@@ -32,13 +32,13 @@ class LoginView(APIView):
         serializer = LoginSerializer(data=request.data, context={"request": request})
 
         if not serializer.is_valid():
-            # Aplana los errores de non_field_errors para que el frontend
-            # reciba directamente: { detail, remaining_attempts }
-            non_field = serializer.errors.get("non_field_errors", [])
-            if non_field:
-                error_detail = non_field[0]
-                return Response(error_detail, status=status.HTTP_401_UNAUTHORIZED)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            errors = serializer.errors
+            # validate() raises ValidationError with a dict keyed by 'detail';
+            # DRF passes dicts through as-is (no non_field_errors wrapping),
+            # so check for our key directly and return 401 for auth errors.
+            if 'detail' in errors:
+                return Response(errors, status=status.HTTP_401_UNAUTHORIZED)
+            return Response(errors, status=status.HTTP_400_BAD_REQUEST)
 
         user = serializer.validated_data
         data = AuthService.generate_tokens_for_user(user)
