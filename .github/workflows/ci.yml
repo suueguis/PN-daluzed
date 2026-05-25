@@ -1,0 +1,139 @@
+# ────────────────────────────────────────────────────────────────────────────
+# CI — Sistema de Inventario Daluzed
+#
+# Se ejecuta en:
+#   • Cada push a main o develop
+#   • Cada pull request apuntando a main
+#
+# Jobs:
+#   backend  → Django tests + cobertura (PostgreSQL real, mismo motor que producción)
+#   frontend → Lint + build (Vitest se activa cuando existan tests en src/__tests__/)
+# ────────────────────────────────────────────────────────────────────────────
+
+name: CI — Daluzed Inventario
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+# ──────────────────────────────────────────────
+# JOB 1: BACKEND
+# ──────────────────────────────────────────────
+jobs:
+  backend:
+    name: Backend — Django Tests
+    runs-on: ubuntu-latest
+
+    # Servicio PostgreSQL idéntico al stack de producción (Railway).
+    # Credenciales y nombre de BD coinciden exactamente con settings.py.
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: daluzed_db
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: "1234"
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Configurar Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
+
+      - name: Correr migraciones
+        run: python manage.py migrate --no-input
+
+      # ── Módulos implementados ──────────────────────────────────────────
+      # Agrega una línea por módulo a medida que lo implementes:
+      #
+      #   apps.authentication  ← ya implementado ✅
+      #   apps.catalogo        ← agregar cuando implementes Corte 1
+      #   apps.inventario      ← agregar cuando implementes Corte 2
+      #   apps.recepcion       ← agregar cuando implementes Corte 2
+      #   apps.produccion      ← agregar cuando implementes Corte 2
+      #   apps.alertas         ← agregar cuando implementes Corte 3
+      #   apps.indicadores     ← agregar cuando implementes Corte 3
+      #   apps.auditoria       ← agregar cuando implementes Corte 3
+      # ──────────────────────────────────────────────────────────────────
+      - name: Ejecutar tests con cobertura
+        run: |
+          coverage run manage.py test \
+            apps.authentication \
+            --verbosity=2
+          coverage report \
+            --fail-under=70 \
+            --omit="*/migrations/*,*/admin.py,*/tests*,*/venv/*"
+
+      - name: Generar reporte XML de cobertura
+        if: always()
+        run: |
+          coverage xml -o coverage.xml
+
+      - name: Subir reporte de cobertura como artefacto
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: backend-coverage-report
+          path: coverage.xml
+          retention-days: 14
+
+  # ──────────────────────────────────────────────
+  # JOB 2: FRONTEND
+  # ──────────────────────────────────────────────
+  frontend:
+    name: Frontend — Lint + Build
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Configurar Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build de producción
+        run: npm run build
+
+      # ── Tests de Vitest ────────────────────────────────────────────────
+      # Descomenta este step cuando instales Vitest y crees los tests:
+      #
+      #   npm install -D vitest @vitest/coverage-v8 \
+      #     @testing-library/react @testing-library/jest-dom \
+      #     @testing-library/user-event jsdom axios-mock-adapter
+      #
+      # Luego agrega en package.json:
+      #   "test": "vitest run --coverage"
+      #
+      # - name: Tests Vitest
+      #   run: npm test
+      # ──────────────────────────────────────────────────────────────────
