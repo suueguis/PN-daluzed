@@ -30,6 +30,7 @@ class Lote(models.Model):
     cantidad = models.DecimalField(max_digits=12, decimal_places=2)
     fecha_vencimiento = models.DateField()
     fecha_entrada = models.DateField(default=date.today)
+    numero_lote = models.CharField(max_length=50, blank=True, default='')
 
     class Meta:
         ordering = ['fecha_vencimiento']
