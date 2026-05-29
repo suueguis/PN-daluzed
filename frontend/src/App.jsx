@@ -4,6 +4,7 @@ import axios from "axios";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Perfil from "./pages/Perfil";
+import CatalogoLayout from "./pages/catalogo/CatalogoLayout";
 import AppLayout from "./components/layout/AppLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
 import useAuthStore from "./store/authStore";
@@ -52,7 +53,7 @@ function App() {
         >
           <Route path="/dashboard"     element={<Dashboard />} />
           <Route path="/perfil"        element={<Perfil />} />
-          <Route path="/catalogo/*"    element={<Placeholder name="Catálogo" />} />
+          <Route path="/catalogo/*"    element={<CatalogoLayout />} />
           <Route path="/inventario/*"  element={<Placeholder name="Inventario" />} />
           <Route path="/recepcion/*"   element={<Placeholder name="Recepción" />} />
           <Route path="/produccion/*"  element={<Placeholder name="Producción" />} />
