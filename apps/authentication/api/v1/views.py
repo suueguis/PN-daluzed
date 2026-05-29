@@ -7,6 +7,7 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
+from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from drf_spectacular.utils import extend_schema, OpenApiResponse
 from axes.models import AccessAttempt
 
@@ -16,10 +17,42 @@ from apps.authentication.services import AuthService
 User = get_user_model()
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Helper de cookie
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _set_refresh_cookie(response, refresh_token: str) -> None:
+    """
+    Setea el refresh token como cookie HttpOnly.
+    Secure=False en DEBUG (HTTP local), Secure=True en producción (HTTPS).
+    SameSite=Lax: protege contra CSRF sin romper navegación normal.
+    """
+    from datetime import timedelta
+    lifetime: timedelta = settings.SIMPLE_JWT.get('REFRESH_TOKEN_LIFETIME', timedelta(days=7))
+    response.set_cookie(
+        key='refresh_token',
+        value=refresh_token,
+        httponly=True,
+        secure=not settings.DEBUG,
+        samesite='Lax',
+        max_age=int(lifetime.total_seconds()),
+        path='/api/v1/auth/',
+    )
+
+
+def _clear_refresh_cookie(response) -> None:
+    response.delete_cookie('refresh_token', path='/api/v1/auth/')
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Login
+# ─────────────────────────────────────────────────────────────────────────────
+
 class LoginView(APIView):
     """
     RF-AUT-01: Autenticación por email y contraseña con protección Axes.
     Devuelve access token, refresh token, username (email) y rol del usuario.
+    El refresh token se envía también como cookie HttpOnly (seguridad extra).
     """
     permission_classes = []
     authentication_classes = []
@@ -73,12 +106,60 @@ class LoginView(APIView):
             )
 
         data = AuthService.generate_tokens_for_user(user)
-        return Response(data, status=status.HTTP_200_OK)
+        response = Response(data, status=status.HTTP_200_OK)
+        _set_refresh_cookie(response, data['refresh'])
+        return response
 
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Token refresh con soporte de cookie HttpOnly
+# ─────────────────────────────────────────────────────────────────────────────
+
+class CookieTokenRefreshView(APIView):
+    """
+    RF-AUT-03: Renueva el access token.
+    Lee el refresh desde el body (tests/Swagger) o desde la cookie HttpOnly (browser).
+    Setea el nuevo refresh token en cookie si ROTATE_REFRESH_TOKENS=True.
+    """
+    permission_classes = []
+    authentication_classes = []
+
+    def post(self, request):
+        # Body tiene prioridad (backward compat con tests y herramientas de API)
+        refresh_token = request.data.get('refresh') or request.COOKIES.get('refresh_token')
+
+        if not refresh_token:
+            return Response(
+                {'detail': 'Refresh token no proporcionado.'},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        serializer = TokenRefreshSerializer(data={'refresh': refresh_token})
+        try:
+            serializer.is_valid(raise_exception=True)
+        except TokenError as exc:
+            return Response(
+                {"detail": str(exc.args[0])},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        response = Response(serializer.validated_data, status=status.HTTP_200_OK)
+
+        # Actualizar cookie si se rotó el refresh token
+        if 'refresh' in serializer.validated_data:
+            _set_refresh_cookie(response, serializer.validated_data['refresh'])
+
+        return response
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Logout
+# ─────────────────────────────────────────────────────────────────────────────
 
 class LogoutView(APIView):
     """
-    RF-AUT-03: Cierre de sesión. Invalida el refresh token en la blacklist.
+    RF-AUT-02: Cierre de sesión.
+    Lee el refresh del body o de la cookie, lo blacklistea y limpia la cookie.
     Requiere el header Authorization: Bearer <access_token>.
     """
     permission_classes = [IsAuthenticated]
@@ -88,7 +169,8 @@ class LogoutView(APIView):
         tags=["Autenticación"],
     )
     def post(self, request):
-        refresh_token = request.data.get("refresh")
+        refresh_token = request.data.get("refresh") or request.COOKIES.get('refresh_token')
+
         if not refresh_token:
             return Response(
                 {"detail": "El campo 'refresh' es requerido."},
@@ -97,10 +179,12 @@ class LogoutView(APIView):
         try:
             token = RefreshToken(refresh_token)
             token.blacklist()
-            return Response(
+            response = Response(
                 {"detail": "Sesión cerrada exitosamente."},
                 status=status.HTTP_200_OK,
             )
+            _clear_refresh_cookie(response)
+            return response
         except TokenError:
             return Response(
                 {"detail": "Token inválido o expirado."},

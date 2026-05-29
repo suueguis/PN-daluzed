@@ -13,13 +13,16 @@ class AuthService:
         """
         refresh = RefreshToken.for_user(user)
 
-        # Rol desde el primer grupo de Django (configurado en el admin)
         first_group = user.groups.first()
         role = first_group.name if first_group else user.role
+
+        # Embed in payload so the frontend can decode them after a silent refresh
+        refresh['username'] = user.email
+        refresh['role'] = role
 
         return {
             "access": str(refresh.access_token),
             "refresh": str(refresh),
-            "username": user.email,   # username = email (campo USERNAME_FIELD del modelo)
+            "username": user.email,
             "role": role,
         }
