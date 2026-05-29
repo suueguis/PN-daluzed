@@ -78,6 +78,8 @@ jobs:
             apps.catalogo \
             apps.inventario \
             apps.recepcion \
+            apps.produccion \
+            apps.alertas \
             --verbosity=2
           coverage report \
             --fail-under=70 \

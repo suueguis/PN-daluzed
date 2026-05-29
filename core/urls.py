@@ -18,6 +18,12 @@ urlpatterns = [
     # ── Recepción v1 ──────────────────────────────────────────────
     path('api/v1/recepcion/', include('apps.recepcion.api.v1.urls')),
 
+    # ── Producción v1 ─────────────────────────────────────────────
+    path('api/v1/produccion/', include('apps.produccion.api.v1.urls')),
+
+    # ── Alertas v1 ────────────────────────────────────────────────
+    path('api/v1/alertas/', include('apps.alertas.api.v1.urls')),
+
     # ── Swagger / OpenAPI ─────────────────────────────────────────
     path('api/schema/',          SpectacularAPIView.as_view(),        name='schema'),
     path('api/docs/',            SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
