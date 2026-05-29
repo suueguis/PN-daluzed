@@ -2,17 +2,13 @@
 import axios from 'axios'
 import useAuthStore from '../store/authStore'
 
-/**
- * Cliente Axios base para todas las peticiones al backend.
- * El proxy de Vite redirige /api → http://localhost:8000/api
- * durante desarrollo, por lo que no hay problemas de CORS.
- */
 const axiosClient = axios.create({
   baseURL: '/api/v1',
   headers: { 'Content-Type': 'application/json' },
+  withCredentials: true,
 })
 
-// ── Request interceptor: inyecta el Bearer token en cada petición ──
+// ── Request interceptor: inject Bearer token ──
 axiosClient.interceptors.request.use(
   (config) => {
     const { accessToken } = useAuthStore.getState()
@@ -24,7 +20,7 @@ axiosClient.interceptors.request.use(
   (error) => Promise.reject(error)
 )
 
-// ── Response interceptor: renueva el access token si expira (401) ──
+// ── Response interceptor: silent refresh on 401 ──
 let isRefreshing = false
 let pendingQueue = []
 
@@ -40,7 +36,6 @@ axiosClient.interceptors.response.use(
 
     if (error.response?.status === 401 && !originalRequest._retry) {
       if (isRefreshing) {
-        // Encola las peticiones que llegan mientras se refresca el token
         return new Promise((resolve, reject) => {
           pendingQueue.push({ resolve, reject })
         })
@@ -48,32 +43,34 @@ axiosClient.interceptors.response.use(
             originalRequest.headers.Authorization = `Bearer ${token}`
             return axiosClient(originalRequest)
           })
-          .catch((err) => Promise.reject(err))
+          .catch((err) => { throw err })
       }
 
       originalRequest._retry = true
       isRefreshing = true
 
       try {
-        const { refreshToken, setAccessToken } = useAuthStore.getState()
-        const { data } = await axios.post('/api/v1/auth/token/refresh/', {
-          refresh: refreshToken,
-        })
-        setAccessToken(data.access)
+        // Cookie is sent automatically — no body needed
+        const { data } = await axios.post(
+          '/api/v1/auth/token/refresh/',
+          {},
+          { withCredentials: true }
+        )
+        useAuthStore.getState().setAccessToken(data.access)
         processQueue(null, data.access)
         originalRequest.headers.Authorization = `Bearer ${data.access}`
         return axiosClient(originalRequest)
       } catch (refreshError) {
         processQueue(refreshError, null)
         useAuthStore.getState().clearAuth()
-        window.location.replace('/login')
-        return Promise.reject(refreshError)
+        globalThis.location.replace('/login')
+        throw refreshError
       } finally {
         isRefreshing = false
       }
     }
 
-    return Promise.reject(error)
+    throw error
   }
 )
 

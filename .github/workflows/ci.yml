@@ -63,7 +63,7 @@ jobs:
       # Agrega una línea por módulo a medida que lo implementes:
       #
       #   apps.authentication  ← ya implementado ✅
-      #   apps.catalogo        ← agregar cuando implementes Corte 1
+      #   apps.catalogo        ← ya implementado ✅
       #   apps.inventario      ← agregar cuando implementes Corte 2
       #   apps.recepcion       ← agregar cuando implementes Corte 2
       #   apps.produccion      ← agregar cuando implementes Corte 2
@@ -75,6 +75,7 @@ jobs:
         run: |
           coverage run manage.py test \
             apps.authentication \
+            apps.catalogo \
             --verbosity=2
           coverage report \
             --fail-under=70 \

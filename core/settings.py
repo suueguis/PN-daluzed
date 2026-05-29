@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     'drf_spectacular',
     # Locales
     'apps.authentication',
+    'apps.catalogo',
 ]
 
 # ──────────────────────────────────────────────
@@ -139,6 +140,8 @@ CORS_ALLOWED_ORIGINS = [
     'http://localhost:5173',
     'http://127.0.0.1:8000',
 ]
+
+CORS_ALLOW_CREDENTIALS = True
 
 
 LANGUAGE_CODE = 'es-co'
