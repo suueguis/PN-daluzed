@@ -76,6 +76,7 @@ jobs:
           coverage run manage.py test \
             apps.authentication \
             apps.catalogo \
+            apps.inventario \
             --verbosity=2
           coverage report \
             --fail-under=70 \

@@ -12,6 +12,9 @@ urlpatterns = [
     # ── Catálogo Maestro v1 ────────────────────────────────────────
     path('api/v1/catalogo/', include('apps.catalogo.api.v1.urls')),
 
+    # ── Inventario v1 ─────────────────────────────────────────────
+    path('api/v1/inventario/', include('apps.inventario.api.v1.urls')),
+
     # ── Swagger / OpenAPI ─────────────────────────────────────────
     path('api/schema/',          SpectacularAPIView.as_view(),        name='schema'),
     path('api/docs/',            SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
