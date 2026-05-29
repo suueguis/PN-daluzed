@@ -33,6 +33,8 @@ INSTALLED_APPS = [
     'apps.catalogo',
     'apps.inventario',
     'apps.recepcion',
+    'apps.produccion',
+    'apps.alertas',
 ]
 
 # ──────────────────────────────────────────────
