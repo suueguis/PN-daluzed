@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     'apps.authentication',
     'apps.catalogo',
     'apps.inventario',
+    'apps.recepcion',
 ]
 
 # ──────────────────────────────────────────────

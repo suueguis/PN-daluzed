@@ -77,6 +77,7 @@ jobs:
             apps.authentication \
             apps.catalogo \
             apps.inventario \
+            apps.recepcion \
             --verbosity=2
           coverage report \
             --fail-under=70 \
