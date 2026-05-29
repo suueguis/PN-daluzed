@@ -1,5 +1,6 @@
 # apps/catalogo/tests/test_catalogo.py
 
+import unittest
 from django.test import TestCase
 from rest_framework.test import APITestCase
 from rest_framework import status
@@ -178,6 +179,7 @@ class MateriaPrimaTestCase(APITestCase):
         self.assertTrue(MateriaPrima.objects.filter(id=mp.id).exists())
 
     # ── CAT-008 ───────────────────────────────────────────────────────
+    @unittest.skip("Requires apps.inventario (Bodega, Lote) — enable when INV module is implemented")
     def test_cat_008_no_desactivar_mp_con_stock_activo(self):
         """
         No se puede desactivar una MP que tiene lotes con cantidad > 0.
