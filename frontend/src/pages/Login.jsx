@@ -1,7 +1,19 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { toast } from "sonner";
 import { loginAPI } from "../api/authAPI";
 import useAuthStore from "../store/authStore";
+
+const loginSchema = z.object({
+  email: z
+    .string()
+    .min(1, "El correo es obligatorio")
+    .email("Correo inválido"),
+  password: z.string().min(1, "La contraseña es obligatoria"),
+});
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Inline icon components  (strokeWidth 1.9, 16 × 16)
@@ -854,49 +866,50 @@ const BakeryIllustration = () => (
 export default function LoginPage() {
   const navigate = useNavigate();
   const setAuth = useAuthStore((state) => state.setAuth);
-
-  const [form, setForm] = useState({ email: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [remaining, setRemaining] = useState(null);
 
-  const handleChange = ({ target: { name, value } }) => {
-    setForm((prev) => ({ ...prev, [name]: value }));
-    setError(null);
-    setRemaining(null);
-  };
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { email: "", password: "" },
+  });
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-    setRemaining(null);
+  const onSubmit = async ({ email, password }) => {
     try {
-      const { data } = await loginAPI(form.email, form.password);
+      const { data } = await loginAPI(email, password);
       setAuth(data);
+      toast.success("Sesión iniciada correctamente");
       navigate("/dashboard", { replace: true });
     } catch (err) {
+      const status = err.response?.status;
       const payload = err.response?.data ?? {};
       const detail = payload.detail;
-      if (detail === "lockout") {
-        setError(
+
+      if (status === 423 || detail === "lockout") {
+        toast.error(
           "Tu cuenta fue bloqueada por demasiados intentos fallidos. Intenta de nuevo en 1 hora.",
         );
       } else if (detail === "inactive") {
-        setError(
+        toast.error(
           "Tu cuenta está desactivada. Contacta al administrador del sistema.",
         );
-      } else if (detail === "invalid") {
-        setRemaining(payload.remaining_attempts ?? null);
-        setError("Correo o contraseña incorrectos.");
+      } else if (status === 401 || detail === "invalid") {
+        const remaining = payload.remaining_attempts;
+        toast.error(
+          remaining != null
+            ? `Correo o contraseña incorrectos. Intentos restantes: ${remaining}.`
+            : "Correo o contraseña incorrectos.",
+        );
       } else {
-        setError("Ocurrió un error inesperado. Intenta de nuevo.");
+        toast.error("Ocurrió un error inesperado. Intenta de nuevo.");
       }
-    } finally {
-      setLoading(false);
     }
   };
+
+  const loading = isSubmitting;
 
   return (
     <div
@@ -955,47 +968,9 @@ export default function LoginPage() {
             Accede a tu cuenta
           </p>
 
-          {/* Error banner */}
-          {error && (
-            <div
-              className="flex items-start gap-2.5 rounded-xl px-4 py-3 mb-5 text-sm border"
-              style={{
-                backgroundColor: "#FFF5F5",
-                borderColor: "#FBBFC4",
-                color: "#C0404A",
-              }}
-            >
-              {/* Info / warning icon */}
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.9"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="shrink-0 mt-0.5"
-              >
-                <circle cx="12" cy="12" r="10" />
-                <line x1="12" y1="8" x2="12" y2="12" />
-                <line x1="12" y1="16" x2="12.01" y2="16" />
-              </svg>
-
-              <div>
-                <p>{error}</p>
-                {remaining !== null && (
-                  <p className="mt-0.5 text-xs opacity-80">
-                    Intentos restantes: {remaining}
-                  </p>
-                )}
-              </div>
-            </div>
-          )}
-
           {/* ── Form ── */}
           <form
-            onSubmit={handleSubmit}
+            onSubmit={handleSubmit(onSubmit)}
             className="flex flex-col gap-5"
             noValidate
           >
@@ -1018,20 +993,23 @@ export default function LoginPage() {
                 <input
                   id="email"
                   type="email"
-                  name="email"
-                  value={form.email}
-                  onChange={handleChange}
-                  required
+                  {...register("email")}
                   autoComplete="email"
                   placeholder="correo@ejemplo.com"
+                  aria-invalid={errors.email ? "true" : "false"}
                   className="w-full rounded-2xl py-3.5 pl-10 pr-4 border text-sm transition-shadow focus:outline-none focus:ring-2 focus:ring-[rgba(201,104,112,0.2)]"
                   style={{
-                    borderColor: "#EDD8C4",
+                    borderColor: errors.email ? "#FBBFC4" : "#EDD8C4",
                     backgroundColor: "#FDFAF7",
                     color: "#3D2010",
                   }}
                 />
               </div>
+              {errors.email && (
+                <p role="alert" className="text-xs" style={{ color: "#C0404A" }}>
+                  {errors.email.message}
+                </p>
+              )}
             </div>
 
             {/* Password field */}
@@ -1053,15 +1031,13 @@ export default function LoginPage() {
                 <input
                   id="password"
                   type={showPassword ? "text" : "password"}
-                  name="password"
-                  value={form.password}
-                  onChange={handleChange}
-                  required
+                  {...register("password")}
                   autoComplete="current-password"
                   placeholder="••••••••"
+                  aria-invalid={errors.password ? "true" : "false"}
                   className="w-full rounded-2xl py-3.5 pl-10 pr-11 border text-sm transition-shadow focus:outline-none focus:ring-2 focus:ring-[rgba(201,104,112,0.2)]"
                   style={{
-                    borderColor: "#EDD8C4",
+                    borderColor: errors.password ? "#FBBFC4" : "#EDD8C4",
                     backgroundColor: "#FDFAF7",
                     color: "#3D2010",
                   }}
@@ -1078,6 +1054,11 @@ export default function LoginPage() {
                   {showPassword ? <EyeClosedIcon /> : <EyeOpenIcon />}
                 </button>
               </div>
+              {errors.password && (
+                <p role="alert" className="text-xs" style={{ color: "#C0404A" }}>
+                  {errors.password.message}
+                </p>
+              )}
             </div>
 
             {/* Submit button */}
