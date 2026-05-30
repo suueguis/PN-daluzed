@@ -1,4 +1,6 @@
 # apps/alertas/api/v1/views.py
+from django.shortcuts import get_object_or_404
+from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -7,6 +9,24 @@ from apps.alertas.models import Alerta
 from apps.alertas.services import AlertaService
 from apps.catalogo.models import MateriaPrima
 from .serializers import AlertaSerializer
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def alertas_activas(request):
+    """Devuelve todas las alertas activas (cualquier tipo)."""
+    alertas = Alerta.objects.filter(activa=True)
+    return Response(AlertaSerializer(alertas, many=True).data)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def resolver_alerta(request, alerta_id):
+    """Marca una alerta como resuelta (RF-ALR-04)."""
+    alerta = get_object_or_404(Alerta, pk=alerta_id)
+    mensaje = request.data.get('mensaje', '')
+    AlertaService.resolver(alerta, mensaje_resolucion=mensaje)
+    return Response(AlertaSerializer(alerta).data, status=status.HTTP_200_OK)
 
 
 @api_view(['GET'])
