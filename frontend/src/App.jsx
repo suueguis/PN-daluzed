@@ -7,6 +7,11 @@ import Perfil from "./pages/Perfil";
 import CatalogoLayout from "./pages/catalogo/CatalogoLayout";
 import AppLayout from "./components/layout/AppLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
+import AlertasLayout from "./pages/alertas/AlertasLayout";
+import AlertasActivasPage from "./pages/alertas/AlertasActivasPage";
+import AlertasReordenPage from "./pages/alertas/AlertasReordenPage";
+import AlertasVencimientoPage from "./pages/alertas/AlertasVencimientoPage";
+import AlertasProduccionPage from "./pages/alertas/AlertasProduccionPage";
 import useAuthStore from "./store/authStore";
 import InventarioLayout from "./pages/inventario/InventarioLayout";
 import StockPage from "./pages/inventario/StockPage";
@@ -86,7 +91,12 @@ function App() {
             <Route path="recepciones/:id"      element={<DetalleRecepcionPage />} />
           </Route>
           <Route path="/produccion/*"  element={<ProduccionLayout />} />
-          <Route path="/alertas/*"     element={<Placeholder name="Alertas" />} />
+          <Route path="/alertas"       element={<AlertasLayout />}>
+            <Route index                       element={<AlertasActivasPage />} />
+            <Route path="reorden"              element={<AlertasReordenPage />} />
+            <Route path="vencimiento"          element={<AlertasVencimientoPage />} />
+            <Route path="produccion-vencida"   element={<AlertasProduccionPage />} />
+          </Route>
         </Route>
         <Route path="*" element={<Navigate to={accessToken ? "/dashboard" : "/login"} replace />} />
       </Routes>
