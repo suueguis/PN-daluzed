@@ -21,3 +21,7 @@ psycopg2-binary==2.9.9
 coverage==7.6.1
 # Importación de catálogos desde Excel (RF-CAT-07)
 openpyxl==3.1.5
+# WebSocket (RF-ALR-05) — Django Channels
+channels==4.0.0
+channels-redis==4.2.0
+daphne==4.1.0

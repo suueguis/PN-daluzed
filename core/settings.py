@@ -15,6 +15,8 @@ DEBUG = True
 ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
+    # Daphne debe ir ANTES de django.contrib.staticfiles
+    'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -22,6 +24,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # Terceros
+    'channels',
     'rest_framework',
     'rest_framework_simplejwt',                  # ✅ AÑADIDO
     'rest_framework_simplejwt.token_blacklist',  # ✅ AÑADIDO (necesario para logout)
@@ -36,6 +39,17 @@ INSTALLED_APPS = [
     'apps.produccion',
     'apps.alertas',
 ]
+
+# ──────────────────────────────────────────────
+# Django Channels (RF-ALR-05) — WebSocket
+# ──────────────────────────────────────────────
+ASGI_APPLICATION = 'core.asgi.application'
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+    },
+}
 
 # ──────────────────────────────────────────────
 # MIDDLEWARE

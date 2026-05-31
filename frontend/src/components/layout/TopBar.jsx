@@ -1,11 +1,14 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { logoutAPI } from '../../api/authAPI';
+import useAlertasStore from '../../store/alertasStore';
 import useAuthStore from '../../store/authStore';
+import Badge from '../ui/Badge';
 import Button from '../ui/Button';
 
 export default function TopBar() {
   const { user, clearAuth } = useAuthStore();
+  const alertasCount = useAlertasStore((s) => s.alertas.length);
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -15,6 +18,8 @@ export default function TopBar() {
     } catch {
       /* ignore — sesión local se limpia igualmente */
     } finally {
+      useAlertasStore.getState().disconnect();
+      useAlertasStore.getState().reset();
       clearAuth();
       navigate('/login', { replace: true });
     }
@@ -27,6 +32,22 @@ export default function TopBar() {
         <span className="font-crushed text-xl text-wine-900">Daluzed</span>
       </div>
       <div className="flex items-center gap-4">
+        <button
+          type="button"
+          aria-label="Alertas activas"
+          onClick={() => navigate('/alertas')}
+          className="relative rounded-full p-2 text-wine-900 transition-colors hover:bg-peach-100 focus:outline-none focus:ring-2 focus:ring-rose-300"
+        >
+          <span aria-hidden className="text-xl">🔔</span>
+          {alertasCount > 0 && (
+            <Badge
+              tone="danger"
+              className="absolute -top-1 -right-1 min-w-[1.25rem] justify-center rounded-full px-1.5 py-0 text-[10px]"
+            >
+              {alertasCount > 99 ? '99+' : alertasCount}
+            </Badge>
+          )}
+        </button>
         {user && (
           <Link
             to="/perfil"
