@@ -15,6 +15,12 @@ import BodegasPage from "./pages/inventario/BodegasPage";
 import TrasladosPage from "./pages/inventario/TrasladosPage";
 import DevolucionesPage from "./pages/inventario/DevolucionesPage";
 import DescartesPage from "./pages/inventario/DescartesPage";
+import RecepcionLayout from "./pages/recepcion/RecepcionLayout";
+import OrdenesPage from "./pages/recepcion/OrdenesPage";
+import NuevaOrdenPage from "./pages/recepcion/NuevaOrdenPage";
+import RecepcionesPage from "./pages/recepcion/RecepcionesPage";
+import NuevaRecepcionPage from "./pages/recepcion/NuevaRecepcionPage";
+import DetalleRecepcionPage from "./pages/recepcion/DetalleRecepcionPage";
 
 function parseJwt(token) {
   try {
@@ -70,7 +76,14 @@ function App() {
             <Route path="devoluciones" element={<DevolucionesPage />} />
             <Route path="descartes"    element={<DescartesPage />} />
           </Route>
-          <Route path="/recepcion/*"   element={<Placeholder name="Recepción" />} />
+          <Route path="/recepcion"     element={<RecepcionLayout />}>
+            <Route index element={<Navigate to="ordenes" replace />} />
+            <Route path="ordenes"              element={<OrdenesPage />} />
+            <Route path="ordenes/nueva"        element={<NuevaOrdenPage />} />
+            <Route path="recepciones"          element={<RecepcionesPage />} />
+            <Route path="recepciones/nueva"    element={<NuevaRecepcionPage />} />
+            <Route path="recepciones/:id"      element={<DetalleRecepcionPage />} />
+          </Route>
           <Route path="/produccion/*"  element={<Placeholder name="Producción" />} />
           <Route path="/alertas/*"     element={<Placeholder name="Alertas" />} />
         </Route>
