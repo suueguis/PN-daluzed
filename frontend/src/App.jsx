@@ -21,6 +21,7 @@ import NuevaOrdenPage from "./pages/recepcion/NuevaOrdenPage";
 import RecepcionesPage from "./pages/recepcion/RecepcionesPage";
 import NuevaRecepcionPage from "./pages/recepcion/NuevaRecepcionPage";
 import DetalleRecepcionPage from "./pages/recepcion/DetalleRecepcionPage";
+import ProduccionLayout from "./pages/produccion/ProduccionLayout";
 
 function parseJwt(token) {
   try {
@@ -84,7 +85,7 @@ function App() {
             <Route path="recepciones/nueva"    element={<NuevaRecepcionPage />} />
             <Route path="recepciones/:id"      element={<DetalleRecepcionPage />} />
           </Route>
-          <Route path="/produccion/*"  element={<Placeholder name="Producción" />} />
+          <Route path="/produccion/*"  element={<ProduccionLayout />} />
           <Route path="/alertas/*"     element={<Placeholder name="Alertas" />} />
         </Route>
         <Route path="*" element={<Navigate to={accessToken ? "/dashboard" : "/login"} replace />} />
