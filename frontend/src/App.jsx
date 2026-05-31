@@ -104,13 +104,4 @@ function App() {
   );
 }
 
-function Placeholder({ name }) {
-  return (
-    <div className="rounded-2xl border border-dashed border-peach-300 bg-white px-6 py-12 text-center">
-      <h2 className="font-crushed text-2xl text-wine-900">{name}</h2>
-      <p className="mt-2 text-sm text-wine-700">Módulo en construcción.</p>
-    </div>
-  );
-}
-
 export default App;
