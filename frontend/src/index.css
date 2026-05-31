@@ -1,20 +1,28 @@
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Crushed&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Crushed&display=swap');
 @import "tailwindcss";
 
-
 @theme {
-  --color-daluzed-bg: #FDF8ED;
-  --color-daluzed-dark: #432A2B;
-  --color-daluzed-pink: #F3D9DD;
-  --color-daluzed-red: #EB6073;
+  --color-cream-50: #FFF8F0;
+  --color-cream-100: #FAF1E4;
+  --color-peach-200: #FCE4D8;
+  --color-peach-300: #F8C9B0;
+  --color-rose-300: #F4A6B8;
+  --color-rose-500: #E85978;
+  --color-wine-700: #8B2C3F;
+  --color-wine-900: #6B1A2A;
+  --color-cherry-500: #C9152E;
+  --color-butter-200: #FCE4A8;
+  --color-mint-200: #D4E8D4;
+  --color-slate-100: #F1F0EE;
 
-
-  --font-crushed: "Crushed", system-ui;
-  --font-montserrat: "Montserrat", sans-serif;
+  --font-crushed: "Crushed", serif;
+  --font-display: "Nunito", system-ui, sans-serif;
 }
 
 body {
-  @apply bg-daluzed-bg;
+  font-family: var(--font-display);
+  background-color: var(--color-cream-50);
+  color: var(--color-wine-900);
   margin: 0;
   -webkit-font-smoothing: antialiased;
 }

@@ -2,6 +2,9 @@ import { useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import axios from "axios";
 import Login from "./pages/Login";
+import Dashboard from "./pages/Dashboard";
+import AppLayout from "./components/layout/AppLayout";
+import ProtectedRoute from "./components/ProtectedRoute";
 import useAuthStore from "./store/authStore";
 
 function parseJwt(token) {
@@ -28,7 +31,7 @@ function App() {
         }
       })
       .catch(() => clearAuth());
-  }, []);
+  }, [setAuth, clearAuth]);
 
   if (isLoading) return null;
 
@@ -37,23 +40,34 @@ function App() {
       <Routes>
         <Route
           path="/login"
-          element={!accessToken ? <Login /> : <Navigate to="/dashboard" />}
+          element={!accessToken ? <Login /> : <Navigate to="/dashboard" replace />}
         />
         <Route
-          path="/dashboard"
           element={
-            accessToken ? (
-              <h1 className="p-10 font-crushed text-4xl">
-                ¡Panel de Control de Daluzed!
-              </h1>
-            ) : (
-              <Navigate to="/login" />
-            )
+            <ProtectedRoute>
+              <AppLayout />
+            </ProtectedRoute>
           }
-        />
-        <Route path="*" element={<Navigate to="/login" />} />
+        >
+          <Route path="/dashboard"     element={<Dashboard />} />
+          <Route path="/catalogo/*"    element={<Placeholder name="Catálogo" />} />
+          <Route path="/inventario/*"  element={<Placeholder name="Inventario" />} />
+          <Route path="/recepcion/*"   element={<Placeholder name="Recepción" />} />
+          <Route path="/produccion/*"  element={<Placeholder name="Producción" />} />
+          <Route path="/alertas/*"     element={<Placeholder name="Alertas" />} />
+        </Route>
+        <Route path="*" element={<Navigate to={accessToken ? "/dashboard" : "/login"} replace />} />
       </Routes>
     </BrowserRouter>
+  );
+}
+
+function Placeholder({ name }) {
+  return (
+    <div className="rounded-2xl border border-dashed border-peach-300 bg-white px-6 py-12 text-center">
+      <h2 className="font-crushed text-2xl text-wine-900">{name}</h2>
+      <p className="mt-2 text-sm text-wine-700">Módulo en construcción.</p>
+    </div>
   );
 }
 
