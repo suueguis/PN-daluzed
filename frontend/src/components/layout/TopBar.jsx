@@ -1,5 +1,6 @@
-import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+import { logoutAPI } from '../../api/authAPI';
 import useAuthStore from '../../store/authStore';
 import Button from '../ui/Button';
 
@@ -9,9 +10,10 @@ export default function TopBar() {
 
   const handleLogout = async () => {
     try {
-      await axios.post('/api/v1/auth/logout/', {}, { withCredentials: true });
+      await logoutAPI();
+      toast.success('Sesión cerrada correctamente');
     } catch {
-      /* ignore */
+      /* ignore — sesión local se limpia igualmente */
     } finally {
       clearAuth();
       navigate('/login', { replace: true });
@@ -26,10 +28,14 @@ export default function TopBar() {
       </div>
       <div className="flex items-center gap-4">
         {user && (
-          <div className="text-right leading-tight">
+          <Link
+            to="/perfil"
+            aria-label="Ir a mi perfil"
+            className="rounded-lg px-2 py-1 text-right leading-tight transition-colors hover:bg-cream-100"
+          >
             <div className="text-sm font-semibold text-wine-900">{user.username}</div>
             <div className="text-xs text-wine-700">{user.role}</div>
-          </div>
+          </Link>
         )}
         <Button variant="ghost" size="sm" onClick={handleLogout}>
           Salir

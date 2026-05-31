@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import axios from "axios";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
+import Perfil from "./pages/Perfil";
 import AppLayout from "./components/layout/AppLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
 import useAuthStore from "./store/authStore";
@@ -50,6 +51,7 @@ function App() {
           }
         >
           <Route path="/dashboard"     element={<Dashboard />} />
+          <Route path="/perfil"        element={<Perfil />} />
           <Route path="/catalogo/*"    element={<Placeholder name="Catálogo" />} />
           <Route path="/inventario/*"  element={<Placeholder name="Inventario" />} />
           <Route path="/recepcion/*"   element={<Placeholder name="Recepción" />} />

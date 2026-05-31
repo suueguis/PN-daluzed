@@ -4,6 +4,7 @@ import { create } from "zustand";
 const useAuthStore = create((set) => ({
   accessToken: null,
   user: null,
+  loginAt: null,
   isAuthenticated: false,
   isLoading: true,
 
@@ -11,6 +12,7 @@ const useAuthStore = create((set) => ({
     set({
       accessToken: access,
       user: { username, role },
+      loginAt: new Date().toISOString(),
       isAuthenticated: true,
       isLoading: false,
     }),
@@ -21,6 +23,7 @@ const useAuthStore = create((set) => ({
     set({
       accessToken: null,
       user: null,
+      loginAt: null,
       isAuthenticated: false,
       isLoading: false,
     }),

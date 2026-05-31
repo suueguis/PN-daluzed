@@ -1,8 +1,9 @@
 import useAuthStore from '../store/authStore';
 
-export default function RoleGate({ roles = [], fallback = null, children }) {
+export default function RoleGate({ allowed, roles, fallback = null, children }) {
+  const allowedRoles = allowed ?? roles ?? [];
   const { user } = useAuthStore();
   if (!user) return fallback;
-  if (roles.includes('*')) return children;
-  return roles.includes(user.role) ? children : fallback;
+  if (allowedRoles.includes('*')) return children;
+  return allowedRoles.includes(user.role) ? children : fallback;
 }
