@@ -129,16 +129,13 @@ jobs:
       - name: Build de producción
         run: npm run build
 
-      # ── Tests de Vitest ────────────────────────────────────────────────
-      # Descomenta este step cuando instales Vitest y crees los tests:
-      #
-      #   npm install -D vitest @vitest/coverage-v8 \
-      #     @testing-library/react @testing-library/jest-dom \
-      #     @testing-library/user-event jsdom axios-mock-adapter
-      #
-      # Luego agrega en package.json:
-      #   "test": "vitest run --coverage"
-      #
-      # - name: Tests Vitest
-      #   run: npm test
-      # ──────────────────────────────────────────────────────────────────
+      - name: Tests Vitest
+        run: npm test
+
+      - name: Subir reporte de cobertura como artefacto
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: frontend-coverage-report
+          path: frontend/coverage/
+          retention-days: 14
