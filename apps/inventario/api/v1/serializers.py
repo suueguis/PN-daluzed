@@ -11,9 +11,18 @@ class BodegaSerializer(serializers.ModelSerializer):
 
 
 class LoteSerializer(serializers.ModelSerializer):
+    materia_prima_nombre = serializers.CharField(source='materia_prima.nombre', read_only=True)
+    bodega_nombre = serializers.CharField(source='bodega.nombre', read_only=True)
+    bodega_tipo = serializers.CharField(source='bodega.tipo', read_only=True)
+
     class Meta:
         model = Lote
-        fields = ['id', 'materia_prima', 'bodega', 'cantidad', 'fecha_vencimiento', 'fecha_entrada']
+        fields = [
+            'id', 'numero_lote',
+            'materia_prima', 'materia_prima_nombre',
+            'bodega', 'bodega_nombre', 'bodega_tipo',
+            'cantidad', 'fecha_vencimiento', 'fecha_entrada',
+        ]
 
 
 class MovimientoSerializer(serializers.ModelSerializer):

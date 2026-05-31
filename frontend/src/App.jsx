@@ -8,6 +8,13 @@ import CatalogoLayout from "./pages/catalogo/CatalogoLayout";
 import AppLayout from "./components/layout/AppLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
 import useAuthStore from "./store/authStore";
+import InventarioLayout from "./pages/inventario/InventarioLayout";
+import StockPage from "./pages/inventario/StockPage";
+import LotesPage from "./pages/inventario/LotesPage";
+import BodegasPage from "./pages/inventario/BodegasPage";
+import TrasladosPage from "./pages/inventario/TrasladosPage";
+import DevolucionesPage from "./pages/inventario/DevolucionesPage";
+import DescartesPage from "./pages/inventario/DescartesPage";
 
 function parseJwt(token) {
   try {
@@ -54,7 +61,15 @@ function App() {
           <Route path="/dashboard"     element={<Dashboard />} />
           <Route path="/perfil"        element={<Perfil />} />
           <Route path="/catalogo/*"    element={<CatalogoLayout />} />
-          <Route path="/inventario/*"  element={<Placeholder name="Inventario" />} />
+          <Route path="/inventario"    element={<InventarioLayout />}>
+            <Route index element={<Navigate to="stock" replace />} />
+            <Route path="stock"        element={<StockPage />} />
+            <Route path="lotes"        element={<LotesPage />} />
+            <Route path="bodegas"      element={<BodegasPage />} />
+            <Route path="traslados"    element={<TrasladosPage />} />
+            <Route path="devoluciones" element={<DevolucionesPage />} />
+            <Route path="descartes"    element={<DescartesPage />} />
+          </Route>
           <Route path="/recepcion/*"   element={<Placeholder name="Recepción" />} />
           <Route path="/produccion/*"  element={<Placeholder name="Producción" />} />
           <Route path="/alertas/*"     element={<Placeholder name="Alertas" />} />
