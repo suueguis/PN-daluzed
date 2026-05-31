@@ -4,15 +4,40 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.generics import get_object_or_404
 
-from apps.inventario.models import Lote, MovimientoInventario
+from apps.inventario.models import Bodega, Lote, MovimientoInventario
 from apps.inventario.services import InventarioService
 from .serializers import (
+    BodegaSerializer,
     LoteSerializer,
     MovimientoSerializer,
     TrasladoCreateSerializer,
     DevolucionCreateSerializer,
     DescarteCreateSerializer,
 )
+
+
+# ── Bodegas ───────────────────────────────────────────────────────────────────
+
+class BodegaViewSet(viewsets.ModelViewSet):
+    queryset = Bodega.objects.all().order_by('nombre')
+    serializer_class = BodegaSerializer
+
+
+# ── Lotes (listado con filtros) ────────────────────────────────────────────────
+
+class LoteListView(APIView):
+    def get(self, request):
+        qs = Lote.objects.select_related('materia_prima', 'bodega').filter(cantidad__gt=0)
+        mp_id = request.query_params.get('materia_prima')
+        bodega_id = request.query_params.get('bodega')
+        vence_antes_de = request.query_params.get('vence_antes_de')
+        if mp_id:
+            qs = qs.filter(materia_prima_id=mp_id)
+        if bodega_id:
+            qs = qs.filter(bodega_id=bodega_id)
+        if vence_antes_de:
+            qs = qs.filter(fecha_vencimiento__lte=vence_antes_de)
+        return Response(LoteSerializer(qs, many=True).data)
 
 
 # ── Stock ─────────────────────────────────────────────────────────────────────
