@@ -7,6 +7,7 @@ from rest_framework.views import APIView
 
 from apps.catalogo.models import (
     MateriaPrima,
+    Presentacion,
     Proveedor,
     ProductoTerminado,
     UnidadMedida,
@@ -14,6 +15,7 @@ from apps.catalogo.models import (
 from apps.catalogo.services import CatalogoService
 from apps.catalogo.api.v1.serializers import (
     MateriaPrimaSerializer,
+    PresentacionSerializer,
     ProductoTerminadoSerializer,
     ProveedorSerializer,
     UnidadMedidaSerializer,
@@ -117,6 +119,22 @@ class ProductoTerminadoViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return ProductoTerminado.objects.select_related('unidad_medida').all()
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Presentaciones
+# ─────────────────────────────────────────────────────────────────────────────
+
+class PresentacionViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = PresentacionSerializer
+    pagination_class = CatalogoPagination
+
+    def get_queryset(self):
+        qs = Presentacion.objects.select_related('materia_prima', 'unidad_medida').order_by('nombre')
+        mp_id = self.request.query_params.get('materia_prima')
+        if mp_id:
+            qs = qs.filter(materia_prima_id=mp_id)
+        return qs
 
 
 # ─────────────────────────────────────────────────────────────────────────────

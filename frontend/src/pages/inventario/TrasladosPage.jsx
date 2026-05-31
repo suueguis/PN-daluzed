@@ -7,8 +7,8 @@ import { formatDecimal, formatDateTime } from '../../utils/formatters';
 const columns = [
   { key: 'id', header: '# Mov.', render: (m) => `#${m.id}` },
   { key: 'lote', header: 'Lote', render: (m) => `#${m.lote}` },
-  { key: 'bodega_origen', header: 'Origen', render: (m) => m.bodega_origen ?? '—' },
-  { key: 'bodega_destino', header: 'Destino', render: (m) => m.bodega_destino ?? '—' },
+  { key: 'bodega_origen', header: 'Origen', render: (m) => m.bodega_origen_nombre ?? '—' },
+  { key: 'bodega_destino', header: 'Destino', render: (m) => m.bodega_destino_nombre ?? '—' },
   { key: 'cantidad', header: 'Cantidad', render: (m) => formatDecimal(m.cantidad), cellClassName: 'tabular-nums text-right' },
   { key: 'fecha', header: 'Fecha', render: (m) => formatDateTime(m.fecha) },
   { key: 'notas', header: 'Notas', render: (m) => m.notas || '—' },

@@ -6,7 +6,7 @@ export function useApiQuery(key, url, options = {}) {
     queryKey: Array.isArray(key) ? key : [key],
     queryFn: async () => {
       const { data } = await axiosClient.get(url, { params: options.params });
-      return data;
+      return data?.results ?? data;
     },
     ...options,
   });
