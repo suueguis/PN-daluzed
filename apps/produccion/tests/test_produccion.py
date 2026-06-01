@@ -346,8 +346,8 @@ class MovimientoCompensatorioTestCase(APITestCase):
             password='Daluzed2026!',
             role='PRODUCCION',
         )
-        # Autenticar como inventario para crear el compensatorio
-        refresh = RefreshToken.for_user(self.user_inventario)
+        # Autenticar como produccion (tiene acceso de escritura en producción)
+        refresh = RefreshToken.for_user(self.user_produccion)
         self.client.credentials(
             HTTP_AUTHORIZATION=f'Bearer {str(refresh.access_token)}'
         )
@@ -403,7 +403,6 @@ class MovimientoCompensatorioTestCase(APITestCase):
             datos_corregidos={'cantidad': 9500},
         )
         roles_y_usuarios = [
-            self.user_inventario,
             self.user_gerente,
             self.user_produccion,
         ]
@@ -442,7 +441,7 @@ class MovimientoCompensatorioTestCase(APITestCase):
         comp = MovimientoCompensatorio.objects.order_by('-id').first()
         self.assertEqual(comp.datos_originales['cantidad'], 10000)
         self.assertEqual(comp.datos_corregidos['cantidad'], 8000)
-        self.assertEqual(comp.usuario, self.user_inventario)
+        self.assertEqual(comp.usuario, self.user_produccion)
         self.assertIsNotNone(comp.fecha)
         self.assertIn(
             'consumidos', comp.descripcion.lower()

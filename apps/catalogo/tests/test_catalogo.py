@@ -269,9 +269,9 @@ class ProveedorTestCase(APITestCase):
 
     def setUp(self):
         self.user = User.objects.create_user(
-            email='gerente@daluzed.com',
+            email='inventario@daluzed.com',
             password='Daluzed2026!',
-            role='GERENTE',
+            role='INVENTARIO',
         )
         refresh = RefreshToken.for_user(self.user)
         self.client.credentials(

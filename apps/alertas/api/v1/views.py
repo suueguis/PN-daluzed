@@ -2,17 +2,20 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from apps.alertas.models import Alerta
 from apps.alertas.services import AlertaService
+from apps.authentication.permissions import allow_roles
 from apps.catalogo.models import MateriaPrima
 from .serializers import AlertaSerializer
 
+_ALR_READ  = ('ADMIN', 'GERENTE', 'PRODUCCION', 'INVENTARIO')
+_ALR_WRITE = ('ADMIN', 'INVENTARIO', 'PRODUCCION')
+
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([allow_roles(*_ALR_READ)])
 def alertas_activas(request):
     """Devuelve todas las alertas activas (cualquier tipo)."""
     alertas = Alerta.objects.filter(activa=True)
@@ -20,7 +23,7 @@ def alertas_activas(request):
 
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@permission_classes([allow_roles(*_ALR_WRITE)])
 def resolver_alerta(request, alerta_id):
     """Marca una alerta como resuelta (RF-ALR-04)."""
     alerta = get_object_or_404(Alerta, pk=alerta_id)
@@ -30,7 +33,7 @@ def resolver_alerta(request, alerta_id):
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([allow_roles(*_ALR_READ)])
 def alertas_reorden(request):
     """Evalúa stock vs reorden para todas las MP activas y devuelve las STOCK_BAJO."""
     for mp in MateriaPrima.objects.filter(activo=True):
@@ -40,7 +43,7 @@ def alertas_reorden(request):
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([allow_roles(*_ALR_READ)])
 def alertas_vencimiento(request):
     dias = int(request.query_params.get('dias', 7))
     AlertaService.verificar_vencimientos(dias_umbral=dias)
@@ -49,7 +52,7 @@ def alertas_vencimiento(request):
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([allow_roles(*_ALR_READ)])
 def alertas_produccion_vencida(request):
     """Lotes PT EN_ESPERA cuyo vencimiento ya pasó."""
     from datetime import date

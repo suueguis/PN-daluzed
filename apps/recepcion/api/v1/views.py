@@ -4,6 +4,11 @@ from rest_framework import status, mixins, viewsets
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
+from apps.authentication.permissions import allow_roles
+
+_REC_READ  = ('ADMIN', 'GERENTE', 'INVENTARIO')
+_REC_WRITE = ('ADMIN', 'INVENTARIO')
+
 from apps.catalogo.models import MateriaPrima, Presentacion
 from apps.recepcion.models import OrdenCompra, RecepcionMercancia, DetalleOrdenCompra
 from apps.recepcion.services import RecepcionService, VidaUtilInsuficienteError
@@ -21,6 +26,11 @@ class OrdenCompraViewSet(
     viewsets.GenericViewSet,
 ):
     serializer_class = OrdenCompraSerializer
+
+    def get_permissions(self):
+        if self.action in ('list', 'retrieve'):
+            return [allow_roles(*_REC_READ)()]
+        return [allow_roles(*_REC_WRITE)()]
 
     def get_queryset(self):
         qs = (
@@ -72,6 +82,11 @@ class RecepcionViewSet(
 ):
     queryset = RecepcionMercancia.objects.all().order_by('-fecha')
     serializer_class = RecepcionMercanciaSerializer
+
+    def get_permissions(self):
+        if self.action in ('list', 'retrieve'):
+            return [allow_roles(*_REC_READ)()]
+        return [allow_roles(*_REC_WRITE)()]
 
     def create(self, request, *args, **kwargs):
         serializer = RecepcionCreateSerializer(data=request.data)

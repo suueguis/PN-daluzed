@@ -4,7 +4,11 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.generics import get_object_or_404
 
+from apps.authentication.permissions import allow_roles
 from apps.inventario.models import Bodega, Lote, MovimientoInventario
+
+_INV_READ  = ('ADMIN', 'GERENTE', 'INVENTARIO')
+_INV_WRITE = ('ADMIN', 'INVENTARIO')
 from apps.inventario.services import InventarioService
 from .serializers import (
     BodegaSerializer,
@@ -22,10 +26,17 @@ class BodegaViewSet(viewsets.ModelViewSet):
     queryset = Bodega.objects.all().order_by('nombre')
     serializer_class = BodegaSerializer
 
+    def get_permissions(self):
+        if self.action in ('list', 'retrieve'):
+            return [allow_roles(*_INV_READ)()]
+        return [allow_roles(*_INV_WRITE)()]
+
 
 # ── Lotes (listado con filtros) ────────────────────────────────────────────────
 
 class LoteListView(APIView):
+    permission_classes = [allow_roles(*_INV_READ)]
+
     def get(self, request):
         qs = Lote.objects.select_related('materia_prima', 'bodega').filter(cantidad__gt=0)
         mp_id = request.query_params.get('materia_prima')
@@ -43,6 +54,8 @@ class LoteListView(APIView):
 # ── Stock ─────────────────────────────────────────────────────────────────────
 
 class StockView(APIView):
+    permission_classes = [allow_roles(*_INV_READ)]
+
     def get(self, request):
         mp_id = request.query_params.get('materia_prima')
         bodega_id = request.query_params.get('bodega')
@@ -53,6 +66,8 @@ class StockView(APIView):
 # ── Punto de reorden ──────────────────────────────────────────────────────────
 
 class ReordenView(APIView):
+    permission_classes = [allow_roles(*_INV_READ)]
+
     def get(self, request):
         mp_id = request.query_params.get('materia_prima')
         data = InventarioService.consultar_reorden(mp_id)
@@ -62,6 +77,8 @@ class ReordenView(APIView):
 # ── FEFO ──────────────────────────────────────────────────────────────────────
 
 class FefoView(APIView):
+    permission_classes = [allow_roles(*_INV_READ)]
+
     def get(self, request):
         mp_id = request.query_params.get('materia_prima')
         bodega_id = request.query_params.get('bodega')
@@ -84,6 +101,11 @@ class TrasladoViewSet(
     queryset = MovimientoInventario.objects.filter(tipo='TRASLADO')
     serializer_class = MovimientoSerializer
 
+    def get_permissions(self):
+        if self.action in ('list', 'retrieve'):
+            return [allow_roles(*_INV_READ)()]
+        return [allow_roles(*_INV_WRITE)()]
+
     def create(self, request, *args, **kwargs):
         serializer = TrasladoCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -102,6 +124,8 @@ class TrasladoViewSet(
 # ── Devoluciones ──────────────────────────────────────────────────────────────
 
 class DevolucionView(APIView):
+    permission_classes = [allow_roles(*_INV_WRITE)]
+
     def post(self, request):
         serializer = DevolucionCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -117,6 +141,8 @@ class DevolucionView(APIView):
 # ── Descartes ─────────────────────────────────────────────────────────────────
 
 class DescarteView(APIView):
+    permission_classes = [allow_roles(*_INV_WRITE)]
+
     def post(self, request):
         serializer = DescarteCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -131,6 +157,8 @@ class DescarteView(APIView):
 # ── Trazabilidad ──────────────────────────────────────────────────────────────
 
 class TrazabilidadView(APIView):
+    permission_classes = [allow_roles(*_INV_READ)]
+
     def get(self, request, lote_id):
         lote = get_object_or_404(Lote, pk=lote_id)
         movimientos = MovimientoInventario.objects.filter(lote=lote).order_by('fecha')
