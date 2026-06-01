@@ -33,8 +33,8 @@ describe('useMateriasPrimasQuery', () => {
     const { result } = renderHook(() => useMateriasPrimasQuery(), { wrapper });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(result.current.data.results).toHaveLength(1);
-    expect(result.current.data.results[0].nombre).toBe('Azúcar');
+    expect(result.current.data).toHaveLength(1);
+    expect(result.current.data[0].nombre).toBe('Azúcar');
   });
 });
 
