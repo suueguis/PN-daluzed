@@ -33,6 +33,11 @@ User = get_user_model()
 today = date.today()
 
 
+BODEGA_PRINCIPAL  = "Bodega Principal"
+BODEGA_PLANTA     = "Bodega de Planta de Producción"
+BODEGA_PRODUCCION = "Planta de Producción"
+
+
 class Command(BaseCommand):
     help = "Crea datos de prueba visuales para todos los módulos del sistema."
 
@@ -236,9 +241,9 @@ class Command(BaseCommand):
 
     def _seed_bodegas(self):
         self.stdout.write("  Bodegas…")
-        self._oc(Bodega, nombre="Bodega Principal",      defaults=dict(tipo="PRINCIPAL"))
-        self._oc(Bodega, nombre="Punto de Producción 1", defaults=dict(tipo="PDP"))
-        self._oc(Bodega, nombre="Punto de Producción 2", defaults=dict(tipo="PDP"))
+        self._oc(Bodega, nombre=BODEGA_PRINCIPAL,  defaults={"tipo": "PRINCIPAL"})
+        self._oc(Bodega, nombre=BODEGA_PLANTA,     defaults={"tipo": "PDP"})
+        self._oc(Bodega, nombre=BODEGA_PRODUCCION, defaults={"tipo": "PDP"})
         self.stdout.write("    ✓ Bodegas listas")
 
     # ------------------------------------------------------------------
@@ -247,8 +252,8 @@ class Command(BaseCommand):
 
     def _seed_lotes(self, usuario):
         self.stdout.write("  Lotes de inventario…")
-        principal = Bodega.objects.get(nombre="Bodega Principal")
-        pdp1      = Bodega.objects.get(nombre="Punto de Producción 1")
+        principal     = Bodega.objects.get(nombre=BODEGA_PRINCIPAL)
+        bodega_planta = Bodega.objects.get(nombre=BODEGA_PLANTA)
 
         mps = {mp.nombre: mp for mp in MateriaPrima.objects.all()}
         provs = {p.nombre: p for p in Proveedor.objects.all()}
@@ -271,9 +276,9 @@ class Command(BaseCommand):
 
         # Lotes normales (buen stock, vencimiento lejano)
         lote("Harina de trigo",     principal, 25000, 180, "Harinera del Valle S.A.", "HAR-001")
-        lote("Harina de trigo",     pdp1,       8000, 160, "Harinera del Valle S.A.", "HAR-002")
+        lote("Harina de trigo",     bodega_planta,       8000, 160, "Harinera del Valle S.A.", "HAR-002")
         lote("Azúcar blanca",       principal, 18000, 365, "Azucarera Nacional",       "AZU-001")
-        lote("Azúcar blanca",       pdp1,       4000, 340, "Azucarera Nacional",       "AZU-002")
+        lote("Azúcar blanca",       bodega_planta,       4000, 340, "Azucarera Nacional",       "AZU-002")
         lote("Mantequilla sin sal", principal,  6000,  21, "Lácteos El Prado",         "MAN-001")
         lote("Leche entera",        principal,  5000,  10, "Lácteos El Prado",         "LEC-001")
         lote("Huevos frescos",      principal,   120,  14, "Distribuidora El Sabor",   "HUE-001")
@@ -286,15 +291,15 @@ class Command(BaseCommand):
         lote("Canela en polvo",     principal,   600, 365, num="CAN-001")
 
         # Lotes próximos a vencer (generan alerta de vencimiento)
-        lote("Mantequilla sin sal", pdp1,       800,   4, "Lácteos El Prado",  "MAN-VENC")
-        lote("Leche entera",        pdp1,      1200,   2, "Lácteos El Prado",  "LEC-VENC")
-        lote("Crema de leche",      pdp1,       400,   3, "Lácteos El Prado",  "CRE-VENC")
-        lote("Huevos frescos",      pdp1,        24,   4, "Distribuidora El Sabor", "HUE-VENC")
+        lote("Mantequilla sin sal", bodega_planta,       800,   4, "Lácteos El Prado",  "MAN-VENC")
+        lote("Leche entera",        bodega_planta,      1200,   2, "Lácteos El Prado",  "LEC-VENC")
+        lote("Crema de leche",      bodega_planta,       400,   3, "Lácteos El Prado",  "CRE-VENC")
+        lote("Huevos frescos",      bodega_planta,        24,   4, "Distribuidora El Sabor", "HUE-VENC")
 
         # Lotes con stock bajo (generan alerta de reorden)
-        lote("Esencia de vainilla", pdp1,   80, 200, "Distribuidora El Sabor", "VAI-BAJO")  # <200 punto reorden
-        lote("Levadura en polvo",   pdp1,  150, 100, "Harinera del Valle S.A.", "LEV-BAJO")  # <500
-        lote("Canela en polvo",     pdp1,   40, 300, num="CAN-BAJO")  # <100
+        lote("Esencia de vainilla", bodega_planta,   80, 200, "Distribuidora El Sabor", "VAI-BAJO")  # <200 punto reorden
+        lote("Levadura en polvo",   bodega_planta,  150, 100, "Harinera del Valle S.A.", "LEV-BAJO")  # <500
+        lote("Canela en polvo",     bodega_planta,   40, 300, num="CAN-BAJO")  # <100
 
         self.stdout.write("    ✓ Lotes listos")
 
@@ -304,8 +309,8 @@ class Command(BaseCommand):
 
     def _seed_traslados(self, usuario):
         self.stdout.write("  Traslados…")
-        principal = Bodega.objects.get(nombre="Bodega Principal")
-        pdp1      = Bodega.objects.get(nombre="Punto de Producción 1")
+        principal     = Bodega.objects.get(nombre=BODEGA_PRINCIPAL)
+        bodega_planta = Bodega.objects.get(nombre=BODEGA_PLANTA)
 
         mps = {mp.nombre: mp for mp in MateriaPrima.objects.all()}
 
@@ -315,23 +320,23 @@ class Command(BaseCommand):
             if not lote_obj:
                 return
             if MovimientoInventario.objects.filter(
-                tipo="TRASLADO", lote=lote_obj, bodega_destino=pdp1, cantidad=cantidad
+                tipo="TRASLADO", lote=lote_obj, bodega_destino=bodega_planta, cantidad=cantidad
             ).exists():
                 return
             MovimientoInventario.objects.create(
                 tipo="TRASLADO",
                 lote=lote_obj,
                 bodega_origen=principal,
-                bodega_destino=pdp1,
+                bodega_destino=bodega_planta,
                 cantidad=cantidad,
                 usuario=usuario,
                 notas=notas,
             )
 
-        traslado("Harina de trigo",     3000, "Reposición semanal PDP1")
-        traslado("Azúcar blanca",       2000, "Reposición semanal PDP1")
+        traslado("Harina de trigo",     3000, "Reposición semanal bodega planta")
+        traslado("Azúcar blanca",       2000, "Reposición semanal bodega planta")
         traslado("Chocolate negro 70%",  800, "Para producción de brownies")
-        traslado("Cacao en polvo",       500, "Reposición PDP1")
+        traslado("Cacao en polvo",       500, "Reposición bodega planta")
         self.stdout.write("    ✓ Traslados listos")
 
     # ------------------------------------------------------------------
@@ -629,24 +634,24 @@ class Command(BaseCommand):
             )
 
         # Stock bajo
-        alerta("STOCK_BAJO", "Esencia de vainilla", "Punto de Producción 1",
-               mensaje="Stock de Esencia de vainilla en PDP1 por debajo del punto de reorden (80 g < 200 g).")
-        alerta("STOCK_BAJO", "Levadura en polvo", "Punto de Producción 1",
-               mensaje="Stock de Levadura en polvo en PDP1 por debajo del punto de reorden (150 g < 500 g).")
-        alerta("STOCK_BAJO", "Canela en polvo", "Punto de Producción 1",
-               mensaje="Stock de Canela en polvo en PDP1 por debajo del punto de reorden (40 g < 100 g).")
+        alerta("STOCK_BAJO", "Esencia de vainilla", BODEGA_PLANTA,
+               mensaje="Stock de Esencia de vainilla en Bodega de Planta de Producciónpor debajo del punto de reorden (80 g < 200 g).")
+        alerta("STOCK_BAJO", "Levadura en polvo", BODEGA_PLANTA,
+               mensaje="Stock de Levadura en polvo en Bodega de Planta de Producciónpor debajo del punto de reorden (150 g < 500 g).")
+        alerta("STOCK_BAJO", "Canela en polvo", BODEGA_PLANTA,
+               mensaje="Stock de Canela en polvo en Bodega de Planta de Producciónpor debajo del punto de reorden (40 g < 100 g).")
 
         # Vencimiento próximo
-        alerta("VENCIMIENTO_PROXIMO", "Leche entera", "Punto de Producción 1",
+        alerta("VENCIMIENTO_PROXIMO", "Leche entera", BODEGA_PLANTA,
                lote_qs_filter={"numero_lote": "LEC-VENC"},
                mensaje="Lote LEC-VENC de Leche entera vence en 2 días.")
-        alerta("VENCIMIENTO_PROXIMO", "Crema de leche", "Punto de Producción 1",
+        alerta("VENCIMIENTO_PROXIMO", "Crema de leche", BODEGA_PLANTA,
                lote_qs_filter={"numero_lote": "CRE-VENC"},
                mensaje="Lote CRE-VENC de Crema de leche vence en 3 días.")
-        alerta("VENCIMIENTO_PROXIMO", "Mantequilla sin sal", "Punto de Producción 1",
+        alerta("VENCIMIENTO_PROXIMO", "Mantequilla sin sal", BODEGA_PLANTA,
                lote_qs_filter={"numero_lote": "MAN-VENC"},
                mensaje="Lote MAN-VENC de Mantequilla sin sal vence en 4 días.")
-        alerta("VENCIMIENTO_PROXIMO", "Huevos frescos", "Punto de Producción 1",
+        alerta("VENCIMIENTO_PROXIMO", "Huevos frescos", BODEGA_PLANTA,
                lote_qs_filter={"numero_lote": "HUE-VENC"},
                mensaje="Lote HUE-VENC de Huevos frescos vence en 4 días.")
 
