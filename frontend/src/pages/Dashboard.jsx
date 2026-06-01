@@ -1,5 +1,12 @@
 import useAuthStore from '../store/authStore';
 
+const ROLE_LABEL = {
+  ADMIN:      'Admin',
+  GERENTE:    'Gerente',
+  PRODUCCION: 'Producción',
+  INVENTARIO: 'Inventario',
+};
+
 const stubCards = [
   {
     key: 'mp',
@@ -26,7 +33,7 @@ const stubCards = [
 
 export default function Dashboard() {
   const { user } = useAuthStore();
-  const displayName = user?.username ?? 'invitado';
+  const displayName = ROLE_LABEL[user?.role] ?? 'invitado';
 
   return (
     <div className="space-y-8">
