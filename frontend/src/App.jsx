@@ -5,6 +5,11 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Perfil from "./pages/Perfil";
 import CatalogoLayout from "./pages/catalogo/CatalogoLayout";
+import UnidadesPage from "./pages/catalogo/UnidadesPage";
+import ProveedoresPage from "./pages/catalogo/ProveedoresPage";
+import MateriasPrimasPage from "./pages/catalogo/MateriasPrimasPage";
+import ProductosTerminadosPage from "./pages/catalogo/ProductosTerminadosPage";
+import PresentacionesPage from "./pages/catalogo/PresentacionesPage";
 import AppLayout from "./components/layout/AppLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AlertasLayout from "./pages/alertas/AlertasLayout";
@@ -72,7 +77,14 @@ function App() {
         >
           <Route path="/dashboard"     element={<Dashboard />} />
           <Route path="/perfil"        element={<Perfil />} />
-          <Route path="/catalogo/*"    element={<CatalogoLayout />} />
+          <Route path="/catalogo"      element={<CatalogoLayout />}>
+            <Route index element={<Navigate to="materias-primas" replace />} />
+            <Route path="unidades"            element={<UnidadesPage />} />
+            <Route path="proveedores"         element={<ProveedoresPage />} />
+            <Route path="materias-primas"     element={<MateriasPrimasPage />} />
+            <Route path="productos-terminados" element={<ProductosTerminadosPage />} />
+            <Route path="presentaciones"      element={<PresentacionesPage />} />
+          </Route>
           <Route path="/inventario"    element={<InventarioLayout />}>
             <Route index element={<Navigate to="stock" replace />} />
             <Route path="stock"        element={<StockPage />} />
