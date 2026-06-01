@@ -12,7 +12,7 @@ import Modal from '../../components/ui/Modal';
 
 function buildPayload(formData, justificacion = '') {
   return {
-    orden_compra_id:           Number(formData.orden_compra_id),
+    orden_compra_id:          Number(formData.orden_compra_id),
     justificacion_vencimiento: justificacion,
     detalles: formData.detalles.map((d) => ({
       materia_prima_id:      Number(d.materia_prima_id),
@@ -33,9 +33,8 @@ export default function NuevaRecepcionPage() {
   const [justificacion, setJustificacion] = useState('');
   const [pendingForm,   setPendingForm]   = useState(null);
   const [submitting,    setSubmitting]    = useState(false);
-  const [selectedOC,    setSelectedOC]    = useState(null);
 
-  const { register, control, handleSubmit, setValue, formState: { errors } } = useForm({
+  const { register, control, handleSubmit, formState: { errors } } = useForm({
     defaultValues: {
       orden_compra_id: initialOC,
       detalles: [{
@@ -47,7 +46,7 @@ export default function NuevaRecepcionPage() {
       }],
     },
   });
-  const { fields, append, remove, replace } = useFieldArray({ control, name: 'detalles' });
+  const { fields, append, remove } = useFieldArray({ control, name: 'detalles' });
 
   const { data: ordenesData } = useQuery({
     queryKey: ['recepcion', 'ordenes', 'PENDIENTE'],
@@ -62,29 +61,15 @@ export default function NuevaRecepcionPage() {
   const mps   = mpsData?.results ?? mpsData ?? [];
   const mpMap = Object.fromEntries(mps.map((m) => [String(m.id), m]));
 
-  const ocOptions = ordenes.map((o) => ({
-    value: String(o.id),
-    label: `OC-${o.id} — ${o.proveedor_nombre ?? o.proveedor}`,
-  }));
+  const { data: presData } = useQuery({
+    queryKey: ['catalogo', 'presentaciones'],
+    queryFn:  () => catalogoForRecepcion.presentaciones().then((r) => r.data),
+  });
+  const presentaciones = presData?.results ?? presData ?? [];
 
-  const handleOCChange = (e, fieldOnChange) => {
-    fieldOnChange(e);
-    const oc = ordenes.find((o) => String(o.id) === e.target.value);
-    setSelectedOC(oc ?? null);
-    if (oc?.detalles?.length) {
-      replace(
-        oc.detalles.map((d) => ({
-          materia_prima_id:      String(d.materia_prima_id),
-          presentacion_id:       String(d.presentacion_id),
-          cantidad_presentacion: String(d.cantidad_presentacion),
-          fecha_vencimiento:     '',
-          numero_lote:           '',
-          _mp_nombre:            d.materia_prima_nombre,
-          _pres_nombre:          d.presentacion_nombre,
-        })),
-      );
-    }
-  };
+  const ocOptions  = ordenes.map((o) => ({ value: String(o.id), label: `OC-${o.id} — Prov. ${o.proveedor}` }));
+  const mpOptions  = mps.map((m) => ({ value: String(m.id), label: m.nombre }));
+  const presOptions = presentaciones.map((p) => ({ value: String(p.id), label: p.nombre ?? `#${p.id}` }));
 
   const doSubmit = async (formData, justif) => {
     setSubmitting(true);
@@ -106,6 +91,7 @@ export default function NuevaRecepcionPage() {
   };
 
   const onSubmit = (formData) => {
+    // Local advisory validation — warns but still submits (backend is authoritative)
     const hoy = new Date();
     for (const d of formData.detalles) {
       const mp = mpMap[d.materia_prima_id];
@@ -144,12 +130,11 @@ export default function NuevaRecepcionPage() {
             rules={{ required: 'Selecciona una orden de compra' }}
             render={({ field }) => (
               <Select
-                label="Presentación"
-                options={[]}
-                placeholder="Selecciona MP primero"
+                label="OC pendiente"
+                options={ocOptions}
+                placeholder="— Seleccionar OC —"
                 error={errors.orden_compra_id?.message}
-                value={field.value}
-                onChange={(e) => handleOCChange(e, field.onChange)}
+                {...field}
               />
             )}
           />
@@ -159,110 +144,69 @@ export default function NuevaRecepcionPage() {
         <div className="rounded-2xl border border-peach-200 bg-white p-5 space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="font-semibold text-wine-900">Detalles de recepción</h3>
-            {!selectedOC && (
-              <Button
-                type="button"
-                size="sm"
-                variant="secondary"
-                onClick={() => append({
-                  materia_prima_id: '', presentacion_id: '',
-                  cantidad_presentacion: '', fecha_vencimiento: '', numero_lote: '',
-                })}
-              >
-                + Agregar línea
-              </Button>
-            )}
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              onClick={() => append({
+                materia_prima_id: '', presentacion_id: '',
+                cantidad_presentacion: '', fecha_vencimiento: '', numero_lote: '',
+              })}
+            >
+              + Agregar línea
+            </Button>
           </div>
 
           {fields.map((field, idx) => (
             <div
               key={field.id}
-              className="grid grid-cols-2 gap-3 rounded-xl border border-peach-200/60 p-3"
+              className="grid grid-cols-2 gap-3 border-t border-peach-200/60 pt-4 first:border-0 first:pt-0"
             >
-              {/* Materia prima */}
-              {field._mp_nombre ? (
-                <div>
-                  <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-wine-700">Materia prima</p>
-                  <p className="rounded-xl border border-peach-200 bg-cream-50 px-3 py-2 text-sm text-wine-900">
-                    {field._mp_nombre}
-                  </p>
-                  <input type="hidden" {...register(`detalles.${idx}.materia_prima_id`)} />
-                </div>
-              ) : (
-                <Controller
-                  control={control}
-                  name={`detalles.${idx}.materia_prima_id`}
-                  rules={{ required: 'Requerido' }}
-                  render={({ field: f }) => (
-                    <Select
-                      label="Materia prima"
-                      options={mps.map((m) => ({ value: String(m.id), label: m.nombre }))}
-                      placeholder="— MP —"
-                      error={errors.detalles?.[idx]?.materia_prima_id?.message}
-                      {...f}
-                    />
-                  )}
-                />
-              )}
-
-              {/* Presentación */}
-              {field._pres_nombre ? (
-                <div>
-                  <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-wine-700">Presentación</p>
-                  <p className="rounded-xl border border-peach-200 bg-cream-50 px-3 py-2 text-sm text-wine-900">
-                    {field._pres_nombre}
-                  </p>
-                  <input type="hidden" {...register(`detalles.${idx}.presentacion_id`)} />
-                </div>
-              ) : (
-                <Controller
-                  control={control}
-                  name={`detalles.${idx}.presentacion_id`}
-                  rules={{ required: 'Requerido' }}
-                  render={({ field: f }) => (
-                    <Select
-                      label="Presentación"
-                      options={[]}
-                      placeholder="— Presentación —"
-                      error={errors.detalles?.[idx]?.presentacion_id?.message}
-                      {...f}
-                    />
-                  )}
-                />
-              )}
-
-              {/* Cantidad */}
-              {field._mp_nombre ? (
-                <div>
-                  <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-wine-700">Cantidad</p>
-                  <p className="rounded-xl border border-peach-200 bg-cream-50 px-3 py-2 text-sm text-wine-900">
-                    {field.cantidad_presentacion}
-                  </p>
-                  <input type="hidden" {...register(`detalles.${idx}.cantidad_presentacion`)} />
-                </div>
-              ) : (
-                <Input
-                  label="Cantidad (en presentación)"
-                  type="number"
-                  step="0.01"
-                  min="0.01"
-                  error={errors.detalles?.[idx]?.cantidad_presentacion?.message}
-                  {...register(`detalles.${idx}.cantidad_presentacion`, {
-                    required: 'Requerido',
-                    min: { value: 0.01, message: 'Debe ser > 0' },
-                  })}
-                />
-              )}
-
-              {/* Fecha vencimiento — siempre editable */}
+              <Controller
+                control={control}
+                name={`detalles.${idx}.materia_prima_id`}
+                rules={{ required: 'Requerido' }}
+                render={({ field: f }) => (
+                  <Select
+                    label="Materia prima"
+                    options={mpOptions}
+                    placeholder="— MP —"
+                    error={errors.detalles?.[idx]?.materia_prima_id?.message}
+                    {...f}
+                  />
+                )}
+              />
+              <Controller
+                control={control}
+                name={`detalles.${idx}.presentacion_id`}
+                rules={{ required: 'Requerido' }}
+                render={({ field: f }) => (
+                  <Select
+                    label="Presentación"
+                    options={presOptions}
+                    placeholder="— Presentación —"
+                    error={errors.detalles?.[idx]?.presentacion_id?.message}
+                    {...f}
+                  />
+                )}
+              />
+              <Input
+                label="Cantidad (en presentación)"
+                type="number"
+                step="0.01"
+                min="0.01"
+                error={errors.detalles?.[idx]?.cantidad_presentacion?.message}
+                {...register(`detalles.${idx}.cantidad_presentacion`, {
+                  required: 'Requerido',
+                  min: { value: 0.01, message: 'Debe ser > 0' },
+                })}
+              />
               <Input
                 label="Fecha de vencimiento"
                 type="date"
                 error={errors.detalles?.[idx]?.fecha_vencimiento?.message}
                 {...register(`detalles.${idx}.fecha_vencimiento`, { required: 'Requerido' })}
               />
-
-              {/* Número de lote — siempre editable */}
               <div className="col-span-2 flex items-end gap-2">
                 <div className="flex-1">
                   <Input
@@ -270,7 +214,7 @@ export default function NuevaRecepcionPage() {
                     {...register(`detalles.${idx}.numero_lote`)}
                   />
                 </div>
-                {!selectedOC && fields.length > 1 && (
+                {fields.length > 1 && (
                   <Button
                     type="button"
                     size="sm"
@@ -294,6 +238,7 @@ export default function NuevaRecepcionPage() {
         </div>
       </form>
 
+      {/* Justification modal — shown when backend rejects due to short expiry */}
       <Modal
         open={justifOpen}
         onClose={() => setJustifOpen(false)}

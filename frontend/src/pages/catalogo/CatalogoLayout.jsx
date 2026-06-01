@@ -7,12 +7,13 @@ import ProductosTerminadosPage from './ProductosTerminadosPage';
 import PresentacionesPage from './PresentacionesPage';
 
 const TABS = [
-  { to: '/catalogo/unidades', label: 'Unidades' },
-  { to: '/catalogo/proveedores', label: 'Proveedores' },
-  { to: '/catalogo/materias-primas', label: 'Materias primas' },
-  { to: '/catalogo/productos-terminados', label: 'Productos terminados' },
-  { to: '/catalogo/presentaciones', label: 'Presentaciones' },
+  { to: 'unidades', label: 'Unidades' },
+  { to: 'proveedores', label: 'Proveedores' },
+  { to: 'materias-primas', label: 'Materias primas' },
+  { to: 'productos-terminados', label: 'Productos terminados' },
+  { to: 'presentaciones', label: 'Presentaciones' },
 ];
+
 export default function CatalogoLayout() {
   return (
     <div className="flex flex-col gap-4">
