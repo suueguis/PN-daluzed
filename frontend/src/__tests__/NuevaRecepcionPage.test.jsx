@@ -42,19 +42,25 @@ const ORDENES_MOCK = [
   { id: 7, proveedor: 'Prov. Test', fecha_creacion: '2026-05-01', estado: 'PENDIENTE' },
 ];
 
+// MPs include nested presentaciones, matching MateriaPrimaSerializer response
 const MPS_MOCK = [
-  { id: 1, nombre: 'Harina', dias_minimos_vencimiento: 90 },
-  { id: 2, nombre: 'Azúcar', dias_minimos_vencimiento: null },
-];
-
-const PRES_MOCK = [
-  { id: 10, nombre: 'Bulto 50kg' },
+  {
+    id: 1,
+    nombre: 'Harina',
+    dias_minimos_vencimiento: 90,
+    presentaciones: [{ id: 10, nombre: 'Bulto 50kg' }],
+  },
+  {
+    id: 2,
+    nombre: 'Azúcar',
+    dias_minimos_vencimiento: null,
+    presentaciones: [],
+  },
 ];
 
 function setupMocks() {
   ordenesAPI.list.mockResolvedValue({ data: ORDENES_MOCK });
   catalogoForRecepcion.materiasPrimas.mockResolvedValue({ data: MPS_MOCK });
-  catalogoForRecepcion.presentaciones.mockResolvedValue({ data: PRES_MOCK });
 }
 
 function renderPage() {
@@ -76,6 +82,18 @@ function daysFromNow(n) {
   return d.toISOString().slice(0, 10);
 }
 
+// ── shared form fill: OC → MP → wait for pres → Pres ─────────────────────────
+
+async function fillBaseForm() {
+  await userEvent.selectOptions(screen.getAllByRole('combobox')[0], '7');  // OC
+  await userEvent.selectOptions(screen.getAllByRole('combobox')[1], '1');  // MP: Harina
+  // useWatch in DetalleLinea re-renders the presentation select after MP changes
+  await waitFor(() => expect(screen.getByText('Bulto 50kg')).toBeInTheDocument());
+  await userEvent.selectOptions(screen.getAllByRole('combobox')[2], '10'); // Presentación
+  await userEvent.type(screen.getByLabelText(/cantidad/i), '5');
+  await userEvent.type(screen.getByLabelText(/fecha de vencimiento/i), daysFromNow(10));
+}
+
 // ── tests ─────────────────────────────────────────────────────────────────────
 
 describe('NuevaRecepcionPage', () => {
@@ -87,12 +105,14 @@ describe('NuevaRecepcionPage', () => {
   it('renderiza el formulario con selects de OC, MP y presentación', async () => {
     renderPage();
 
-    await waitFor(() => {
-      expect(screen.getByText(/OC-7/)).toBeInTheDocument();
-    });
+    await waitFor(() => expect(screen.getByText(/OC-7/)).toBeInTheDocument());
 
+    // MP options are visible immediately
     expect(screen.getByText('Harina')).toBeInTheDocument();
-    expect(screen.getByText('Bulto 50kg')).toBeInTheDocument();
+
+    // Presentations appear only after selecting the MP (filtered by useWatch)
+    await userEvent.selectOptions(screen.getAllByRole('combobox')[1], '1');
+    await waitFor(() => expect(screen.getByText('Bulto 50kg')).toBeInTheDocument());
   });
 
   it('muestra modal de justificación cuando el backend devuelve 400 por días insuficientes', async () => {
@@ -107,19 +127,9 @@ describe('NuevaRecepcionPage', () => {
     });
 
     renderPage();
-
-    // Wait for dropdowns to populate
     await waitFor(() => expect(screen.getByText(/OC-7/)).toBeInTheDocument());
 
-    // Fill form: OC
-    const selects = screen.getAllByRole('combobox');
-    await userEvent.selectOptions(selects[0], '7');   // OC
-    await userEvent.selectOptions(selects[1], '1');   // MP (Harina)
-    await userEvent.selectOptions(selects[2], '10');  // Presentación
-
-    // Fill cantidad and fecha
-    await userEvent.type(screen.getByLabelText(/cantidad/i), '5');
-    await userEvent.type(screen.getByLabelText(/fecha de vencimiento/i), daysFromNow(10));
+    await fillBaseForm();
 
     await userEvent.click(screen.getByRole('button', { name: /registrar recepción/i }));
 
@@ -129,7 +139,6 @@ describe('NuevaRecepcionPage', () => {
   });
 
   it('reintenta el submit con justificación y navega al éxito (201)', async () => {
-    // First call fails, second succeeds
     recepcionesAPI.create
       .mockRejectedValueOnce({
         response: {
@@ -145,19 +154,12 @@ describe('NuevaRecepcionPage', () => {
     renderPage();
     await waitFor(() => expect(screen.getByText(/OC-7/)).toBeInTheDocument());
 
-    const selects = screen.getAllByRole('combobox');
-    await userEvent.selectOptions(selects[0], '7');
-    await userEvent.selectOptions(selects[1], '1');
-    await userEvent.selectOptions(selects[2], '10');
-    await userEvent.type(screen.getByLabelText(/cantidad/i), '5');
-    await userEvent.type(screen.getByLabelText(/fecha de vencimiento/i), daysFromNow(10));
+    await fillBaseForm();
 
     await userEvent.click(screen.getByRole('button', { name: /registrar recepción/i }));
 
-    // Modal appears
     await waitFor(() => expect(screen.getByText(/justificación requerida/i)).toBeInTheDocument());
 
-    // Fill justification
     await userEvent.type(
       screen.getByRole('textbox', { name: /justificación de vencimiento/i }),
       'Proveedor certificó calidad extendida.',
@@ -191,12 +193,8 @@ describe('NuevaRecepcionPage', () => {
     renderPage();
     await waitFor(() => expect(screen.getByText(/OC-7/)).toBeInTheDocument());
 
-    const selects = screen.getAllByRole('combobox');
-    await userEvent.selectOptions(selects[0], '7');
-    await userEvent.selectOptions(selects[1], '1');
-    await userEvent.selectOptions(selects[2], '10');
-    await userEvent.type(screen.getByLabelText(/cantidad/i), '5');
-    await userEvent.type(screen.getByLabelText(/fecha de vencimiento/i), daysFromNow(10));
+    await fillBaseForm();
+
     await userEvent.click(screen.getByRole('button', { name: /registrar recepción/i }));
 
     await waitFor(() => expect(screen.getByText(/justificación requerida/i)).toBeInTheDocument());
