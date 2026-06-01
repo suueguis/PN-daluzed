@@ -26,9 +26,17 @@ class LoteSerializer(serializers.ModelSerializer):
 
 
 class MovimientoSerializer(serializers.ModelSerializer):
+    bodega_origen_nombre = serializers.CharField(source='bodega_origen.nombre', read_only=True, allow_null=True)
+    bodega_destino_nombre = serializers.CharField(source='bodega_destino.nombre', read_only=True, allow_null=True)
+
     class Meta:
         model = MovimientoInventario
-        fields = ['id', 'tipo', 'lote', 'bodega_origen', 'bodega_destino', 'cantidad', 'usuario', 'fecha', 'notas']
+        fields = [
+            'id', 'tipo', 'lote',
+            'bodega_origen', 'bodega_origen_nombre',
+            'bodega_destino', 'bodega_destino_nombre',
+            'cantidad', 'usuario', 'fecha', 'notas',
+        ]
 
 
 # ── Traslado ──────────────────────────────────────────────────────────────────
