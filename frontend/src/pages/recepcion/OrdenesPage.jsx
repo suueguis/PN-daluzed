@@ -29,7 +29,7 @@ export default function OrdenesPage() {
 
   const columns = [
     { key: 'id',             header: '# OC',     render: (r) => `OC-${r.id}` },
-    { key: 'proveedor', header: 'Proveedor', render: (r) => r.proveedor_nombre ?? r.proveedor },
+    { key: 'proveedor',      header: 'Proveedor', render: (r) => r.proveedor },
     { key: 'fecha_creacion', header: 'Fecha',     render: (r) => r.fecha_creacion },
     {
       key: 'estado',

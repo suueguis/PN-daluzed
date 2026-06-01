@@ -12,7 +12,7 @@ import Modal from '../../components/ui/Modal';
 
 function buildPayload(formData, justificacion = '') {
   return {
-    orden_compra_id:           Number(formData.orden_compra_id),
+    orden_compra_id:          Number(formData.orden_compra_id),
     justificacion_vencimiento: justificacion,
     detalles: formData.detalles.map((d) => ({
       materia_prima_id:      Number(d.materia_prima_id),
@@ -234,6 +234,7 @@ export default function NuevaRecepcionPage() {
   };
 
   const onSubmit = (formData) => {
+    // Local advisory validation — warns but still submits (backend is authoritative)
     const hoy = new Date();
     for (const d of formData.detalles) {
       const mp = mpMap[d.materia_prima_id];
@@ -276,7 +277,7 @@ export default function NuevaRecepcionPage() {
                 options={ocOptions}
                 placeholder="— Selecciona una OC —"
                 error={errors.orden_compra_id?.message}
-                value={field.value}
+                {...field}
                 onChange={(e) => handleOCChange(e, field.onChange)}
               />
             )}
@@ -287,19 +288,17 @@ export default function NuevaRecepcionPage() {
         <div className="rounded-2xl border border-peach-200 bg-white p-5 space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="font-semibold text-wine-900">Detalles de recepción</h3>
-            {!selectedOC && (
-              <Button
-                type="button"
-                size="sm"
-                variant="secondary"
-                onClick={() => append({
-                  materia_prima_id: '', presentacion_id: '',
-                  cantidad_presentacion: '', fecha_vencimiento: '', numero_lote: '',
-                })}
-              >
-                + Agregar línea
-              </Button>
-            )}
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              onClick={() => append({
+                materia_prima_id: '', presentacion_id: '',
+                cantidad_presentacion: '', fecha_vencimiento: '', numero_lote: '',
+              })}
+            >
+              + Agregar línea
+            </Button>
           </div>
 
           {fields.map((field, idx) => (
@@ -327,6 +326,7 @@ export default function NuevaRecepcionPage() {
         </div>
       </form>
 
+      {/* Justification modal — shown when backend rejects due to short expiry */}
       <Modal
         open={justifOpen}
         onClose={() => setJustifOpen(false)}
