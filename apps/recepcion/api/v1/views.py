@@ -1,8 +1,11 @@
 # apps/recepcion/api/v1/views.py
+from django.db import transaction
 from rest_framework import status, mixins, viewsets
+from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
-from apps.recepcion.models import OrdenCompra, RecepcionMercancia
+from apps.catalogo.models import MateriaPrima, Presentacion
+from apps.recepcion.models import OrdenCompra, RecepcionMercancia, DetalleOrdenCompra
 from apps.recepcion.services import RecepcionService, VidaUtilInsuficienteError
 from .serializers import (
     RecepcionCreateSerializer,
@@ -14,10 +17,51 @@ from .serializers import (
 class OrdenCompraViewSet(
     mixins.ListModelMixin,
     mixins.RetrieveModelMixin,
+    mixins.CreateModelMixin,
     viewsets.GenericViewSet,
 ):
-    queryset = OrdenCompra.objects.all().order_by('-fecha_creacion')
     serializer_class = OrdenCompraSerializer
+
+    def get_queryset(self):
+        qs = (
+            OrdenCompra.objects
+            .prefetch_related('detalles__materia_prima', 'detalles__presentacion')
+            .select_related('proveedor')
+            .order_by('-fecha_creacion')
+        )
+        estado = self.request.query_params.get('estado')
+        if estado:
+            qs = qs.filter(estado=estado)
+        return qs
+
+    @transaction.atomic
+    def perform_create(self, serializer):
+        oc = OrdenCompra.objects.create(
+            proveedor=serializer.validated_data['proveedor'],
+            usuario_creador=self.request.user,
+        )
+        for d in self.request.data.get('detalles', []):
+            try:
+                mp   = MateriaPrima.objects.get(pk=d['materia_prima_id'])
+                pres = Presentacion.objects.get(pk=d['presentacion_id'])
+            except (MateriaPrima.DoesNotExist, Presentacion.DoesNotExist, KeyError) as exc:
+                raise ValidationError({'detalles': str(exc)})
+            DetalleOrdenCompra.objects.create(
+                orden=oc,
+                materia_prima=mp,
+                presentacion=pres,
+                cantidad_presentacion=d['cantidad_presentacion'],
+            )
+        return oc
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        oc = self.perform_create(serializer)
+        return Response(
+            self.get_serializer(oc).data,
+            status=status.HTTP_201_CREATED,
+        )
 
 
 class RecepcionViewSet(
