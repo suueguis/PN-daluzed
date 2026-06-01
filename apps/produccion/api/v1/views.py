@@ -3,8 +3,12 @@ from datetime import date as date_cls
 
 from rest_framework import status, mixins, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+
+from apps.authentication.permissions import allow_roles
+
+_PROD_READ  = ('ADMIN', 'GERENTE', 'PRODUCCION')
+_PROD_WRITE = ('ADMIN', 'PRODUCCION')
 
 from apps.produccion.models import (
     Batido, LoteProductoTerminado, MovimientoCompensatorio,
@@ -32,6 +36,11 @@ class BatidoViewSet(
 ):
     queryset = Batido.objects.all()
     serializer_class = BatidoSerializer
+
+    def get_permissions(self):
+        if self.action in ('list', 'retrieve'):
+            return [allow_roles(*_PROD_READ)()]
+        return [allow_roles(*_PROD_WRITE)()]
 
     def create(self, request, *args, **kwargs):
         serializer = BatidoCreateSerializer(data=request.data)
@@ -64,6 +73,11 @@ class DespachoViewSet(
     queryset = LoteProductoTerminado.objects.all()
     serializer_class = LoteProductoTerminadoSerializer
 
+    def get_permissions(self):
+        if self.action in ('list', 'retrieve'):
+            return [allow_roles(*_PROD_READ)()]
+        return [allow_roles(*_PROD_WRITE)()]
+
     @action(detail=True, methods=['post'])
     def despachar(self, request, pk=None):
         lote_pt = self.get_object()
@@ -88,6 +102,11 @@ class CompensatorioViewSet(
     queryset = MovimientoCompensatorio.objects.all()
     serializer_class = MovimientoCompensatorioSerializer
 
+    def get_permissions(self):
+        if self.action in ('list', 'retrieve'):
+            return [allow_roles(*_PROD_READ)()]
+        return [allow_roles(*_PROD_WRITE)()]
+
     def create(self, request, *args, **kwargs):
         serializer = MovimientoCompensatorioCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -108,7 +127,7 @@ class CompensatorioViewSet(
 
 # ── Endpoints de consulta (function-based) ────────────────────────────
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([allow_roles(*_PROD_READ)])
 def sugerencia_fefo(request):
     producto_id = request.query_params.get('producto_terminado_id')
     producto = None
@@ -120,7 +139,7 @@ def sugerencia_fefo(request):
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([allow_roles(*_PROD_READ)])
 def sugerencia_fifo(request):
     producto_id = request.query_params.get('producto_terminado_id')
     if not producto_id:
@@ -142,7 +161,7 @@ def sugerencia_fifo(request):
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([allow_roles(*_PROD_READ)])
 def jornada(request):
     fecha_str = request.query_params.get('fecha')
     fecha = date_cls.fromisoformat(fecha_str) if fecha_str else date_cls.today()

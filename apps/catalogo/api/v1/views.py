@@ -5,6 +5,11 @@ from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from apps.authentication.permissions import allow_roles
+
+_CAT_READ  = ('ADMIN', 'GERENTE', 'INVENTARIO')
+_CAT_WRITE = ('ADMIN', 'INVENTARIO')
+
 from apps.catalogo.models import (
     MateriaPrima,
     Presentacion,
@@ -39,6 +44,11 @@ class UnidadMedidaViewSet(viewsets.ModelViewSet):
     pagination_class = CatalogoPagination
     http_method_names = ['get', 'post', 'patch', 'head', 'options']
 
+    def get_permissions(self):
+        if self.action in ('list', 'retrieve'):
+            return [allow_roles(*_CAT_READ)()]
+        return [allow_roles(*_CAT_WRITE)()]
+
     def get_queryset(self):
         return UnidadMedida.objects.all().order_by('nombre')
 
@@ -53,6 +63,11 @@ class ProveedorViewSet(viewsets.ModelViewSet):
     serializer_class = ProveedorSerializer
     pagination_class = CatalogoPagination
     http_method_names = ['get', 'post', 'patch', 'head', 'options']
+
+    def get_permissions(self):
+        if self.action in ('list', 'retrieve'):
+            return [allow_roles(*_CAT_READ)()]
+        return [allow_roles(*_CAT_WRITE)()]
 
     def get_queryset(self):
         return Proveedor.objects.all().order_by('nombre')
@@ -71,6 +86,11 @@ class MateriaPrimaViewSet(viewsets.ModelViewSet):
     serializer_class = MateriaPrimaSerializer
     pagination_class = CatalogoPagination
     http_method_names = ['get', 'post', 'patch', 'head', 'options']
+
+    def get_permissions(self):
+        if self.action in ('list', 'retrieve'):
+            return [allow_roles(*_CAT_READ)()]
+        return [allow_roles(*_CAT_WRITE)()]
 
     def get_queryset(self):
         qs = MateriaPrima.objects.select_related('unidad_medida').prefetch_related(
@@ -117,6 +137,11 @@ class ProductoTerminadoViewSet(viewsets.ModelViewSet):
     pagination_class = CatalogoPagination
     http_method_names = ['get', 'post', 'patch', 'head', 'options']
 
+    def get_permissions(self):
+        if self.action in ('list', 'retrieve'):
+            return [allow_roles(*_CAT_READ)()]
+        return [allow_roles(*_CAT_WRITE)()]
+
     def get_queryset(self):
         return ProductoTerminado.objects.select_related('unidad_medida').all()
 
@@ -128,6 +153,7 @@ class ProductoTerminadoViewSet(viewsets.ModelViewSet):
 class PresentacionViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = PresentacionSerializer
     pagination_class = CatalogoPagination
+    permission_classes = [allow_roles(*_CAT_READ)]
 
     def get_queryset(self):
         qs = Presentacion.objects.select_related('materia_prima', 'unidad_medida').order_by('nombre')
@@ -148,6 +174,7 @@ class ImportarCatalogoView(APIView):
     Retorna procesados, creados y lista de errores por fila (RF-CAT-07).
     """
 
+    permission_classes = [allow_roles(*_CAT_WRITE)]
     parser_classes = [MultiPartParser]
 
     TIPOS_VALIDOS = ('materias_primas', 'productos_terminados', 'proveedores')
