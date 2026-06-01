@@ -1,17 +1,12 @@
-import { NavLink, Outlet, Navigate, Route, Routes } from 'react-router-dom';
+import { NavLink, Outlet } from 'react-router-dom';
 import { cn } from '../../utils/cn';
-import UnidadesPage from './UnidadesPage';
-import ProveedoresPage from './ProveedoresPage';
-import MateriasPrimasPage from './MateriasPrimasPage';
-import ProductosTerminadosPage from './ProductosTerminadosPage';
-import PresentacionesPage from './PresentacionesPage';
 
 const TABS = [
-  { to: 'unidades', label: 'Unidades' },
-  { to: 'proveedores', label: 'Proveedores' },
-  { to: 'materias-primas', label: 'Materias primas' },
+  { to: 'unidades',           label: 'Unidades' },
+  { to: 'proveedores',        label: 'Proveedores' },
+  { to: 'materias-primas',    label: 'Materias primas' },
   { to: 'productos-terminados', label: 'Productos terminados' },
-  { to: 'presentaciones', label: 'Presentaciones' },
+  { to: 'presentaciones',     label: 'Presentaciones' },
 ];
 
 export default function CatalogoLayout() {
@@ -32,6 +27,7 @@ export default function CatalogoLayout() {
           <NavLink
             key={t.to}
             to={t.to}
+            end
             className={({ isActive }) =>
               cn(
                 '-mb-px rounded-t-xl px-4 py-2 text-sm font-semibold transition-colors',
@@ -47,14 +43,6 @@ export default function CatalogoLayout() {
       </nav>
 
       <section>
-        <Routes>
-          <Route index element={<Navigate to="materias-primas" replace />} />
-          <Route path="unidades" element={<UnidadesPage />} />
-          <Route path="proveedores" element={<ProveedoresPage />} />
-          <Route path="materias-primas" element={<MateriasPrimasPage />} />
-          <Route path="productos-terminados" element={<ProductosTerminadosPage />} />
-          <Route path="presentaciones" element={<PresentacionesPage />} />
-        </Routes>
         <Outlet />
       </section>
     </div>
