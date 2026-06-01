@@ -1,8 +1,11 @@
 # apps/recepcion/api/v1/views.py
+from django.db import transaction
 from rest_framework import status, mixins, viewsets
+from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
-from apps.recepcion.models import OrdenCompra, RecepcionMercancia
+from apps.catalogo.models import MateriaPrima, Presentacion
+from apps.recepcion.models import OrdenCompra, RecepcionMercancia, DetalleOrdenCompra
 from apps.recepcion.services import RecepcionService, VidaUtilInsuficienteError
 from .serializers import (
     RecepcionCreateSerializer,
@@ -10,8 +13,6 @@ from .serializers import (
     OrdenCompraSerializer,
 )
 
-
-from apps.recepcion.models import OrdenCompra, RecepcionMercancia, DetalleOrdenCompra
 
 class OrdenCompraViewSet(
     mixins.ListModelMixin,
@@ -22,26 +23,33 @@ class OrdenCompraViewSet(
     serializer_class = OrdenCompraSerializer
 
     def get_queryset(self):
-        qs = OrdenCompra.objects.prefetch_related('detalles__materia_prima', 'detalles__presentacion').select_related('proveedor').order_by('-fecha_creacion')
+        qs = (
+            OrdenCompra.objects
+            .prefetch_related('detalles__materia_prima', 'detalles__presentacion')
+            .select_related('proveedor')
+            .order_by('-fecha_creacion')
+        )
         estado = self.request.query_params.get('estado')
         if estado:
             qs = qs.filter(estado=estado)
         return qs
 
+    @transaction.atomic
     def perform_create(self, serializer):
-        import json
-        proveedor = serializer.validated_data['proveedor']
         oc = OrdenCompra.objects.create(
-            proveedor=proveedor,
+            proveedor=serializer.validated_data['proveedor'],
             usuario_creador=self.request.user,
         )
-        detalles_data = self.request.data.get('detalles', [])
-        for d in detalles_data:
-            from apps.catalogo.models import MateriaPrima, Presentacion
+        for d in self.request.data.get('detalles', []):
+            try:
+                mp   = MateriaPrima.objects.get(pk=d['materia_prima_id'])
+                pres = Presentacion.objects.get(pk=d['presentacion_id'])
+            except (MateriaPrima.DoesNotExist, Presentacion.DoesNotExist, KeyError) as exc:
+                raise ValidationError({'detalles': str(exc)})
             DetalleOrdenCompra.objects.create(
                 orden=oc,
-                materia_prima=MateriaPrima.objects.get(pk=d['materia_prima_id']),
-                presentacion=Presentacion.objects.get(pk=d['presentacion_id']),
+                materia_prima=mp,
+                presentacion=pres,
                 cantidad_presentacion=d['cantidad_presentacion'],
             )
         return oc
