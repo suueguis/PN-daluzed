@@ -57,13 +57,13 @@ export default function OrdenesPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-end gap-3">
         <Select
           options={ESTADO_OPTIONS}
           value={estado}
           onChange={(e) => setEstado(e.target.value)}
           placeholder=""
-          className="w-52"
+          className="w-full sm:w-52"
           aria-label="Filtrar por estado"
         />
         <Button onClick={() => navigate('/recepcion/ordenes/nueva')}>+ Nueva OC</Button>

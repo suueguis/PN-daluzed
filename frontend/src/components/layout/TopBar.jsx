@@ -1,12 +1,13 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { Menu } from 'lucide-react';
 import { logoutAPI } from '../../api/authAPI';
 import useAlertasStore from '../../store/alertasStore';
 import useAuthStore from '../../store/authStore';
 import Badge from '../ui/Badge';
 import Button from '../ui/Button';
 
-export default function TopBar() {
+export default function TopBar({ onMenuClick }) {
   const { user, clearAuth } = useAuthStore();
   const alertasCount = useAlertasStore((s) => s.alertas.length);
   const navigate = useNavigate();
@@ -26,12 +27,20 @@ export default function TopBar() {
   };
 
   return (
-    <header className="flex h-[60px] items-center justify-between border-b border-peach-200 bg-white px-6 shadow-sm">
+    <header className="flex h-[60px] items-center justify-between border-b border-peach-200 bg-white px-3 sm:px-6 shadow-sm">
       <div className="flex items-center gap-3">
+        <button
+          type="button"
+          aria-label="Abrir menú"
+          onClick={onMenuClick}
+          className="rounded-lg p-2 text-wine-900 hover:bg-peach-100 lg:hidden"
+        >
+          <Menu size={20} />
+        </button>
         <img src="/logo.png" alt="Daluzed" className="h-10 w-auto" />
         <span className="font-crushed text-xl text-wine-900">Daluzed</span>
       </div>
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 sm:gap-4">
         <button
           type="button"
           aria-label="Alertas activas"
@@ -54,8 +63,8 @@ export default function TopBar() {
             aria-label="Ir a mi perfil"
             className="rounded-lg px-2 py-1 text-right leading-tight transition-colors hover:bg-cream-100"
           >
-            <div className="text-sm font-semibold text-wine-900">{user.username}</div>
-            <div className="text-xs text-wine-700">{user.role}</div>
+            <div className="max-w-[8rem] truncate text-sm font-semibold text-wine-900">{user.username}</div>
+            <div className="hidden text-xs text-wine-700 sm:block">{user.role}</div>
           </Link>
         )}
         <Button variant="ghost" size="sm" onClick={handleLogout}>

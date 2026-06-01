@@ -17,7 +17,7 @@ export default function AlertasLayout() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <h1 className="font-crushed text-2xl text-wine-900">Alertas</h1>
           <p className="text-sm text-wine-700">
@@ -31,7 +31,7 @@ export default function AlertasLayout() {
 
       <nav
         aria-label="Pestañas de alertas"
-        className="flex gap-2 rounded-2xl border border-peach-200 bg-white p-1"
+        className="flex flex-wrap gap-2 rounded-2xl border border-peach-200 bg-white p-1"
       >
         {tabs.map((tab) => (
           <NavLink

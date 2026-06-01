@@ -13,7 +13,7 @@ export default function CatalogoLayout() {
   return (
     <div className="flex flex-col gap-4">
       <header>
-        <h1 className="font-crushed text-3xl text-wine-900">Catálogo maestro</h1>
+        <h1 className="font-crushed text-2xl sm:text-3xl text-wine-900">Catálogo maestro</h1>
         <p className="text-sm text-wine-700">
           Gestiona unidades, proveedores, materias primas, productos y presentaciones.
         </p>

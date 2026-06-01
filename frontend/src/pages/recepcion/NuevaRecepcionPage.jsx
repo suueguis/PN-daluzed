@@ -34,7 +34,7 @@ function DetalleLinea({ control, register, idx, field, mps, presMap, errors, fie
   }));
 
   return (
-    <div className="grid grid-cols-2 gap-3 rounded-xl border border-peach-200/60 p-3">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 rounded-xl border border-peach-200/60 p-3">
       {/* Materia prima */}
       {field._mp_nombre ? (
         <div>
@@ -119,7 +119,7 @@ function DetalleLinea({ control, register, idx, field, mps, presMap, errors, fie
       />
 
       {/* Número de lote — siempre editable */}
-      <div className="col-span-2 flex items-end gap-2">
+      <div className="sm:col-span-2 flex items-end gap-2">
         <div className="flex-1">
           <Input
             label="Número de lote (opcional)"

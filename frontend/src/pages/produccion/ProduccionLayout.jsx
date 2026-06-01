@@ -18,26 +18,30 @@ export default function ProduccionLayout() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="font-crushed text-3xl text-wine-900">Producción</h1>
-        <nav className="mt-4 flex gap-1 border-b border-peach-200">
-          {tabs.map((tab) => (
-            <NavLink
-              key={tab.to}
-              to={tab.to}
-              end={tab.end}
-              className={({ isActive }) =>
-                cn(
-                  'rounded-t-lg px-4 py-2 text-sm font-semibold transition-colors',
-                  isActive
-                    ? 'border-b-2 border-rose-500 text-rose-500'
-                    : 'text-wine-700 hover:text-wine-900 hover:bg-cream-100',
-                )
-              }
-            >
-              {tab.label}
-            </NavLink>
-          ))}
-        </nav>
+        <h1 className="font-crushed text-2xl sm:text-3xl text-wine-900">Producción</h1>
+        <div className="mt-4 border-b border-peach-200">
+          <nav className="overflow-x-auto">
+            <div className="flex min-w-max gap-1">
+              {tabs.map((tab) => (
+                <NavLink
+                  key={tab.to}
+                  to={tab.to}
+                  end={tab.end}
+                  className={({ isActive }) =>
+                    cn(
+                      'rounded-t-lg px-4 py-2 text-sm font-semibold transition-colors',
+                      isActive
+                        ? 'border-b-2 border-rose-500 text-rose-500'
+                        : 'text-wine-700 hover:text-wine-900 hover:bg-cream-100',
+                    )
+                  }
+                >
+                  {tab.label}
+                </NavLink>
+              ))}
+            </div>
+          </nav>
+        </div>
       </div>
 
       <Routes>

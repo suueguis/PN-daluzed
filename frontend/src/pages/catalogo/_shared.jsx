@@ -12,7 +12,7 @@ export function Toolbar({
   return (
     <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
       <div className="flex flex-wrap items-end gap-2">
-        <div className="w-64">
+        <div className="w-full sm:w-64">
           <Input
             name="search"
             label="Buscar"

@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Outlet } from 'react-router-dom';
 
 import useAlertasStore from '../../store/alertasStore';
@@ -10,6 +10,7 @@ export default function AppLayout() {
   const accessToken = useAuthStore((s) => s.accessToken);
   const connect    = useAlertasStore((s) => s.connect);
   const disconnect = useAlertasStore((s) => s.disconnect);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (!accessToken) return undefined;
@@ -19,10 +20,17 @@ export default function AppLayout() {
 
   return (
     <div className="flex h-screen flex-col bg-cream-50">
-      <TopBar />
+      <TopBar onMenuClick={() => setSidebarOpen(true)} />
       <div className="flex flex-1 overflow-hidden">
-        <Sidebar />
-        <main className="flex-1 overflow-y-auto p-6">
+        {sidebarOpen && (
+          <div
+            className="fixed inset-0 z-30 bg-black/30 lg:hidden"
+            onClick={() => setSidebarOpen(false)}
+            aria-hidden="true"
+          />
+        )}
+        <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6">
           <Outlet />
         </main>
       </div>

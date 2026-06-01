@@ -57,12 +57,12 @@ export default function DetalleRecepcionPage() {
 
       <div className="rounded-2xl border border-peach-200 bg-white p-5">
         <h3 className="mb-4 font-semibold text-wine-900">Cabecera</h3>
-        <dl className="grid grid-cols-2 gap-4">
+        <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Field label="# Recepción"   value={`REC-${recepcion.id}`} />
           <Field label="Orden de compra" value={`OC-${recepcion.orden_compra}`} />
           <Field label="Fecha"          value={recepcion.fecha} />
           <Field label="Usuario"        value={recepcion.usuario} />
-          <div className="col-span-2">
+          <div className="sm:col-span-2">
             <dt className="text-xs font-semibold uppercase tracking-wide text-wine-700">Estado</dt>
             <dd className="mt-0.5">
               <Badge tone={recepcion.confirmada ? 'success' : 'warning'}>
@@ -71,7 +71,7 @@ export default function DetalleRecepcionPage() {
             </dd>
           </div>
           {recepcion.justificacion_vencimiento && (
-            <div className="col-span-2">
+            <div className="sm:col-span-2">
               <Field
                 label="Justificación de vencimiento"
                 value={recepcion.justificacion_vencimiento}

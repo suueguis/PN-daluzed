@@ -97,7 +97,7 @@ export default function NuevaOrdenPage() {
           </div>
 
           {fields.map((field, idx) => (
-            <div key={field.id} className="grid grid-cols-3 gap-3 border-t border-peach-200/60 pt-4 first:border-0 first:pt-0">
+            <div key={field.id} className="grid grid-cols-1 sm:grid-cols-3 gap-3 border-t border-peach-200/60 pt-4 first:border-0 first:pt-0">
               <Controller
                 control={control}
                 name={`detalles.${idx}.materia_prima_id`}

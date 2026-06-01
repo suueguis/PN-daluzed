@@ -45,7 +45,7 @@ export default function PresentacionesPage() {
         onSearchChange={search.setInput}
         searchPlaceholder="Nombre o materia prima…"
         extras={
-          <div className="w-64">
+          <div className="w-full sm:w-64">
             <Select
               label="Materia prima"
               name="mp"

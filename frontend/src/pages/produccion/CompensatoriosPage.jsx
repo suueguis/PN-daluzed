@@ -142,7 +142,7 @@ export default function CompensatoriosPage() {
         }
       >
         <form id="compensatorio-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Select
               label="Tipo afectado"
               placeholder="Selecciona..."
