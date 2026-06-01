@@ -11,7 +11,7 @@ import {
 function useListQuery(key, api, params, options) {
   return useQuery({
     queryKey: [key, params],
-    queryFn: () => api.list(params).then((d) => d?.results ?? d),
+    queryFn: () => api.list(params),
     ...options,
   });
 }

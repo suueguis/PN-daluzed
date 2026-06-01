@@ -40,9 +40,11 @@ export default function BatidosPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-bold text-wine-900">Batidos</h2>
-        <Button as={Link} to="/produccion/batidos/nuevo" size="sm">
-          <Plus size={14} /> Nuevo batido
+        <Link to="/produccion/batidos/nuevo">
+       <Button size="sm">
+        <Plus size={14} /> Nuevo batido
         </Button>
+        </Link>
       </div>
       <Table
         columns={columns}
