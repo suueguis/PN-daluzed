@@ -3,7 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import OrdenesPage from '../pages/recepcion/OrdenesPage';
+import OrdenesPage from '../../../pages/recepcion/OrdenesPage';
 
 // Mock the API module
 vi.mock('../api/recepcionAPI', () => ({
@@ -18,7 +18,7 @@ vi.mock('../api/recepcionAPI', () => ({
   },
 }));
 
-const { ordenesAPI } = await import('../api/recepcionAPI');
+const { ordenesAPI } = await import('../../../api/recepcionAPI');
 
 const ORDENES_MOCK = [
   { id: 1, proveedor: 'Prov. Alpha', fecha_creacion: '2026-05-01', estado: 'PENDIENTE' },

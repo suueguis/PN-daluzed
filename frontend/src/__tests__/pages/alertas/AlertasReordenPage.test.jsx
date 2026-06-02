@@ -21,8 +21,8 @@ vi.mock('sonner', () => ({
   }),
 }));
 
-import alertasAPI from '../api/alertasAPI';
-import AlertasReordenPage from '../pages/alertas/AlertasReordenPage';
+import alertasAPI from '../../../api/alertasAPI';
+import AlertasReordenPage from '../../../pages/alertas/AlertasReordenPage';
 
 function renderWithProviders(ui) {
   const qc = new QueryClient({

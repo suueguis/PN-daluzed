@@ -3,7 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import DespachosPage from '../pages/produccion/DespachosPage';
+import DespachosPage from '../../../pages/produccion/DespachosPage';
 
 // ── Mocks ──────────────────────────────────────────────────────────────
 const toastSuccess = vi.fn();
@@ -26,7 +26,7 @@ vi.mock('../hooks/useApi', () => ({
   useApiQuery: vi.fn(),
 }));
 
-import { useApiQuery } from '../hooks/useApi';
+import { useApiQuery } from '../../../hooks/useApi';
 
 // ── Helpers ────────────────────────────────────────────────────────────
 const LOTES_EN_ESPERA = [

@@ -3,7 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import NuevoBatidoPage from '../pages/produccion/NuevoBatidoPage';
+import NuevoBatidoPage from '../../../pages/produccion/NuevoBatidoPage';
 
 // ── Mocks ──────────────────────────────────────────────────────────────
 const toastError = vi.fn();
@@ -38,7 +38,7 @@ vi.mock('../hooks/useApi', () => ({
   useApiMutation: vi.fn(),
 }));
 
-import { useApiQuery, useApiMutation } from '../hooks/useApi';
+import { useApiQuery, useApiMutation } from '../../../hooks/useApi';
 
 // ── Helpers ────────────────────────────────────────────────────────────
 function makeQC() {

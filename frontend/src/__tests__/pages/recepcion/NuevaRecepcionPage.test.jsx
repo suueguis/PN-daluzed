@@ -3,7 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import NuevaRecepcionPage from '../pages/recepcion/NuevaRecepcionPage';
+import NuevaRecepcionPage from '../../../pages/recepcion/NuevaRecepcionPage';
 
 // ── mocks ────────────────────────────────────────────────────────────────────
 
@@ -36,7 +36,7 @@ vi.mock('react-router-dom', async () => {
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
-const { ordenesAPI, recepcionesAPI, catalogoForRecepcion } = await import('../api/recepcionAPI');
+const { ordenesAPI, recepcionesAPI, catalogoForRecepcion } = await import('../../../api/recepcionAPI');
 
 const ORDENES_MOCK = [
   { id: 7, proveedor: 'Prov. Test', fecha_creacion: '2026-05-01', estado: 'PENDIENTE' },

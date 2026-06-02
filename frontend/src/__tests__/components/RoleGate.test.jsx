@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import RoleGate from '../components/RoleGate';
-import useAuthStore from '../store/authStore';
+import RoleGate from '../../components/RoleGate';
+import useAuthStore from '../../store/authStore';
 
 function setUser(role) {
   useAuthStore.setState({
