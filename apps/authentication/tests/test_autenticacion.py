@@ -1,4 +1,4 @@
-# apps/authentication/tests.py
+# apps/authentication/tests/test_autenticacion.py
 # AUT-001 → AUT-015 — Autenticación, refresh y RBAC
 
 from django.test import TestCase
