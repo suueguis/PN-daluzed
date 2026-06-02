@@ -9,10 +9,10 @@ const createMutate = vi.fn();
 const toastSuccess = vi.fn();
 const toastError = vi.fn();
 
-vi.mock('../hooks/inventario/useInventario', () => ({
+vi.mock('../../../hooks/inventario/useInventario', () => ({
   useCreateDevolucion: vi.fn(() => ({ mutateAsync: createMutate, isPending: false })),
 }));
-vi.mock('../hooks/useApi', () => ({
+vi.mock('../../../hooks/useApi', () => ({
   useApiQuery: vi.fn(),
 }));
 vi.mock('sonner', () => ({

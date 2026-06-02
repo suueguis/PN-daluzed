@@ -24,7 +24,7 @@ vi.mock('react-router-dom', async () => {
 });
 
 const mockSugerenciaFEFO = vi.fn();
-vi.mock('../api/produccionAPI', () => ({
+vi.mock('../../../api/produccionAPI', () => ({
   produccionAPI: {
     sugerenciaFEFO: (...a) => mockSugerenciaFEFO(...a),
     listLotesPorMP: vi.fn().mockResolvedValue({ data: [] }),
@@ -33,7 +33,7 @@ vi.mock('../api/produccionAPI', () => ({
 
 const mockMutate = vi.fn();
 let capturedOnError;
-vi.mock('../hooks/useApi', () => ({
+vi.mock('../../../hooks/useApi', () => ({
   useApiQuery: vi.fn(),
   useApiMutation: vi.fn(),
 }));

@@ -15,13 +15,13 @@ vi.mock('sonner', () => ({
   },
 }));
 
-vi.mock('../api/produccionAPI', () => ({
+vi.mock('../../../api/produccionAPI', () => ({
   produccionAPI: {
     createCompensatorio: vi.fn(),
   },
 }));
 
-vi.mock('../hooks/useApi', () => ({
+vi.mock('../../../hooks/useApi', () => ({
   useApiQuery: vi.fn(),
 }));
 

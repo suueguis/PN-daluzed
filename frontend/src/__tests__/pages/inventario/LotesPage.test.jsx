@@ -5,13 +5,13 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
 import LotesPage from '../../../pages/inventario/LotesPage';
 
-vi.mock('../hooks/inventario/useInventario', () => ({
+vi.mock('../../../hooks/inventario/useInventario', () => ({
   useLotes: vi.fn(),
   useBodegas: vi.fn(),
   useCreateDevolucion: vi.fn(() => ({ mutateAsync: vi.fn(), isPending: false })),
   useCreateDescarte: vi.fn(() => ({ mutateAsync: vi.fn(), isPending: false })),
 }));
-vi.mock('../hooks/useApi', () => ({
+vi.mock('../../../hooks/useApi', () => ({
   useApiQuery: vi.fn(),
 }));
 

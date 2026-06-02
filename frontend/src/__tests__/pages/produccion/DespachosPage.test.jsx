@@ -16,13 +16,13 @@ vi.mock('sonner', () => ({
 }));
 
 const mockDespacharLote = vi.fn();
-vi.mock('../api/produccionAPI', () => ({
+vi.mock('../../../api/produccionAPI', () => ({
   produccionAPI: {
     despacharLote: (...a) => mockDespacharLote(...a),
   },
 }));
 
-vi.mock('../hooks/useApi', () => ({
+vi.mock('../../../hooks/useApi', () => ({
   useApiQuery: vi.fn(),
 }));
 

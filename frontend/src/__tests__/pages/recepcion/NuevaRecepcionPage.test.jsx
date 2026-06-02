@@ -7,7 +7,7 @@ import NuevaRecepcionPage from '../../../pages/recepcion/NuevaRecepcionPage';
 
 // ── mocks ────────────────────────────────────────────────────────────────────
 
-vi.mock('../api/recepcionAPI', () => ({
+vi.mock('../../../api/recepcionAPI', () => ({
   ordenesAPI:    { list: vi.fn() },
   recepcionesAPI: { list: vi.fn(), get: vi.fn(), create: vi.fn() },
   catalogoForRecepcion: {

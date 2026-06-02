@@ -7,12 +7,12 @@ import TrasladoForm from '../../../pages/inventario/TrasladoForm';
 
 const createMutate = vi.fn();
 
-vi.mock('../hooks/inventario/useInventario', () => ({
+vi.mock('../../../hooks/inventario/useInventario', () => ({
   useFefo: vi.fn(),
   useBodegas: vi.fn(),
   useCreateTraslado: vi.fn(() => ({ mutateAsync: createMutate, isPending: false })),
 }));
-vi.mock('../hooks/useApi', () => ({
+vi.mock('../../../hooks/useApi', () => ({
   useApiQuery: vi.fn(),
 }));
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }));

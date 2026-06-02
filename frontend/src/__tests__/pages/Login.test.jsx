@@ -6,7 +6,7 @@ import useAuthStore from '../../store/authStore';
 import Login from '../../pages/Login';
 
 const loginAPI = vi.fn();
-vi.mock('../api/authAPI', () => ({
+vi.mock('../../api/authAPI', () => ({
   loginAPI: (...args) => loginAPI(...args),
   logoutAPI: vi.fn(),
 }));

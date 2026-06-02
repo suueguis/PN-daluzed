@@ -6,7 +6,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import OrdenesPage from '../../../pages/recepcion/OrdenesPage';
 
 // Mock the API module
-vi.mock('../api/recepcionAPI', () => ({
+vi.mock('../../../api/recepcionAPI', () => ({
   ordenesAPI: {
     list: vi.fn(),
   },
