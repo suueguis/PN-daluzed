@@ -3,6 +3,7 @@ from rest_framework.routers import DefaultRouter
 
 from apps.catalogo.api.v1.views import (
     ImportarCatalogoView,
+    PlantillaView,
     MateriaPrimaViewSet,
     PresentacionViewSet,
     ProductoTerminadoViewSet,
@@ -19,5 +20,6 @@ router.register(r'presentaciones', PresentacionViewSet, basename='presentaciones
 
 urlpatterns = [
     path('', include(router.urls)),
-    path('importar/', ImportarCatalogoView.as_view(), name='catalogo-importar'),
+    path('importar/',  ImportarCatalogoView.as_view(), name='catalogo-importar'),
+    path('plantilla/', PlantillaView.as_view(),        name='catalogo-plantilla'),
 ]
