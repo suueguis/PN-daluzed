@@ -82,9 +82,9 @@ El modelo `Bodega` solo tiene `nombre` y `tipo`. No hay zonas.
 
 La sesión debe cerrarse tras 30 minutos de inactividad del usuario.
 
-- [ ] **Frontend:** crear hook `useInactivityLogout(minutes = 30)` que escucha eventos `mousemove`, `keydown`, `click` y resetea un timer; al cumplirse el tiempo sin actividad, llama a `clearAuth()` y navega a `/login`
-- [ ] Activar el hook en `AppLayout.jsx`
-- [ ] Mostrar un toast de aviso 2 minutos antes del cierre automático ("Tu sesión expirará en 2 minutos por inactividad")
+- [x] **Frontend:** crear hook `useInactivityLogout(minutes = 30)` que escucha eventos `mousemove`, `keydown`, `click` y resetea un timer; al cumplirse el tiempo sin actividad, llama a `clearAuth()` y navega a `/login`
+- [x] Activar el hook en `AppLayout.jsx`
+- [x] Mostrar un toast de aviso 2 minutos antes del cierre automático ("Tu sesión expirará en 2 minutos por inactividad")
 
 ---
 
