@@ -5,7 +5,6 @@ import { z } from 'zod';
 import { toast } from 'sonner';
 import { useBodegas, useCreateBodega, useUpdateBodega, useDeleteBodega } from '../../hooks/inventario/useInventario';
 import { useZonas, useCreateZona, useUpdateZona, useDeleteZona } from '../../hooks/inventario/useZonas';
-import Table from '../../components/ui/Table';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Select from '../../components/ui/Select';
@@ -216,38 +215,6 @@ export default function BodegasPage() {
   function toggleZonas(bodegaId) {
     setExpandedBodega((prev) => (prev === bodegaId ? null : bodegaId));
   }
-
-  const columns = [
-    { key: 'nombre', header: 'Nombre', render: (b) => b.nombre },
-    {
-      key: 'tipo',
-      header: 'Tipo',
-      render: (b) => (
-        <Badge tone={b.tipo === 'PRINCIPAL' ? 'info' : 'success'}>
-          {b.tipo === 'PRINCIPAL' ? 'Principal' : 'PDP'}
-        </Badge>
-      ),
-    },
-    {
-      key: 'zonas_count',
-      header: 'Zonas',
-      render: (b) => (
-        <Button size="sm" variant="ghost" onClick={() => toggleZonas(b.id)}>
-          {expandedBodega === b.id ? 'Ocultar' : `Ver zonas (${b.zonas?.length ?? 0})`}
-        </Button>
-      ),
-    },
-    {
-      key: 'acciones',
-      header: '',
-      render: (b) => (
-        <div className="flex gap-2">
-          <Button size="sm" variant="secondary" onClick={() => setModal(b)}>Editar</Button>
-          <Button size="sm" variant="danger" onClick={() => setConfirmDelete(b)}>Eliminar</Button>
-        </div>
-      ),
-    },
-  ];
 
   return (
     <div className="space-y-4">

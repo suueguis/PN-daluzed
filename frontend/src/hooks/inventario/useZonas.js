@@ -33,7 +33,7 @@ export function useUpdateZona() {
 export function useDeleteZona() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, bodegaId }) => zonasAPI.remove(id),
+    mutationFn: ({ id }) => zonasAPI.remove(id),
     onSuccess: (_, vars) => qc.invalidateQueries({ queryKey: key(vars.bodegaId) }),
   });
 }
