@@ -9,3 +9,10 @@ export const loginAPI = (email, password) =>
 // Cookie is sent automatically; no refresh body needed
 export const logoutAPI = () =>
   axiosClient.post('/api/v1/auth/logout/')
+
+export const cambiarContrasenaAPI = (contrasena_actual, nueva_contrasena, confirmar_contrasena) =>
+  axiosClient.post('/api/v1/auth/cambiar-contrasena/', {
+    contrasena_actual,
+    nueva_contrasena,
+    confirmar_contrasena,
+  })
