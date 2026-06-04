@@ -11,7 +11,7 @@ from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from drf_spectacular.utils import extend_schema, OpenApiResponse
 from axes.models import AccessAttempt
 
-from .serializers import LoginSerializer
+from .serializers import LoginSerializer, CambiarContrasenaSerializer
 from apps.authentication.services import AuthService
 
 User = get_user_model()
@@ -190,3 +190,38 @@ class LogoutView(APIView):
                 {"detail": "Token inválido o expirado."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Cambio de contraseña (item 2.5)
+# ─────────────────────────────────────────────────────────────────────────────
+
+class CambiarContrasenaView(APIView):
+    """
+    Permite al usuario autenticado cambiar su propia contraseña.
+    Requiere la contraseña actual, una nueva y su confirmación.
+    """
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(
+        request=CambiarContrasenaSerializer,
+        responses={
+            200: OpenApiResponse(description="Contraseña actualizada correctamente."),
+            400: OpenApiResponse(description="Validación fallida (actual incorrecta, no coinciden, débil, etc.)."),
+            401: OpenApiResponse(description="No autenticado."),
+        },
+        summary="Cambiar contraseña del usuario autenticado",
+        tags=["Autenticación"],
+    )
+    def post(self, request):
+        serializer = CambiarContrasenaSerializer(
+            data=request.data, context={'request': request}
+        )
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer.save()
+        return Response(
+            {"detail": "Contraseña actualizada correctamente."},
+            status=status.HTTP_200_OK,
+        )
