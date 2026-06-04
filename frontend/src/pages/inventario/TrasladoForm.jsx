@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
@@ -23,13 +23,13 @@ const schema = z.object({
 });
 
 export default function TrasladoForm({ defaultMpId, onSuccess, onCancel }) {
-  const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm({
+  const { register, handleSubmit, control, setValue, formState: { errors } } = useForm({
     resolver: zodResolver(schema),
     defaultValues: { materia_prima: defaultMpId ?? '', lote_id: '', bodega_destino: '', cantidad: '' },
   });
 
-  const mpSeleccionada = watch('materia_prima');
-  const loteSeleccionado = watch('lote_id');
+  const mpSeleccionada = useWatch({ control, name: 'materia_prima' });
+  const loteSeleccionado = useWatch({ control, name: 'lote_id' });
 
   const { data: mps = [] } = useApiQuery(['catalogo', 'materias-primas'], '/catalogo/materias-primas/');
   const { data: bodegas = [] } = useBodegas();

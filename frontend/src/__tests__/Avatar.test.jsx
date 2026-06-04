@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import Avatar, { getInitials } from '../components/ui/Avatar';
+import Avatar from '../components/ui/Avatar';
+import { getInitials } from '../utils/getInitials';
 
 describe('getInitials', () => {
   it('toma las dos primeras letras del local-part del email cuando no hay separador', () => {
