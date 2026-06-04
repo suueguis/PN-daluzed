@@ -10,6 +10,11 @@ vi.mock('../../../hooks/inventario/useInventario', () => ({
   useBodegas: vi.fn(),
   useCreateDevolucion: vi.fn(() => ({ mutateAsync: vi.fn(), isPending: false })),
   useCreateDescarte: vi.fn(() => ({ mutateAsync: vi.fn(), isPending: false })),
+  useTrazabilidad: vi.fn(() => ({ data: undefined, isLoading: false })),
+}));
+vi.mock('../../../pages/inventario/TrazabilidadModal', () => ({
+  default: ({ lote, onClose }) =>
+    lote ? <div role="dialog" aria-label="trazabilidad"><button onClick={onClose}>Cerrar</button></div> : null,
 }));
 vi.mock('../../../hooks/useApi', () => ({
   useApiQuery: vi.fn(),
@@ -78,8 +83,18 @@ describe('LotesPage', () => {
   it('abre modal devolución al hacer click en Devolver', async () => {
     render(<LotesPage />, { wrapper });
     await userEvent.click(screen.getAllByRole('button', { name: /Devolver/i })[0]);
-    // El título del modal es único en el documento
     expect(screen.getByRole('dialog')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /Registrar Devolución/i })).toBeInTheDocument();
+  });
+
+  it('muestra botón Ver historial en cada fila', () => {
+    render(<LotesPage />, { wrapper });
+    expect(screen.getAllByRole('button', { name: /Ver historial/i })).toHaveLength(2);
+  });
+
+  it('abre modal trazabilidad al hacer click en Ver historial', async () => {
+    render(<LotesPage />, { wrapper });
+    await userEvent.click(screen.getAllByRole('button', { name: /Ver historial/i })[0]);
+    expect(screen.getByRole('dialog', { name: 'trazabilidad' })).toBeInTheDocument();
   });
 });

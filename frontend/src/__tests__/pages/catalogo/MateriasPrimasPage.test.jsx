@@ -1,5 +1,6 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
 import MockAdapter from 'axios-mock-adapter';
@@ -78,5 +79,35 @@ describe('MateriasPrimasPage', () => {
     await waitFor(() =>
       expect(screen.getByText(/Sin materias primas/i)).toBeInTheDocument(),
     );
+  });
+
+  it('muestra botones Descargar plantilla e Importar Excel', async () => {
+    mock.onGet('/catalogo/materias-primas/').reply(200, { results: [] });
+    mock.onGet('/catalogo/unidades-medida/').reply(200, { results: [] });
+
+    renderPage();
+
+    await waitFor(() => expect(screen.getByText(/Sin materias primas/i)).toBeInTheDocument());
+    expect(screen.getByRole('button', { name: /descargar plantilla/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /importar excel/i })).toBeInTheDocument();
+  });
+
+  it('Descargar plantilla dispara descarga del blob', async () => {
+    const user = userEvent.setup();
+    mock.onGet('/catalogo/materias-primas/').reply(200, { results: [] });
+    mock.onGet('/catalogo/unidades-medida/').reply(200, { results: [] });
+    mock.onGet('/catalogo/plantilla/').reply(200, new Uint8Array([0, 1, 2]).buffer);
+
+    const createURL = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:test');
+    const revokeURL = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+
+    renderPage();
+
+    await waitFor(() => expect(screen.getByText(/Sin materias primas/i)).toBeInTheDocument());
+    await user.click(screen.getByRole('button', { name: /descargar plantilla/i }));
+    await waitFor(() => expect(createURL).toHaveBeenCalled());
+
+    createURL.mockRestore();
+    revokeURL.mockRestore();
   });
 });
