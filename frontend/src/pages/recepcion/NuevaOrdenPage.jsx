@@ -3,6 +3,7 @@ import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { ordenesAPI, catalogoForRecepcion } from '../../api/recepcionAPI';
+import { formatApiError } from '../../utils/formatApiError';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Select from '../../components/ui/Select';
@@ -53,8 +54,7 @@ export default function NuevaOrdenPage() {
       toast.success('Orden de compra creada.');
       navigate('/recepcion/ordenes');
     } catch (err) {
-      const msg = err?.response?.data?.detail ?? 'Error al crear la orden.';
-      toast.error(msg);
+      toast.error(formatApiError(err, 'No se pudo crear la orden de compra'));
     }
   };
 

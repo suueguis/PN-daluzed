@@ -11,6 +11,7 @@ import Button from '../../components/ui/Button';
 import Spinner from '../../components/ui/Spinner';
 import Badge from '../../components/ui/Badge';
 import { formatDate, formatDecimal } from '../../utils/formatters';
+import { formatApiError } from '../../utils/formatApiError';
 
 const schema = z.object({
   materia_prima: z.string().min(1, 'Selecciona una materia prima'),
@@ -66,8 +67,7 @@ export default function TrasladoForm({ defaultMpId, onSuccess, onCancel }) {
       toast.success('Traslado registrado');
       onSuccess?.();
     } catch (err) {
-      const msg = err?.response?.data?.detail ?? 'Error al registrar el traslado';
-      toast.error(msg);
+      toast.error(formatApiError(err, 'No se pudo registrar el traslado'));
     }
   }
 

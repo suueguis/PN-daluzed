@@ -8,6 +8,7 @@ import Modal from '../../components/ui/Modal';
 import Table from '../../components/ui/Table';
 import { useApiQuery } from '../../hooks/useApi';
 import { produccionAPI } from '../../api/produccionAPI';
+import { formatApiError } from '../../utils/formatApiError';
 import { formatDate } from '../../utils/formatters';
 import { cn } from '../../utils/cn';
 
@@ -39,7 +40,7 @@ export default function DespachosPage() {
       toast.success(`Lote #${confirmar.id} despachado`);
       qc.invalidateQueries({ queryKey: ['despachos'] });
     } catch (err) {
-      toast.error(err?.response?.data?.detail ?? 'Error al despachar');
+      toast.error(formatApiError(err, 'No se pudo despachar el lote'));
     } finally {
       setDespachando(false);
       setConfirmar(null);

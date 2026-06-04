@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { formatApiError } from '../../utils/formatApiError';
 import Table from '../../components/ui/Table';
 import Modal from '../../components/ui/Modal';
 import Button from '../../components/ui/Button';
@@ -57,12 +58,12 @@ export default function ProveedoresPage() {
     if (editing?.id) {
       updateM.mutate(
         { id: editing.id, data: form },
-        { onSuccess: () => after('Proveedor actualizado'), onError: () => toast.error('Error al guardar') },
+        { onSuccess: () => after('Proveedor actualizado'), onError: (err) => toast.error(formatApiError(err, 'No se pudo guardar el proveedor')) },
       );
     } else {
       createM.mutate(form, {
         onSuccess: () => after('Proveedor creado'),
-        onError: () => toast.error('Error al crear'),
+        onError: (err) => toast.error(formatApiError(err, 'No se pudo crear el proveedor')),
       });
     }
   };
@@ -72,7 +73,7 @@ export default function ProveedoresPage() {
       { id: row.id, data: { activo: !row.activo } },
       {
         onSuccess: () => toast.success(row.activo ? 'Proveedor desactivado' : 'Proveedor activado'),
-        onError: () => toast.error('Error al cambiar estado'),
+        onError: (err) => toast.error(formatApiError(err, 'No se pudo cambiar el estado')),
       },
     );
   };

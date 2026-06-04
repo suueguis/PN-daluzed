@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { formatApiError } from '../../utils/formatApiError';
 import Table from '../../components/ui/Table';
 import Modal from '../../components/ui/Modal';
 import Button from '../../components/ui/Button';
@@ -47,12 +48,12 @@ export default function UnidadesPage() {
     if (editing?.id) {
       updateM.mutate(
         { id: editing.id, data: form },
-        { onSuccess: () => onOk('Unidad actualizada'), onError: () => toast.error('Error al guardar') },
+        { onSuccess: () => onOk('Unidad actualizada'), onError: (err) => toast.error(formatApiError(err, 'No se pudo guardar la unidad')) },
       );
     } else {
       createM.mutate(form, {
         onSuccess: () => onOk('Unidad creada'),
-        onError: () => toast.error('Error al crear'),
+        onError: (err) => toast.error(formatApiError(err, 'No se pudo crear la unidad')),
       });
     }
   };

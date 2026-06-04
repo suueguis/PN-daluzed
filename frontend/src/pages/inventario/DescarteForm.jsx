@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { useCreateDescarte } from '../../hooks/inventario/useInventario';
 import Button from '../../components/ui/Button';
 import { formatDecimal, formatDate } from '../../utils/formatters';
+import { formatApiError } from '../../utils/formatApiError';
 
 const schema = z.object({
   motivo: z.string().min(10, 'El motivo debe tener al menos 10 caracteres'),
@@ -27,8 +28,7 @@ export default function DescarteForm({ lote, onSuccess, onCancel }) {
       toast.success('Descarte registrado');
       onSuccess?.();
     } catch (err) {
-      const msg = err?.response?.data?.detail ?? 'Error al registrar el descarte';
-      toast.error(msg);
+      toast.error(formatApiError(err, 'No se pudo registrar el descarte'));
     }
   }
 

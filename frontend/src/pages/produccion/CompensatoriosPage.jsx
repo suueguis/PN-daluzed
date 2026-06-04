@@ -14,6 +14,7 @@ import Spinner from '../../components/ui/Spinner';
 import { useApiQuery } from '../../hooks/useApi';
 import { produccionAPI } from '../../api/produccionAPI';
 import { formatDateTime } from '../../utils/formatters';
+import { formatApiError } from '../../utils/formatApiError';
 
 const isValidJSON = (val) => {
   try {
@@ -66,7 +67,7 @@ export default function CompensatoriosPage() {
       reset();
       setOpen(false);
     } catch (err) {
-      toast.error(err?.response?.data?.detail ?? 'Error al guardar');
+      toast.error(formatApiError(err, 'No se pudo registrar el compensatorio'));
     } finally {
       setGuardando(false);
     }
