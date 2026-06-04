@@ -4,22 +4,31 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
 import { useBodegas, useCreateBodega, useUpdateBodega, useDeleteBodega } from '../../hooks/inventario/useInventario';
-import Table from '../../components/ui/Table';
+import { useZonas, useCreateZona, useUpdateZona, useDeleteZona } from '../../hooks/inventario/useZonas';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Select from '../../components/ui/Select';
 import Modal from '../../components/ui/Modal';
 import Badge from '../../components/ui/Badge';
+import Spinner from '../../components/ui/Spinner';
+import EmptyState from '../../components/ui/EmptyState';
 
 const TIPO_OPTIONS = [
   { value: 'PRINCIPAL', label: 'Bodega Principal' },
   { value: 'PDP', label: 'Punto de Producción (PDP)' },
 ];
 
-const schema = z.object({
+const bodegaSchema = z.object({
   nombre: z.string().min(2, 'Nombre requerido'),
   tipo: z.enum(['PRINCIPAL', 'PDP'], { message: 'Selecciona un tipo' }),
 });
+
+const zonaSchema = z.object({
+  nombre:      z.string().min(1, 'Nombre requerido'),
+  descripcion: z.string().optional(),
+});
+
+// ── Formulario Bodega ─────────────────────────────────────────────────────────
 
 function BodegaForm({ initial, onSuccess, onCancel }) {
   const isEdit = !!initial;
@@ -28,7 +37,7 @@ function BodegaForm({ initial, onSuccess, onCancel }) {
   const mut = isEdit ? updateMut : createMut;
 
   const { register, handleSubmit, formState: { errors } } = useForm({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(bodegaSchema),
     defaultValues: initial ?? { nombre: '', tipo: 'PRINCIPAL' },
   });
 
@@ -45,12 +54,7 @@ function BodegaForm({ initial, onSuccess, onCancel }) {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <Input label="Nombre" {...register('nombre')} error={errors.nombre?.message} />
-      <Select
-        label="Tipo"
-        options={TIPO_OPTIONS}
-        {...register('tipo')}
-        error={errors.tipo?.message}
-      />
+      <Select label="Tipo" options={TIPO_OPTIONS} {...register('tipo')} error={errors.tipo?.message} />
       <div className="flex justify-end gap-2 pt-2">
         <Button variant="secondary" onClick={onCancel} type="button">Cancelar</Button>
         <Button type="submit" disabled={mut.isPending}>
@@ -61,9 +65,139 @@ function BodegaForm({ initial, onSuccess, onCancel }) {
   );
 }
 
+// ── Formulario Zona ───────────────────────────────────────────────────────────
+
+function ZonaForm({ bodegaId, initial, onSuccess, onCancel }) {
+  const isEdit = !!initial;
+  const createMut = useCreateZona();
+  const updateMut = useUpdateZona();
+  const mut = isEdit ? updateMut : createMut;
+
+  const { register, handleSubmit, formState: { errors } } = useForm({
+    resolver: zodResolver(zonaSchema),
+    defaultValues: initial ?? { nombre: '', descripcion: '' },
+  });
+
+  async function onSubmit(values) {
+    try {
+      const payload = { ...values, bodega: bodegaId };
+      await mut.mutateAsync(isEdit ? { id: initial.id, ...payload } : payload);
+      toast.success(isEdit ? 'Zona actualizada' : 'Zona creada');
+      onSuccess();
+    } catch {
+      toast.error('Error al guardar la zona');
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <Input label="Nombre" placeholder="Ej: Estante A, Refrigeración" {...register('nombre')} error={errors.nombre?.message} />
+      <Input label="Descripción (opcional)" {...register('descripcion')} />
+      <div className="flex justify-end gap-2 pt-2">
+        <Button variant="secondary" onClick={onCancel} type="button">Cancelar</Button>
+        <Button type="submit" disabled={mut.isPending}>
+          {mut.isPending ? 'Guardando…' : isEdit ? 'Actualizar' : 'Crear zona'}
+        </Button>
+      </div>
+    </form>
+  );
+}
+
+// ── Panel de zonas por bodega ─────────────────────────────────────────────────
+
+function ZonasPanel({ bodega }) {
+  const [zonaModal, setZonaModal] = useState(null); // null | 'new' | zona
+  const [confirmZonaDelete, setConfirmZonaDelete] = useState(null);
+
+  const { data: zonas = [], isLoading } = useZonas(bodega.id);
+  const deleteMut = useDeleteZona();
+
+  async function handleDeleteZona(zona) {
+    try {
+      await deleteMut.mutateAsync({ id: zona.id, bodegaId: bodega.id });
+      toast.success('Zona eliminada');
+      setConfirmZonaDelete(null);
+    } catch {
+      toast.error('No se puede eliminar esta zona');
+    }
+  }
+
+  return (
+    <div className="border-t border-peach-200 bg-cream-50 px-6 py-4">
+      <div className="flex items-center justify-between mb-3">
+        <span className="text-xs font-bold uppercase tracking-wide text-wine-700">
+          Zonas ({zonas.length})
+        </span>
+        <Button size="sm" variant="ghost" onClick={() => setZonaModal('new')}>
+          + Agregar zona
+        </Button>
+      </div>
+
+      {isLoading ? (
+        <div className="flex justify-center py-4"><Spinner size="sm" /></div>
+      ) : zonas.length === 0 ? (
+        <p className="text-sm text-wine-700/70 italic">Sin zonas definidas.</p>
+      ) : (
+        <div className="space-y-1">
+          {zonas.map((zona) => (
+            <div key={zona.id} className="flex items-center justify-between rounded-xl bg-white border border-peach-200 px-3 py-2">
+              <div>
+                <span className="text-sm font-semibold text-wine-900">{zona.nombre}</span>
+                {zona.descripcion && (
+                  <span className="ml-2 text-xs text-wine-700/70">{zona.descripcion}</span>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <Button size="sm" variant="secondary" onClick={() => setZonaModal(zona)}>Editar</Button>
+                <Button size="sm" variant="danger" onClick={() => setConfirmZonaDelete(zona)}>Eliminar</Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <Modal
+        open={!!zonaModal}
+        onClose={() => setZonaModal(null)}
+        title={zonaModal === 'new' ? `Nueva zona — ${bodega.nombre}` : 'Editar zona'}
+        size="sm"
+      >
+        <ZonaForm
+          bodegaId={bodega.id}
+          initial={zonaModal !== 'new' ? zonaModal : undefined}
+          onSuccess={() => setZonaModal(null)}
+          onCancel={() => setZonaModal(null)}
+        />
+      </Modal>
+
+      <Modal
+        open={!!confirmZonaDelete}
+        onClose={() => setConfirmZonaDelete(null)}
+        title="Confirmar eliminación"
+        size="sm"
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setConfirmZonaDelete(null)}>Cancelar</Button>
+            <Button variant="danger" onClick={() => handleDeleteZona(confirmZonaDelete)} disabled={deleteMut.isPending}>
+              {deleteMut.isPending ? 'Eliminando…' : 'Eliminar'}
+            </Button>
+          </>
+        }
+      >
+        <p className="text-sm text-wine-900">
+          ¿Eliminar la zona <strong>{confirmZonaDelete?.nombre}</strong>?
+        </p>
+      </Modal>
+    </div>
+  );
+}
+
+// ── Página principal ──────────────────────────────────────────────────────────
+
 export default function BodegasPage() {
-  const [modal, setModal] = useState(null); // null | 'new' | { ...bodega }
+  const [modal, setModal] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
+  const [expandedBodega, setExpandedBodega] = useState(null);
 
   const { data: bodegas = [], isLoading } = useBodegas();
   const deleteMut = useDeleteBodega();
@@ -78,28 +212,9 @@ export default function BodegasPage() {
     }
   }
 
-  const columns = [
-    { key: 'nombre', header: 'Nombre', render: (b) => b.nombre },
-    {
-      key: 'tipo',
-      header: 'Tipo',
-      render: (b) => (
-        <Badge tone={b.tipo === 'PRINCIPAL' ? 'info' : 'success'}>
-          {b.tipo === 'PRINCIPAL' ? 'Principal' : 'PDP'}
-        </Badge>
-      ),
-    },
-    {
-      key: 'acciones',
-      header: '',
-      render: (b) => (
-        <div className="flex gap-2">
-          <Button size="sm" variant="secondary" onClick={() => setModal(b)}>Editar</Button>
-          <Button size="sm" variant="danger" onClick={() => setConfirmDelete(b)}>Eliminar</Button>
-        </div>
-      ),
-    },
-  ];
+  function toggleZonas(bodegaId) {
+    setExpandedBodega((prev) => (prev === bodegaId ? null : bodegaId));
+  }
 
   return (
     <div className="space-y-4">
@@ -107,14 +222,34 @@ export default function BodegasPage() {
         <Button onClick={() => setModal('new')}>+ Nueva Bodega</Button>
       </div>
 
-      <Table
-        columns={columns}
-        data={bodegas}
-        loading={isLoading}
-        emptyTitle="Sin bodegas"
-        emptyDescription="Crea la primera bodega."
-        getRowKey={(b) => b.id}
-      />
+      {isLoading ? (
+        <div className="flex justify-center py-10"><Spinner size="lg" /></div>
+      ) : bodegas.length === 0 ? (
+        <EmptyState title="Sin bodegas" description="Crea la primera bodega." />
+      ) : (
+        <div className="overflow-hidden rounded-2xl border border-peach-200 bg-white">
+          {bodegas.map((bodega, i) => (
+            <div key={bodega.id}>
+              {/* Fila de bodega */}
+              <div className={`grid grid-cols-[1fr_auto_auto_auto] items-center gap-4 px-4 py-3 ${i > 0 ? 'border-t border-peach-200/60' : ''} hover:bg-cream-50`}>
+                <span className="font-medium text-wine-900">{bodega.nombre}</span>
+                <Badge tone={bodega.tipo === 'PRINCIPAL' ? 'info' : 'success'}>
+                  {bodega.tipo === 'PRINCIPAL' ? 'Principal' : 'PDP'}
+                </Badge>
+                <Button size="sm" variant="ghost" onClick={() => toggleZonas(bodega.id)}>
+                  {expandedBodega === bodega.id ? 'Ocultar zonas' : `Zonas (${bodega.zonas?.length ?? 0})`}
+                </Button>
+                <div className="flex gap-2">
+                  <Button size="sm" variant="secondary" onClick={() => setModal(bodega)}>Editar</Button>
+                  <Button size="sm" variant="danger" onClick={() => setConfirmDelete(bodega)}>Eliminar</Button>
+                </div>
+              </div>
+              {/* Panel de zonas expandible */}
+              {expandedBodega === bodega.id && <ZonasPanel bodega={bodega} />}
+            </div>
+          ))}
+        </div>
+      )}
 
       <Modal
         open={!!modal}

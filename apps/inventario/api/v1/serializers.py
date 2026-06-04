@@ -1,13 +1,21 @@
 # apps/inventario/api/v1/serializers.py
 from decimal import Decimal
 from rest_framework import serializers
-from apps.inventario.models import Bodega, Lote, MovimientoInventario
+from apps.inventario.models import Bodega, ZonaBodega, Lote, MovimientoInventario
+
+
+class ZonaBodegaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ZonaBodega
+        fields = ['id', 'bodega', 'nombre', 'descripcion']
 
 
 class BodegaSerializer(serializers.ModelSerializer):
+    zonas = ZonaBodegaSerializer(many=True, read_only=True)
+
     class Meta:
         model = Bodega
-        fields = ['id', 'nombre', 'tipo']
+        fields = ['id', 'nombre', 'tipo', 'zonas']
 
 
 class LoteSerializer(serializers.ModelSerializer):

@@ -5,13 +5,14 @@ from rest_framework.response import Response
 from rest_framework.generics import get_object_or_404
 
 from apps.authentication.permissions import allow_roles
-from apps.inventario.models import Bodega, Lote, MovimientoInventario
+from apps.inventario.models import Bodega, ZonaBodega, Lote, MovimientoInventario
 
 _INV_READ  = ('ADMIN', 'GERENTE', 'INVENTARIO')
 _INV_WRITE = ('ADMIN', 'INVENTARIO')
 from apps.inventario.services import InventarioService
 from .serializers import (
     BodegaSerializer,
+    ZonaBodegaSerializer,
     LoteSerializer,
     MovimientoSerializer,
     TrasladoCreateSerializer,
@@ -23,13 +24,31 @@ from .serializers import (
 # ── Bodegas ───────────────────────────────────────────────────────────────────
 
 class BodegaViewSet(viewsets.ModelViewSet):
-    queryset = Bodega.objects.all().order_by('nombre')
+    queryset = Bodega.objects.prefetch_related('zonas').order_by('nombre')
     serializer_class = BodegaSerializer
 
     def get_permissions(self):
         if self.action in ('list', 'retrieve'):
             return [allow_roles(*_INV_READ)()]
         return [allow_roles(*_INV_WRITE)()]
+
+
+# ── Zonas de bodega ───────────────────────────────────────────────────────────
+
+class ZonaBodegaViewSet(viewsets.ModelViewSet):
+    serializer_class = ZonaBodegaSerializer
+
+    def get_permissions(self):
+        if self.action in ('list', 'retrieve'):
+            return [allow_roles(*_INV_READ)()]
+        return [allow_roles(*_INV_WRITE)()]
+
+    def get_queryset(self):
+        qs = ZonaBodega.objects.select_related('bodega').order_by('nombre')
+        bodega_id = self.request.query_params.get('bodega')
+        if bodega_id:
+            qs = qs.filter(bodega_id=bodega_id)
+        return qs
 
 
 # ── Lotes (listado con filtros) ────────────────────────────────────────────────
