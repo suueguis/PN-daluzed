@@ -476,3 +476,50 @@ class ProductoTerminadoYUnidadesTestCase(APITestCase):
         # Assert
         self.assertEqual(presentacion.factor_conversion, 50000)
         self.assertEqual(total_gramos, 100000)
+
+
+# ──────────────────────────────────────────────────────────────────────
+# PLT-001 al PLT-005 — PlantillaView (descarga de plantillas xlsx)
+# ──────────────────────────────────────────────────────────────────────
+
+class PlantillaViewTestCase(APITestCase):
+    """Descarga de plantillas xlsx para importación masiva (RF-CAT-07)."""
+
+    URL = '/api/v1/catalogo/plantilla/'
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            email='inventario_plt@daluzed.com',
+            password='Daluzed2026!',
+            role='INVENTARIO',
+        )
+        refresh = RefreshToken.for_user(self.user)
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {str(refresh.access_token)}')
+
+    def test_plt_001_materias_primas_devuelve_xlsx(self):
+        response = self.client.get(self.URL, {'tipo': 'materias_primas'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn(
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            response.get('Content-Type', ''),
+        )
+        self.assertIn('plantilla_materias_primas.xlsx', response.get('Content-Disposition', ''))
+
+    def test_plt_002_productos_terminados_devuelve_xlsx(self):
+        response = self.client.get(self.URL, {'tipo': 'productos_terminados'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('plantilla_productos_terminados.xlsx', response.get('Content-Disposition', ''))
+
+    def test_plt_003_proveedores_devuelve_xlsx(self):
+        response = self.client.get(self.URL, {'tipo': 'proveedores'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('plantilla_proveedores.xlsx', response.get('Content-Disposition', ''))
+
+    def test_plt_004_tipo_invalido_devuelve_400(self):
+        response = self.client.get(self.URL, {'tipo': 'invalido'})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_plt_005_sin_autenticacion_devuelve_401(self):
+        self.client.credentials()
+        response = self.client.get(self.URL, {'tipo': 'materias_primas'})
+        self.assertIn(response.status_code, [status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN])

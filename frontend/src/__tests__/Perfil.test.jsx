@@ -60,6 +60,14 @@ describe('Perfil — cambio de contraseña', () => {
     expect(screen.getByLabelText(/confirmar nueva contraseña/i)).toBeInTheDocument();
   });
 
+  it('muestra el avatar con iniciales del email y el color del rol', () => {
+    renderPerfil();
+    const avatar = screen.getByTestId('user-avatar');
+    expect(avatar).toHaveTextContent('SA');
+    expect(avatar).toHaveAttribute('data-role', 'INVENTARIO');
+    expect(avatar.className).toMatch(/bg-mint-200/);
+  });
+
   it('envía la solicitud y muestra toast de éxito cuando todo es válido', async () => {
     cambiarContrasenaAPI.mockResolvedValue({ data: { detail: 'ok' } });
 

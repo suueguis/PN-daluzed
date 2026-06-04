@@ -80,6 +80,7 @@ jobs:
             apps.recepcion \
             apps.produccion \
             apps.alertas \
+            apps.indicadores \
             --verbosity=2
           coverage report \
             --fail-under=70 \

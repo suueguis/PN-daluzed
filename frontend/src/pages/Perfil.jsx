@@ -6,6 +6,7 @@ import { es } from 'date-fns/locale';
 import { logoutAPI, cambiarContrasenaAPI } from '../api/authAPI';
 import useAuthStore from '../store/authStore';
 import Button from '../components/ui/Button';
+import Avatar from '../components/ui/Avatar';
 
 const roleLabels = {
   ADMIN: 'Administrador',
@@ -97,9 +98,12 @@ export default function Perfil() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
-      <header>
-        <h1 className="font-crushed text-3xl text-wine-900">Mi perfil</h1>
-        <p className="text-sm text-wine-700">Datos de la cuenta y sesión actual.</p>
+      <header className="flex items-center gap-4">
+        <Avatar name={user?.username} role={user?.role} size="lg" />
+        <div>
+          <h1 className="font-crushed text-3xl text-wine-900">Mi perfil</h1>
+          <p className="text-sm text-wine-700">Datos de la cuenta y sesión actual.</p>
+        </div>
       </header>
 
       <section className="rounded-2xl border border-peach-200 bg-white p-6 shadow-sm">
