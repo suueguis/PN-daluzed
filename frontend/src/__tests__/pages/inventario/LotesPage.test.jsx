@@ -3,20 +3,20 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
-import LotesPage from '../pages/inventario/LotesPage';
+import LotesPage from '../../../pages/inventario/LotesPage';
 
-vi.mock('../hooks/inventario/useInventario', () => ({
+vi.mock('../../../hooks/inventario/useInventario', () => ({
   useLotes: vi.fn(),
   useBodegas: vi.fn(),
   useCreateDevolucion: vi.fn(() => ({ mutateAsync: vi.fn(), isPending: false })),
   useCreateDescarte: vi.fn(() => ({ mutateAsync: vi.fn(), isPending: false })),
 }));
-vi.mock('../hooks/useApi', () => ({
+vi.mock('../../../hooks/useApi', () => ({
   useApiQuery: vi.fn(),
 }));
 
-import { useLotes, useBodegas } from '../hooks/inventario/useInventario';
-import { useApiQuery } from '../hooks/useApi';
+import { useLotes, useBodegas } from '../../../hooks/inventario/useInventario';
+import { useApiQuery } from '../../../hooks/useApi';
 
 const VENCE_7 = new Date(Date.now() + 5 * 86400000).toISOString().split('T')[0];
 const VENCIDO = new Date(Date.now() - 2 * 86400000).toISOString().split('T')[0];

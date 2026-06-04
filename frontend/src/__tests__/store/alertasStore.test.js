@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
-import useAlertasStore from '../store/alertasStore';
+import useAlertasStore from '../../store/alertasStore';
 
 // ── Mock global de WebSocket ──────────────────────────────────────────
 class MockWebSocket {

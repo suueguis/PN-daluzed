@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
 
 // Mock del API client antes de importar la página.
-vi.mock('../api/alertasAPI', () => ({
+vi.mock('../../../api/alertasAPI', () => ({
   default: {
     reorden: vi.fn(),
     activas: vi.fn(),
@@ -21,8 +21,8 @@ vi.mock('sonner', () => ({
   }),
 }));
 
-import alertasAPI from '../api/alertasAPI';
-import AlertasReordenPage from '../pages/alertas/AlertasReordenPage';
+import alertasAPI from '../../../api/alertasAPI';
+import AlertasReordenPage from '../../../pages/alertas/AlertasReordenPage';
 
 function renderWithProviders(ui) {
   const qc = new QueryClient({

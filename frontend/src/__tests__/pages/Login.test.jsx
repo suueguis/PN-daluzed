@@ -2,11 +2,11 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
-import useAuthStore from '../store/authStore';
-import Login from '../pages/Login';
+import useAuthStore from '../../store/authStore';
+import Login from '../../pages/Login';
 
 const loginAPI = vi.fn();
-vi.mock('../api/authAPI', () => ({
+vi.mock('../../api/authAPI', () => ({
   loginAPI: (...args) => loginAPI(...args),
   logoutAPI: vi.fn(),
 }));

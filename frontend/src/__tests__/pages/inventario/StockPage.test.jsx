@@ -2,18 +2,18 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
-import StockPage from '../pages/inventario/StockPage';
+import StockPage from '../../../pages/inventario/StockPage';
 
-vi.mock('../hooks/inventario/useInventario', () => ({
+vi.mock('../../../hooks/inventario/useInventario', () => ({
   useLotes: vi.fn(),
   useBodegas: vi.fn(),
 }));
-vi.mock('../hooks/useApi', () => ({
+vi.mock('../../../hooks/useApi', () => ({
   useApiQuery: vi.fn(),
 }));
 
-import { useLotes, useBodegas } from '../hooks/inventario/useInventario';
-import { useApiQuery } from '../hooks/useApi';
+import { useLotes, useBodegas } from '../../../hooks/inventario/useInventario';
+import { useApiQuery } from '../../../hooks/useApi';
 
 const BODEGAS = [
   { id: 1, nombre: 'Bodega Principal', tipo: 'PRINCIPAL' },
