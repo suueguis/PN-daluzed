@@ -79,15 +79,17 @@ export default function LotesPage() {
           options={mpOptions}
           value={mpFiltro}
           onChange={(e) => setMpFiltro(e.target.value)}
-          placeholder="Materia Prima"
+          placeholder="Filtrar por materia prima…"
           className="min-w-48"
+          aria-label="Filtrar por materia prima"
         />
         <Select
           options={bodegaOptions}
           value={bodegaFiltro}
           onChange={(e) => setBodegaFiltro(e.target.value)}
-          placeholder="Bodega"
+          placeholder="Filtrar por bodega…"
           className="min-w-40"
+          aria-label="Filtrar por bodega"
         />
         <Select
           options={VENCIMIENTO_OPTIONS}

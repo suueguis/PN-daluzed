@@ -71,26 +71,21 @@ export default function TrasladoForm({ defaultMpId, onSuccess, onCancel }) {
     }
   }
 
-  const mpOptions = [
-    { value: '', label: 'Selecciona materia prima' },
-    ...mps.map((m) => ({ value: String(m.id), label: m.nombre })),
-  ];
+  const mpOptions = mps.map((m) => ({ value: String(m.id), label: m.nombre }));
 
   const loteOptions = fefo?.lotes?.map((l) => ({
     value: String(l.id),
     label: `${l.numero_lote || `#${l.id}`} — ${formatDecimal(l.cantidad)} — vence ${formatDate(l.fecha_vencimiento)}`,
   })) ?? [];
 
-  const pdpOptions = [
-    { value: '', label: 'Selecciona bodega destino' },
-    ...pdpBodegas.map((b) => ({ value: String(b.id), label: b.nombre })),
-  ];
+  const pdpOptions = pdpBodegas.map((b) => ({ value: String(b.id), label: b.nombre }));
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <Select
         label="Materia Prima"
         options={mpOptions}
+        placeholder="Selecciona materia prima…"
         {...register('materia_prima')}
         error={errors.materia_prima?.message}
       />
@@ -118,7 +113,7 @@ export default function TrasladoForm({ defaultMpId, onSuccess, onCancel }) {
                   {...register('lote_id')}
                   className="w-full rounded-xl border border-peach-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-300"
                 >
-                  <option value="">Selecciona un lote</option>
+                  <option value="" disabled>Selecciona lote…</option>
                   {fefo?.lotes?.map((l) => (
                     <option key={l.id} value={String(l.id)}>
                       {l.id === fefo.lote_sugerido?.id ? '★ ' : ''}
@@ -141,6 +136,7 @@ export default function TrasladoForm({ defaultMpId, onSuccess, onCancel }) {
           <Select
             label="Bodega Destino"
             options={pdpOptions}
+            placeholder="Selecciona bodega destino…"
             {...register('bodega_destino')}
             error={errors.bodega_destino?.message}
           />
@@ -153,7 +149,7 @@ export default function TrasladoForm({ defaultMpId, onSuccess, onCancel }) {
             max={maxCantidad}
             {...register('cantidad')}
             error={errors.cantidad?.message}
-            placeholder="0.00"
+            placeholder="ej. 250.00"
           />
         </>
       )}

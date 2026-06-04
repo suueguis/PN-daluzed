@@ -156,7 +156,7 @@ export default function ProductosTerminadosPage() {
           <Select
             label="Unidad de medida"
             name="unidad_medida"
-            placeholder="Selecciona…"
+            placeholder="Selecciona unidad…"
             value={form.unidad_medida}
             onChange={(e) => setForm({ ...form, unidad_medida: e.target.value })}
             options={unidades.map((u) => ({ value: u.id, label: `${u.nombre} (${u.simbolo})` }))}

@@ -147,7 +147,7 @@ export default function CompensatoriosPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Select
               label="Tipo afectado"
-              placeholder="Selecciona..."
+              placeholder="Selecciona tipo…"
               options={TIPOS}
               error={errors.tipo_afectado?.message}
               {...register('tipo_afectado')}
@@ -156,6 +156,7 @@ export default function CompensatoriosPage() {
               label="ID afectado"
               type="number"
               min="1"
+              placeholder="ej. 42"
               error={errors.id_afectado?.message}
               {...register('id_afectado')}
             />
