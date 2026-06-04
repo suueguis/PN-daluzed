@@ -35,3 +35,7 @@ export const devolucionesAPI = {
 export const descartesAPI = {
   create: (data) => axiosClient.post('/inventario/descartes/', data),
 };
+
+export const trazabilidadAPI = {
+  get: (loteId) => axiosClient.get(`/inventario/trazabilidad/${loteId}/`),
+};

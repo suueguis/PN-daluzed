@@ -33,9 +33,9 @@ El modelo `User` existe, pero no hay endpoints CRUD ni UI. El Admin no puede cre
 
 El endpoint `GET /api/v1/inventario/trazabilidad/{lote_id}/` ya existe y está testeado (INV-012). Solo falta exponerlo en la UI.
 
-- [ ] **Frontend:** agregar columna "Ver historial" en `LotesPage` que abra un modal o navegue a `/inventario/lotes/{id}/trazabilidad`
-- [ ] Crear `TrazabilidadModal.jsx` o `TrazabilidadPage.jsx` que muestre la lista de movimientos del lote (tipo, fecha, bodega origen/destino, cantidad, usuario)
-- [ ] Conectar al endpoint existente con `useQuery`
+- [x] **Frontend:** agregar columna "Ver historial" en `LotesPage` que abra un modal o navegue a `/inventario/lotes/{id}/trazabilidad`
+- [x] Crear `TrazabilidadModal.jsx` o `TrazabilidadPage.jsx` que muestre la lista de movimientos del lote (tipo, fecha, bodega origen/destino, cantidad, usuario)
+- [x] Conectar al endpoint existente con `useQuery`
 
 ---
 
