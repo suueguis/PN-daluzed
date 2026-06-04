@@ -2,9 +2,79 @@
 
 > **Actualizado:** Junio 2026  
 > **Leyenda de tamaño:** 🟢 pequeño (< 2h) · 🟡 mediano (2–6h) · 🔴 grande (> 6h)  
-> **Leyenda de prioridad:** `M` = Must Have · `S` = Should Have · `+` = más allá de requisitos
+> **Leyenda de prioridad:** `+I` = +Importante (próxima iteración) · `M` = Must Have · `S` = Should Have · `+` = más allá de requisitos
 
 Marcar con `[x]` a medida que se completen.
+
+---
+
+## 0. +Importante — bugs UX/seguridad detectados en `main` (2026-06-04)
+
+Hallazgos sobre la app desplegada en `main` (último commit: `ff23c1c` — responsive). Tienen prioridad sobre el resto del backlog hasta dejarlos en cero.
+
+### 0.1 Inputs sin `placeholder` (UX) 🟢
+
+Los formularios muestran campos vacíos sin texto guía. Usuarios nuevos no saben qué tipear.
+
+- [x] Auditar **todos** los `<input>`, `<textarea>` y `<select>` del frontend y añadir `placeholder` significativo (ej.: "ej. 250.00", "kg", "Selecciona una bodega"). _(PR #34; pendientes archivos bloqueados Dashboard/Perfil/BodegasPage/MateriasPrimasPage — entran con sus PRs respectivos)_
+- [x] Caso especial: el `<input type="password">` puede usar `placeholder="••••••••"`. _(ya existía en Login)_
+- [x] Verificar contraste del placeholder (no debe parecer un valor real ya escrito). _(Input/Select usan `placeholder:text-wine-700/40`)_
+
+---
+
+### 0.2 Confirmación doble en acciones destructivas (UX/Seguridad) 🟢
+
+Hoy las acciones peligrosas (logout, desactivar usuario, descartar lote, anular OC, eliminar bodega/zona) se ejecutan con un solo click sin diálogo de "¿estás seguro?".
+
+- [x] Crear un componente `<ConfirmDialog>` reutilizable que pida confirmación con dos pasos cuando la acción es **irreversible** o afecta a otros usuarios. _(PR #35)_
+  - Primer paso: modal con descripción del impacto.
+  - Segundo paso: usuario debe escribir la palabra clave (ej.: el email del usuario a desactivar, el código del lote a descartar).
+- [x] Aplicar a: Descartar lote, Eliminar bodega/zona. _(PR #35)_ Cerrar sesión (Perfil) y Desactivar usuario quedan en cola: `Perfil.jsx` bloqueado por PR #28/#29, y 1.1 (gestión de usuarios) aún no implementado. Anular OC no tiene flujo todavía.
+- [x] Tests: garantizar que el segundo click no avance hasta que se cumpla la condición. _(4 tests en `ConfirmDialog.test.jsx`)_
+
+---
+
+### 0.3 Toasts/errores con descripción concreta (UX) 🟢
+
+Hoy aparecen toasts genéricos tipo "Error" o "Algo salió mal". El usuario no sabe qué pasó ni qué hacer.
+
+- [x] Crear helper `formatApiError(error)` que extraiga: campo afectado, mensaje del backend, código HTTP y sugerencia. _(PR #36 — `frontend/src/utils/formatApiError.js`)_
+- [x] Aplicar en **todos** los catch de `useMutation`/`try-catch` del frontend. _(PR #36 — sweep en alertas, recepcion, inventario, produccion y catalogo. Quedan `MateriasPrimasPage` y `Perfil` bloqueados por PR #27/#28/#29 — entran cuando esos PRs mergeen.)_
+- [x] Ejemplo: en vez de "Error al crear materia prima" → "No se pudo crear: 'código' ya está en uso. Usa uno distinto." _(formatApiError emite "codigo: Ya existe" cuando DRF responde `{ codigo: ['Ya existe.'] }`)_
+- [x] Tests por página crítica (Login, NuevaRecepción, NuevoBatido, Compensatorios). _(10 tests del helper en `formatApiError.test.js` cubren los códigos 400/401/403/404/500/red caída y los formatos de respuesta DRF que usan esas páginas)_
+
+---
+
+### 0.4 Eliminar `console.log` que exponen `username`/datos sensibles (Seguridad) 🟢
+
+En DevTools se ven prints con el email del usuario logueado. Riesgo de leak en sesiones compartidas/grabaciones de pantalla.
+
+- [x] `grep -rn "console\." frontend/src` y revisar cada uno. Eliminar todos los que loguen objetos de usuario, tokens o respuestas del API. _(0 hallazgos al cierre del item — PR #31)_
+- [x] Mantener sólo `console.error` controlados en interceptores y limpiar el payload antes de loguear. _(interceptor de `axiosClient` no loguea)_
+- [x] Añadir regla de ESLint `no-console: ['error', { allow: ['warn', 'error'] }]` para evitar regresiones. _(PR #31)_
+- [x] Verificar que en `build` de producción no haya rastros.
+
+---
+
+### 0.5 Reemplazar el campo que pide datos en JSON crudo (UX crítico) 🟡
+
+Algún formulario está pidiendo que el usuario tipee JSON directamente — un usuario de panadería no tiene por qué saber JSON.
+
+- [x] Localizar el(los) formulario(s): probablemente en módulos de configuración, alertas o detalle de movimientos. _(Hallado: `CompensatoriosPage` — `datos_originales` y `datos_corregidos` JSONField)_
+- [x] Reemplazar por un formulario con campos individuales tipados (selects, inputs numéricos, datepickers). _(Nuevo `KeyValueEditor` con coerción numérica/booleana — PR #33; textareas JSON permanecen como fallback editable)_
+- [x] Si el backend usa `JSONField`, validar/serializar la entrada estructurada antes de enviarla. _(`KeyValueEditor.onChange` construye el objeto y lo serializa antes de POST)_
+
+---
+
+### 0.6 Proveedores: respetar `activo` en flujo de Orden de Compra (Bug funcional) 🟡
+
+Al crear una OC, el dropdown de proveedores incluye proveedores **inactivos** (o, peor: los inactivos también pueden seleccionarse y la OC se crea).
+
+- [ ] Backend: el endpoint `GET /api/v1/catalogo/proveedores/` debe aceptar `?activo=true` y respetarlo. Verificar que `ProveedorViewSet.get_queryset` filtre correctamente. _(Pendiente: archivo bloqueado por PR #27; entra cuando ese PR mergee.)_
+- [x] Frontend (`NuevaOrdenPage`): consumir solo proveedores activos en el selector de OC. _(PR #32)_
+- [x] Validación de servidor: si llega `proveedor_id` inactivo en el POST, devolver `400` con mensaje claro. _(`OrdenCompraSerializer.validate_proveedor` → PR #32)_
+- [x] Test backend: crear OC con proveedor inactivo → debe fallar. _(PR #32)_
+- [x] Test frontend: el selector no lista inactivos. _(PR #32)_
 
 ---
 
@@ -333,6 +403,12 @@ Cuando hay un batido `EN_PROCESO`, el stock de Bodega PDP está parcialmente com
 
 | Prioridad | Ítem | Tamaño |
 |-----------|------|--------|
+| 🔥 +I | Placeholders en inputs (0.1) | 🟢 |
+| 🔥 +I | Confirmación doble en acciones destructivas (0.2) | 🟢 |
+| 🔥 +I | Errores con descripción concreta (0.3) | 🟢 |
+| 🔥 +I | Eliminar `console.log` con username (0.4) | 🟢 |
+| 🔥 +I | Reemplazar campo JSON crudo (0.5) | 🟡 |
+| 🔥 +I | Proveedores activo/inactivo en OC (0.6) | 🟡 |
 | 🚨 M | Gestión de usuarios (1.1) | 🔴 |
 | 🚨 M | Dashboard completo + exportación (1.3) | 🔴 |
 | 🚨 M | AlertaService implementar (2.10) | 🔴 |
