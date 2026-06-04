@@ -26,11 +26,11 @@ Los formularios muestran campos vacíos sin texto guía. Usuarios nuevos no sabe
 
 Hoy las acciones peligrosas (logout, desactivar usuario, descartar lote, anular OC, eliminar bodega/zona) se ejecutan con un solo click sin diálogo de "¿estás seguro?".
 
-- [ ] Crear un componente `<ConfirmDialog>` reutilizable que pida confirmación con dos pasos cuando la acción es **irreversible** o afecta a otros usuarios.
+- [x] Crear un componente `<ConfirmDialog>` reutilizable que pida confirmación con dos pasos cuando la acción es **irreversible** o afecta a otros usuarios. _(PR #35)_
   - Primer paso: modal con descripción del impacto.
   - Segundo paso: usuario debe escribir la palabra clave (ej.: el email del usuario a desactivar, el código del lote a descartar).
-- [ ] Aplicar a: Cerrar sesión (Perfil), Desactivar usuario (1.1), Descartar lote, Anular orden de compra, Eliminar bodega/zona.
-- [ ] Tests: garantizar que el segundo click no avance hasta que se cumpla la condición.
+- [x] Aplicar a: Descartar lote, Eliminar bodega/zona. _(PR #35)_ Cerrar sesión (Perfil) y Desactivar usuario quedan en cola: `Perfil.jsx` bloqueado por PR #28/#29, y 1.1 (gestión de usuarios) aún no implementado. Anular OC no tiene flujo todavía.
+- [x] Tests: garantizar que el segundo click no avance hasta que se cumpla la condición. _(4 tests en `ConfirmDialog.test.jsx`)_
 
 ---
 
