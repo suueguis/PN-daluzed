@@ -53,7 +53,7 @@ function DetalleLinea({ control, register, idx, field, mps, presMap, errors, fie
             <Select
               label="Materia prima"
               options={mps.map((m) => ({ value: String(m.id), label: m.nombre }))}
-              placeholder="— MP —"
+              placeholder="Selecciona materia prima…"
               error={errors.detalles?.[idx]?.materia_prima_id?.message}
               {...f}
             />
@@ -79,7 +79,7 @@ function DetalleLinea({ control, register, idx, field, mps, presMap, errors, fie
             <Select
               label="Presentación"
               options={presOptions}
-              placeholder={mpId ? '— Presentación —' : 'Selecciona MP primero'}
+              placeholder={mpId ? 'Selecciona presentación…' : 'Selecciona materia prima primero'}
               error={errors.detalles?.[idx]?.presentacion_id?.message}
               {...f}
             />
@@ -102,6 +102,7 @@ function DetalleLinea({ control, register, idx, field, mps, presMap, errors, fie
           type="number"
           step="0.01"
           min="0.01"
+          placeholder="ej. 10"
           error={errors.detalles?.[idx]?.cantidad_presentacion?.message}
           {...register(`detalles.${idx}.cantidad_presentacion`, {
             required: 'Requerido',
@@ -123,6 +124,7 @@ function DetalleLinea({ control, register, idx, field, mps, presMap, errors, fie
         <div className="flex-1">
           <Input
             label="Número de lote (opcional)"
+            placeholder="ej. LOT-2026-001"
             {...register(`detalles.${idx}.numero_lote`)}
           />
         </div>
@@ -275,7 +277,7 @@ export default function NuevaRecepcionPage() {
               <Select
                 label="Orden de compra"
                 options={ocOptions}
-                placeholder="— Selecciona una OC —"
+                placeholder="Selecciona orden de compra…"
                 error={errors.orden_compra_id?.message}
                 {...field}
                 onChange={(e) => handleOCChange(e, field.onChange)}

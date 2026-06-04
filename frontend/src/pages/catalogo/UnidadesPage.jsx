@@ -106,12 +106,14 @@ export default function UnidadesPage() {
           <Input
             label="Nombre"
             name="nombre"
+            placeholder="ej. Kilogramos"
             value={form.nombre}
             onChange={(e) => setForm({ ...form, nombre: e.target.value })}
           />
           <Input
             label="Símbolo"
             name="simbolo"
+            placeholder="ej. kg"
             value={form.simbolo}
             onChange={(e) => setForm({ ...form, simbolo: e.target.value })}
           />

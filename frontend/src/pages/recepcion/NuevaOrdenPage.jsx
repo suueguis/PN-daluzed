@@ -75,7 +75,7 @@ export default function NuevaOrdenPage() {
               <Select
                 label="Proveedor"
                 options={provOptions}
-                placeholder="— Seleccionar proveedor —"
+                placeholder="Selecciona proveedor…"
                 error={errors.proveedor_id?.message}
                 {...field}
               />
@@ -106,7 +106,7 @@ export default function NuevaOrdenPage() {
                   <Select
                     label="Materia prima"
                     options={mpOptions}
-                    placeholder="— MP —"
+                    placeholder="Selecciona materia prima…"
                     error={errors.detalles?.[idx]?.materia_prima_id?.message}
                     {...f}
                   />
@@ -120,7 +120,7 @@ export default function NuevaOrdenPage() {
                   <Select
                     label="Presentación"
                     options={presOptions}
-                    placeholder="— Presentación —"
+                    placeholder="Selecciona presentación…"
                     error={errors.detalles?.[idx]?.presentacion_id?.message}
                     {...f}
                   />

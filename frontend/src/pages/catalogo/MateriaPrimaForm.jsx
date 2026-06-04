@@ -11,6 +11,7 @@ export default function MateriaPrimaForm({ value, onChange, unidades = [] }) {
         <Input
           label="Nombre"
           name="nombre"
+          placeholder="ej. Harina de trigo"
           value={value.nombre}
           onChange={(e) => set('nombre', e.target.value)}
         />
@@ -19,7 +20,7 @@ export default function MateriaPrimaForm({ value, onChange, unidades = [] }) {
       <Select
         label="Unidad de medida"
         name="unidad_medida"
-        placeholder="Selecciona…"
+        placeholder="Selecciona unidad…"
         value={value.unidad_medida}
         onChange={(e) => set('unidad_medida', e.target.value)}
         options={unidades.map((u) => ({ value: u.id, label: `${u.nombre} (${u.simbolo})` }))}
@@ -31,6 +32,7 @@ export default function MateriaPrimaForm({ value, onChange, unidades = [] }) {
         type="number"
         min="0"
         step="0.01"
+        placeholder="ej. 5000"
         value={value.punto_reorden}
         onChange={(e) => set('punto_reorden', e.target.value)}
       />

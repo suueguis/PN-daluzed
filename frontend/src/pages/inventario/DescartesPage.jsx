@@ -38,6 +38,7 @@ export default function DescartesPage() {
             label="Lote a Descartar"
             options={loteOptions}
             value={loteId}
+            placeholder="Selecciona lote…"
             onChange={(e) => setLoteId(e.target.value)}
           />
         </div>

@@ -85,7 +85,7 @@ describe('TrasladoForm', () => {
 
     await waitFor(() => screen.getByText('Sugerencia FEFO'));
 
-    const cantidadInput = screen.getByPlaceholderText('0.00');
+    const cantidadInput = screen.getByPlaceholderText(/ej\. 250\.00/i);
     await userEvent.clear(cantidadInput);
     await userEvent.type(cantidadInput, '500');
 

@@ -37,10 +37,7 @@ export default function DevolucionForm({ lote, onSuccess, onCancel }) {
     }
   }
 
-  const proveedorOptions = [
-    { value: '', label: 'Selecciona proveedor' },
-    ...proveedores.map((p) => ({ value: String(p.id), label: p.nombre })),
-  ];
+  const proveedorOptions = proveedores.map((p) => ({ value: String(p.id), label: p.nombre }));
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -54,6 +51,7 @@ export default function DevolucionForm({ lote, onSuccess, onCancel }) {
       <Select
         label="Proveedor"
         options={proveedorOptions}
+        placeholder="Selecciona proveedor…"
         {...register('proveedor_id')}
         error={errors.proveedor_id?.message}
       />
