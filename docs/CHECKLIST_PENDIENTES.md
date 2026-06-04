@@ -60,10 +60,9 @@ En DevTools se ven prints con el email del usuario logueado. Riesgo de leak en s
 
 Algún formulario está pidiendo que el usuario tipee JSON directamente — un usuario de panadería no tiene por qué saber JSON.
 
-- [ ] Localizar el(los) formulario(s): probablemente en módulos de configuración, alertas o detalle de movimientos.
-  - Comando: `grep -rn "JSON\\|jsonField\\|textarea" frontend/src/pages` para mapear candidatos.
-- [ ] Reemplazar por un formulario con campos individuales tipados (selects, inputs numéricos, datepickers).
-- [ ] Si el backend usa `JSONField`, validar/serializar la entrada estructurada antes de enviarla.
+- [x] Localizar el(los) formulario(s): probablemente en módulos de configuración, alertas o detalle de movimientos. _(Hallado: `CompensatoriosPage` — `datos_originales` y `datos_corregidos` JSONField)_
+- [x] Reemplazar por un formulario con campos individuales tipados (selects, inputs numéricos, datepickers). _(Nuevo `KeyValueEditor` con coerción numérica/booleana — PR #33; textareas JSON permanecen como fallback editable)_
+- [x] Si el backend usa `JSONField`, validar/serializar la entrada estructurada antes de enviarla. _(`KeyValueEditor.onChange` construye el objeto y lo serializa antes de POST)_
 
 ---
 
