@@ -33,9 +33,9 @@ El modelo `User` existe, pero no hay endpoints CRUD ni UI. El Admin no puede cre
 
 El endpoint `GET /api/v1/inventario/trazabilidad/{lote_id}/` ya existe y está testeado (INV-012). Solo falta exponerlo en la UI.
 
-- [x] **Frontend:** agregar columna "Ver historial" en `LotesPage` que abra un modal o navegue a `/inventario/lotes/{id}/trazabilidad`
-- [x] Crear `TrazabilidadModal.jsx` o `TrazabilidadPage.jsx` que muestre la lista de movimientos del lote (tipo, fecha, bodega origen/destino, cantidad, usuario)
-- [x] Conectar al endpoint existente con `useQuery`
+- [ ] **Frontend:** agregar columna "Ver historial" en `LotesPage` que abra un modal o navegue a `/inventario/lotes/{id}/trazabilidad`
+- [ ] Crear `TrazabilidadModal.jsx` o `TrazabilidadPage.jsx` que muestre la lista de movimientos del lote (tipo, fecha, bodega origen/destino, cantidad, usuario)
+- [ ] Conectar al endpoint existente con `useQuery`
 
 ---
 
@@ -43,10 +43,6 @@ El endpoint `GET /api/v1/inventario/trazabilidad/{lote_id}/` ya existe y está t
 
 El dashboard actual tiene 3 tarjetas planas. El cliente necesita indicadores reales de gestión.
 
-- [x] **Backend:** crear endpoints KPIs en `apps.indicadores` (`/kpis/` con tipos stock, vencimientos, produccion) y `/exportar/` (PDF + xlsx)
-- [x] **Frontend:** ampliar `Dashboard.jsx` con tarjeta stock BP, tabla de lotes próximos a vencer (top 5), sección de exportar
-- [x] **Exportación PDF/Excel (RF-IND-05):** endpoints `/kpis/` y `/exportar/` + botón Exportar con rango de fechas en Dashboard
-- [x] **Panel en tiempo real (RF-IND-07):** `refetchInterval: 60_000` en todos los queries del Dashboard
 - [ ] **Backend:** crear endpoint `GET /api/v1/indicadores/resumen/` que devuelva:
   - Total stock Bodega Principal (en gramos/unidades por MP)
   - Rotación de inventario del último mes (consumo total / stock promedio)

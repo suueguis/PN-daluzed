@@ -1,9 +1,15 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { materiasPrimasAPI } from '../api/catalogoAPI';
 import { alertasAPI } from '../api/alertasAPI';
 import { produccionAPI } from '../api/produccionAPI';
+import { kpisAPI, exportarAPI } from '../api/indicadoresAPI';
 import useAuthStore from '../store/authStore';
+import Badge from '../components/ui/Badge';
+import Spinner from '../components/ui/Spinner';
+import Button from '../components/ui/Button';
+import { formatDate, formatDecimal } from '../utils/formatters';
 
 const ROLE_LABEL = {
   ADMIN:      'Admin',
@@ -12,7 +18,6 @@ const ROLE_LABEL = {
   INVENTARIO: 'Inventario',
 };
 
-// Handles both paginated { count, results:[] } and plain array responses
 function countOf(data) {
   if (data == null) return null;
   if (typeof data.count === 'number') return data.count;
@@ -23,27 +28,62 @@ function countOf(data) {
 
 const today = new Date().toISOString().slice(0, 10);
 
+function triggerDownload(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export default function Dashboard() {
   const { user } = useAuthStore();
   const displayName = ROLE_LABEL[user?.role] ?? 'invitado';
+  const [exportando, setExportando] = useState(false);
+  const [exportDesde, setExportDesde] = useState('');
+  const [exportHasta, setExportHasta] = useState('');
 
+  // ── KPIs con refresh cada 60 s ────────────────────────────────────
   const { data: mpsData, isLoading: mpsLoading } = useQuery({
     queryKey: ['dashboard', 'mps'],
     queryFn: () => materiasPrimasAPI.list(),
     staleTime: 60_000,
+    refetchInterval: 60_000,
   });
 
   const { data: alertasData, isLoading: alertasLoading } = useQuery({
     queryKey: ['dashboard', 'alertas'],
     queryFn: alertasAPI.activas,
     staleTime: 30_000,
+    refetchInterval: 60_000,
   });
 
   const { data: batidosData, isLoading: batidosLoading } = useQuery({
     queryKey: ['dashboard', 'batidos', today],
     queryFn: () => produccionAPI.listBatidos({ fecha: today }).then((r) => r.data),
     staleTime: 30_000,
+    refetchInterval: 60_000,
   });
+
+  const { data: stockData, isLoading: stockLoading } = useQuery({
+    queryKey: ['dashboard', 'kpis', 'stock'],
+    queryFn: async () => { const { data } = await kpisAPI.stock(); return data; },
+    staleTime: 60_000,
+    refetchInterval: 60_000,
+  });
+
+  const { data: vencData, isLoading: vencLoading } = useQuery({
+    queryKey: ['dashboard', 'kpis', 'vencimientos'],
+    queryFn: async () => { const { data } = await kpisAPI.vencimientos(7); return data; },
+    staleTime: 60_000,
+    refetchInterval: 60_000,
+  });
+
+  // ── Derived metrics ───────────────────────────────────────────────
+  const stockBP = stockData?.stock_por_bodega?.filter((r) => r.bodega_tipo === 'PRINCIPAL') ?? [];
+  const totalStockBP = stockBP.reduce((s, r) => s + parseFloat(r.cantidad_total), 0);
+  const lotesVencer = vencData?.lotes_por_vencer ?? [];
 
   const cards = [
     {
@@ -70,7 +110,26 @@ export default function Dashboard() {
       link:  '/produccion',
       tone:  'bg-mint-200/50 border-mint-200',
     },
+    {
+      key:   'stock-bp',
+      label: 'Stock Bodega Principal',
+      value: stockLoading ? '…' : formatDecimal(totalStockBP, 0),
+      hint:  'gramos / unidades totales',
+      link:  '/inventario/lotes',
+      tone:  'bg-rose-100/60 border-rose-200',
+    },
   ];
+
+  async function handleExportar(formato) {
+    setExportando(true);
+    try {
+      const { data: blob } = await exportarAPI.descargar(formato, exportDesde || undefined, exportHasta || undefined);
+      const ext = formato === 'pdf' ? 'pdf' : 'xlsx';
+      triggerDownload(blob, `inventario_${today}.${ext}`);
+    } finally {
+      setExportando(false);
+    }
+  }
 
   return (
     <div className="space-y-8">
@@ -83,9 +142,10 @@ export default function Dashboard() {
         </p>
       </header>
 
+      {/* ── Tarjetas resumen ─────────────────────────────────────── */}
       <section
         aria-label="Resumen rápido"
-        className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
+        className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4"
       >
         {cards.map((card) => (
           <Link
@@ -101,6 +161,80 @@ export default function Dashboard() {
             <p className="mt-2 text-xs text-wine-700/80">{card.hint}</p>
           </Link>
         ))}
+      </section>
+
+      {/* ── Lotes próximos a vencer ──────────────────────────────── */}
+      <section aria-label="Lotes próximos a vencer">
+        <h2 className="mb-3 font-crushed text-xl text-wine-900">
+          Lotes próximos a vencer <span className="text-sm font-normal text-wine-700">(próximos 7 días)</span>
+        </h2>
+        {vencLoading ? (
+          <div className="flex justify-center py-6"><Spinner /></div>
+        ) : lotesVencer.length === 0 ? (
+          <p className="rounded-2xl border border-peach-200 bg-cream-50 px-5 py-4 text-sm text-wine-700">
+            No hay lotes próximos a vencer.
+          </p>
+        ) : (
+          <div className="overflow-hidden rounded-2xl border border-peach-200 bg-white">
+            <table className="w-full text-sm">
+              <thead className="bg-cream-100">
+                <tr>
+                  {['Materia Prima', 'Bodega', 'Cantidad', 'Vencimiento', 'Días restantes'].map((h) => (
+                    <th key={h} className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-wine-700">
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {lotesVencer.slice(0, 5).map((lote) => (
+                  <tr key={lote.lote_id} className="border-t border-peach-200/60 hover:bg-cream-50">
+                    <td className="px-4 py-3 text-wine-900">{lote.materia_prima}</td>
+                    <td className="px-4 py-3 text-wine-900">{lote.bodega}</td>
+                    <td className="px-4 py-3 tabular-nums text-wine-900">{formatDecimal(lote.cantidad)}</td>
+                    <td className="px-4 py-3 tabular-nums text-wine-900">{formatDate(lote.fecha_vencimiento)}</td>
+                    <td className="px-4 py-3">
+                      <Badge tone={lote.dias_restantes <= 3 ? 'danger' : 'warning'}>
+                        {lote.dias_restantes}d
+                      </Badge>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
+      {/* ── Exportar reporte ─────────────────────────────────────── */}
+      <section aria-label="Exportar reporte">
+        <h2 className="mb-3 font-crushed text-xl text-wine-900">Exportar inventario</h2>
+        <div className="flex flex-wrap items-end gap-3 rounded-2xl border border-peach-200 bg-cream-50 p-4">
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-semibold text-wine-700">Desde</label>
+            <input
+              type="date"
+              value={exportDesde}
+              onChange={(e) => setExportDesde(e.target.value)}
+              className="rounded-xl border border-peach-300 bg-white px-3 py-2 text-sm text-wine-900 focus:outline-none focus:ring-2 focus:ring-rose-300"
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-semibold text-wine-700">Hasta</label>
+            <input
+              type="date"
+              value={exportHasta}
+              onChange={(e) => setExportHasta(e.target.value)}
+              className="rounded-xl border border-peach-300 bg-white px-3 py-2 text-sm text-wine-900 focus:outline-none focus:ring-2 focus:ring-rose-300"
+            />
+          </div>
+          <Button variant="secondary" disabled={exportando} onClick={() => handleExportar('xlsx')}>
+            {exportando ? '…' : 'Excel'}
+          </Button>
+          <Button variant="secondary" disabled={exportando} onClick={() => handleExportar('pdf')}>
+            {exportando ? '…' : 'PDF'}
+          </Button>
+        </div>
       </section>
     </div>
   );
