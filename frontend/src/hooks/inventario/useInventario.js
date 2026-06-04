@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { bodegasAPI, lotesAPI, fefoAPI, trasladosAPI, devolucionesAPI, descartesAPI } from '../../api/inventarioAPI';
+import { bodegasAPI, lotesAPI, fefoAPI, trasladosAPI, devolucionesAPI, descartesAPI, trazabilidadAPI } from '../../api/inventarioAPI';
 
 // ── Keys ─────────────────────────────────────────────────────────────────────
 
@@ -47,6 +47,17 @@ export function useDeleteBodega() {
 }
 
 // ── Lotes ─────────────────────────────────────────────────────────────────────
+
+export function useTrazabilidad(loteId) {
+  return useQuery({
+    queryKey: ['inventario', 'trazabilidad', loteId],
+    queryFn: async () => {
+      const { data } = await trazabilidadAPI.get(loteId);
+      return data;
+    },
+    enabled: !!loteId,
+  });
+}
 
 export function useLotes(params = {}) {
   return useQuery({
