@@ -7,6 +7,7 @@ import { useApiQuery } from '../../hooks/useApi';
 import Select from '../../components/ui/Select';
 import Button from '../../components/ui/Button';
 import { formatDecimal, formatDate } from '../../utils/formatters';
+import { formatApiError } from '../../utils/formatApiError';
 
 const schema = z.object({
   proveedor_id: z.string().min(1, 'Selecciona un proveedor'),
@@ -32,8 +33,7 @@ export default function DevolucionForm({ lote, onSuccess, onCancel }) {
       toast.success('Devolución registrada');
       onSuccess?.();
     } catch (err) {
-      const msg = err?.response?.data?.detail ?? 'Error al registrar la devolución';
-      toast.error(msg);
+      toast.error(formatApiError(err, 'No se pudo registrar la devolución'));
     }
   }
 

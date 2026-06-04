@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { formatApiError } from '../../utils/formatApiError';
 import Table from '../../components/ui/Table';
 import Modal from '../../components/ui/Modal';
 import Button from '../../components/ui/Button';
@@ -68,12 +69,12 @@ export default function ProductosTerminadosPage() {
     if (editing?.id) {
       updateM.mutate(
         { id: editing.id, data: payload },
-        { onSuccess: () => after('Producto actualizado'), onError: () => toast.error('Error al guardar') },
+        { onSuccess: () => after('Producto actualizado'), onError: (err) => toast.error(formatApiError(err, 'No se pudo guardar el producto')) },
       );
     } else {
       createM.mutate(payload, {
         onSuccess: () => after('Producto creado'),
-        onError: () => toast.error('Error al crear'),
+        onError: (err) => toast.error(formatApiError(err, 'No se pudo crear el producto')),
       });
     }
   };
@@ -84,7 +85,7 @@ export default function ProductosTerminadosPage() {
       {
         onSuccess: () =>
           toast.success(row.activo ? 'Producto desactivado' : 'Producto activado'),
-        onError: () => toast.error('Error al cambiar estado'),
+        onError: (err) => toast.error(formatApiError(err, 'No se pudo cambiar el estado')),
       },
     );
   };

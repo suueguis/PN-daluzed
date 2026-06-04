@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { differenceInDays } from 'date-fns';
 import { ordenesAPI, recepcionesAPI, catalogoForRecepcion } from '../../api/recepcionAPI';
+import { formatApiError } from '../../utils/formatApiError';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Select from '../../components/ui/Select';
@@ -228,7 +229,7 @@ export default function NuevaRecepcionPage() {
         setPendingForm(formData);
         setJustifOpen(true);
       } else {
-        toast.error(detail || 'Error al registrar la recepción.');
+        toast.error(formatApiError(err, 'No se pudo registrar la recepción'));
       }
     } finally {
       setSubmitting(false);

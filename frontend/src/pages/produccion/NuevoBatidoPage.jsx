@@ -12,6 +12,7 @@ import Select from '../../components/ui/Select';
 import Spinner from '../../components/ui/Spinner';
 import { useApiQuery, useApiMutation } from '../../hooks/useApi';
 import { produccionAPI } from '../../api/produccionAPI';
+import { formatApiError } from '../../utils/formatApiError';
 
 const schema = z.object({
   producto_terminado_id: z.coerce.number().positive('Selecciona un producto'),
@@ -77,11 +78,13 @@ export default function NuevoBatidoPage() {
       navigate('/produccion/batidos');
     },
     onError: (err) => {
-      const detail = err?.response?.data?.detail ?? 'Error al registrar el batido';
+      const detail = err?.response?.data?.detail ?? '';
       if (detail.includes('faltante')) {
         toast.error(detail);
-      } else {
+      } else if (err?.response?.status === 409) {
         toast.error('Hay 2 batidos en proceso, espera a completarlos.');
+      } else {
+        toast.error(formatApiError(err, 'No se pudo registrar el batido'));
       }
     },
   });
@@ -109,8 +112,8 @@ export default function NuevoBatidoPage() {
           _disponible: String(s.cantidad_disponible),
         })),
       );
-    } catch {
-      toast.error('Error al obtener sugerencias FEFO');
+    } catch (err) {
+      toast.error(formatApiError(err, 'No se pudieron obtener sugerencias FEFO'));
     } finally {
       setSugeriendo(false);
     }

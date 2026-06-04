@@ -12,6 +12,7 @@ import Modal from '../../components/ui/Modal';
 import Badge from '../../components/ui/Badge';
 import Spinner from '../../components/ui/Spinner';
 import EmptyState from '../../components/ui/EmptyState';
+import { formatApiError } from '../../utils/formatApiError';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 
 const TIPO_OPTIONS = [
@@ -47,8 +48,8 @@ function BodegaForm({ initial, onSuccess, onCancel }) {
       await mut.mutateAsync(isEdit ? { id: initial.id, ...values } : values);
       toast.success(isEdit ? 'Bodega actualizada' : 'Bodega creada');
       onSuccess();
-    } catch {
-      toast.error('Error al guardar la bodega');
+    } catch (err) {
+      toast.error(formatApiError(err, 'No se pudo guardar la bodega'));
     }
   }
 
@@ -85,8 +86,8 @@ function ZonaForm({ bodegaId, initial, onSuccess, onCancel }) {
       await mut.mutateAsync(isEdit ? { id: initial.id, ...payload } : payload);
       toast.success(isEdit ? 'Zona actualizada' : 'Zona creada');
       onSuccess();
-    } catch {
-      toast.error('Error al guardar la zona');
+    } catch (err) {
+      toast.error(formatApiError(err, 'No se pudo guardar la zona'));
     }
   }
 
@@ -118,8 +119,8 @@ function ZonasPanel({ bodega }) {
       await deleteMut.mutateAsync({ id: zona.id, bodegaId: bodega.id });
       toast.success('Zona eliminada');
       setConfirmZonaDelete(null);
-    } catch {
-      toast.error('No se puede eliminar esta zona');
+    } catch (err) {
+      toast.error(formatApiError(err, 'No se pudo eliminar la zona'));
     }
   }
 
@@ -200,8 +201,8 @@ export default function BodegasPage() {
       await deleteMut.mutateAsync(id);
       toast.success('Bodega eliminada');
       setConfirmDelete(null);
-    } catch {
-      toast.error('No se puede eliminar esta bodega');
+    } catch (err) {
+      toast.error(formatApiError(err, 'No se pudo eliminar la bodega'));
     }
   }
 

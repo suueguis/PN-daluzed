@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 
 import alertasAPI from '../../api/alertasAPI';
 import useAlertasStore from '../../store/alertasStore';
+import { formatApiError } from '../../utils/formatApiError';
 
 const STALE_30S = 30_000;
 
@@ -54,6 +55,6 @@ export function useResolverAlerta() {
       queryClient.invalidateQueries({ queryKey: ['alertas'] });
       toast.success('Alerta resuelta');
     },
-    onError: () => toast.error('No se pudo resolver la alerta'),
+    onError: (err) => toast.error(formatApiError(err, 'No se pudo resolver la alerta')),
   });
 }
