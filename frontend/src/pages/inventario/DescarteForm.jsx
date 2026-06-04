@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
 import { useCreateDescarte } from '../../hooks/inventario/useInventario';
 import Button from '../../components/ui/Button';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { formatDecimal, formatDate } from '../../utils/formatters';
 
 const schema = z.object({
@@ -11,20 +13,27 @@ const schema = z.object({
 });
 
 export default function DescarteForm({ lote, onSuccess, onCancel }) {
-  const { register, handleSubmit, formState: { errors } } = useForm({
+  const { register, handleSubmit, getValues, formState: { errors } } = useForm({
     resolver: zodResolver(schema),
     defaultValues: { motivo: '' },
   });
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const createMut = useCreateDescarte();
+  const loteCode = lote.numero_lote || `#${lote.id}`;
 
-  async function onSubmit(values) {
+  function onSubmit() {
+    setConfirmOpen(true);
+  }
+
+  async function actuallyDescarte() {
     try {
       await createMut.mutateAsync({
         lote_id: lote.id,
-        motivo: values.motivo,
+        motivo: getValues('motivo'),
       });
       toast.success('Descarte registrado');
+      setConfirmOpen(false);
       onSuccess?.();
     } catch (err) {
       const msg = err?.response?.data?.detail ?? 'Error al registrar el descarte';
@@ -62,6 +71,17 @@ export default function DescarteForm({ lote, onSuccess, onCancel }) {
           {createMut.isPending ? 'Registrando…' : 'Confirmar Descarte'}
         </Button>
       </div>
+
+      <ConfirmDialog
+        open={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        onConfirm={actuallyDescarte}
+        title="Descartar lote"
+        description={`El lote ${loteCode} (${formatDecimal(lote.cantidad)}) quedará descartado. Esta acción no se puede deshacer.`}
+        confirmWord={loteCode}
+        confirmLabel="Descartar lote"
+        loading={createMut.isPending}
+      />
     </form>
   );
 }

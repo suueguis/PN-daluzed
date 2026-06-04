@@ -12,6 +12,7 @@ import Modal from '../../components/ui/Modal';
 import Badge from '../../components/ui/Badge';
 import Spinner from '../../components/ui/Spinner';
 import EmptyState from '../../components/ui/EmptyState';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
 
 const TIPO_OPTIONS = [
   { value: 'PRINCIPAL', label: 'Bodega Principal' },
@@ -170,24 +171,16 @@ function ZonasPanel({ bodega }) {
         />
       </Modal>
 
-      <Modal
+      <ConfirmDialog
         open={!!confirmZonaDelete}
         onClose={() => setConfirmZonaDelete(null)}
-        title="Confirmar eliminación"
-        size="sm"
-        footer={
-          <>
-            <Button variant="secondary" onClick={() => setConfirmZonaDelete(null)}>Cancelar</Button>
-            <Button variant="danger" onClick={() => handleDeleteZona(confirmZonaDelete)} disabled={deleteMut.isPending}>
-              {deleteMut.isPending ? 'Eliminando…' : 'Eliminar'}
-            </Button>
-          </>
-        }
-      >
-        <p className="text-sm text-wine-900">
-          ¿Eliminar la zona <strong>{confirmZonaDelete?.nombre}</strong>?
-        </p>
-      </Modal>
+        onConfirm={() => handleDeleteZona(confirmZonaDelete)}
+        title="Eliminar zona"
+        description={`La zona "${confirmZonaDelete?.nombre}" será eliminada de la bodega ${bodega.nombre}. Esta acción no se puede deshacer.`}
+        confirmWord={confirmZonaDelete?.nombre}
+        confirmLabel="Eliminar zona"
+        loading={deleteMut.isPending}
+      />
     </div>
   );
 }
@@ -263,24 +256,16 @@ export default function BodegasPage() {
         />
       </Modal>
 
-      <Modal
+      <ConfirmDialog
         open={!!confirmDelete}
         onClose={() => setConfirmDelete(null)}
-        title="Confirmar eliminación"
-        size="sm"
-        footer={
-          <>
-            <Button variant="secondary" onClick={() => setConfirmDelete(null)}>Cancelar</Button>
-            <Button variant="danger" onClick={() => handleDelete(confirmDelete.id)} disabled={deleteMut.isPending}>
-              {deleteMut.isPending ? 'Eliminando…' : 'Eliminar'}
-            </Button>
-          </>
-        }
-      >
-        <p className="text-sm text-wine-900">
-          ¿Eliminar la bodega <strong>{confirmDelete?.nombre}</strong>? Esta acción no se puede deshacer.
-        </p>
-      </Modal>
+        onConfirm={() => handleDelete(confirmDelete.id)}
+        title="Eliminar bodega"
+        description={`La bodega "${confirmDelete?.nombre}" y todas sus zonas quedarán eliminadas. Esta acción no se puede deshacer.`}
+        confirmWord={confirmDelete?.nombre}
+        confirmLabel="Eliminar bodega"
+        loading={deleteMut.isPending}
+      />
     </div>
   );
 }
