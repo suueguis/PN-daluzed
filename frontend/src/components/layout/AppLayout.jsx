@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Outlet } from 'react-router-dom';
 
+import useInactivityLogout from '../../hooks/useInactivityLogout';
 import useAlertasStore from '../../store/alertasStore';
 import useAuthStore from '../../store/authStore';
 import Sidebar from './Sidebar';
@@ -11,6 +12,8 @@ export default function AppLayout() {
   const connect    = useAlertasStore((s) => s.connect);
   const disconnect = useAlertasStore((s) => s.disconnect);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  useInactivityLogout(30);
 
   useEffect(() => {
     if (!accessToken) return undefined;

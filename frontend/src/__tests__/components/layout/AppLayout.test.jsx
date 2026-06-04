@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
-import AppLayout from '../components/layout/AppLayout';
-import useAuthStore from '../store/authStore';
+import AppLayout from '../../../components/layout/AppLayout';
+import useAuthStore from '../../../store/authStore';
 
 function renderLayout() {
   return render(

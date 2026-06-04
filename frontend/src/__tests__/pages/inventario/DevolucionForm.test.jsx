@@ -3,23 +3,23 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
-import DevolucionForm from '../pages/inventario/DevolucionForm';
+import DevolucionForm from '../../../pages/inventario/DevolucionForm';
 
 const createMutate = vi.fn();
 const toastSuccess = vi.fn();
 const toastError = vi.fn();
 
-vi.mock('../hooks/inventario/useInventario', () => ({
+vi.mock('../../../hooks/inventario/useInventario', () => ({
   useCreateDevolucion: vi.fn(() => ({ mutateAsync: createMutate, isPending: false })),
 }));
-vi.mock('../hooks/useApi', () => ({
+vi.mock('../../../hooks/useApi', () => ({
   useApiQuery: vi.fn(),
 }));
 vi.mock('sonner', () => ({
   toast: { success: (...a) => toastSuccess(...a), error: (...a) => toastError(...a) },
 }));
 
-import { useApiQuery } from '../hooks/useApi';
+import { useApiQuery } from '../../../hooks/useApi';
 
 const LOTE = {
   id: 3,

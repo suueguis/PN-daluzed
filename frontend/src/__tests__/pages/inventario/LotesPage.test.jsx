@@ -3,20 +3,25 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
-import LotesPage from '../pages/inventario/LotesPage';
+import LotesPage from '../../../pages/inventario/LotesPage';
 
-vi.mock('../hooks/inventario/useInventario', () => ({
+vi.mock('../../../hooks/inventario/useInventario', () => ({
   useLotes: vi.fn(),
   useBodegas: vi.fn(),
   useCreateDevolucion: vi.fn(() => ({ mutateAsync: vi.fn(), isPending: false })),
   useCreateDescarte: vi.fn(() => ({ mutateAsync: vi.fn(), isPending: false })),
+  useTrazabilidad: vi.fn(() => ({ data: undefined, isLoading: false })),
 }));
-vi.mock('../hooks/useApi', () => ({
+vi.mock('../../../pages/inventario/TrazabilidadModal', () => ({
+  default: ({ lote, onClose }) =>
+    lote ? <div role="dialog" aria-label="trazabilidad"><button onClick={onClose}>Cerrar</button></div> : null,
+}));
+vi.mock('../../../hooks/useApi', () => ({
   useApiQuery: vi.fn(),
 }));
 
-import { useLotes, useBodegas } from '../hooks/inventario/useInventario';
-import { useApiQuery } from '../hooks/useApi';
+import { useLotes, useBodegas } from '../../../hooks/inventario/useInventario';
+import { useApiQuery } from '../../../hooks/useApi';
 
 const VENCE_7 = new Date(Date.now() + 5 * 86400000).toISOString().split('T')[0];
 const VENCIDO = new Date(Date.now() - 2 * 86400000).toISOString().split('T')[0];
@@ -78,8 +83,18 @@ describe('LotesPage', () => {
   it('abre modal devolución al hacer click en Devolver', async () => {
     render(<LotesPage />, { wrapper });
     await userEvent.click(screen.getAllByRole('button', { name: /Devolver/i })[0]);
-    // El título del modal es único en el documento
     expect(screen.getByRole('dialog')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /Registrar Devolución/i })).toBeInTheDocument();
+  });
+
+  it('muestra botón Ver historial en cada fila', () => {
+    render(<LotesPage />, { wrapper });
+    expect(screen.getAllByRole('button', { name: /Ver historial/i })).toHaveLength(2);
+  });
+
+  it('abre modal trazabilidad al hacer click en Ver historial', async () => {
+    render(<LotesPage />, { wrapper });
+    await userEvent.click(screen.getAllByRole('button', { name: /Ver historial/i })[0]);
+    expect(screen.getByRole('dialog', { name: 'trazabilidad' })).toBeInTheDocument();
   });
 });

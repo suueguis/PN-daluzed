@@ -3,22 +3,22 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
-import TrasladoForm from '../pages/inventario/TrasladoForm';
+import TrasladoForm from '../../../pages/inventario/TrasladoForm';
 
 const createMutate = vi.fn();
 
-vi.mock('../hooks/inventario/useInventario', () => ({
+vi.mock('../../../hooks/inventario/useInventario', () => ({
   useFefo: vi.fn(),
   useBodegas: vi.fn(),
   useCreateTraslado: vi.fn(() => ({ mutateAsync: createMutate, isPending: false })),
 }));
-vi.mock('../hooks/useApi', () => ({
+vi.mock('../../../hooks/useApi', () => ({
   useApiQuery: vi.fn(),
 }));
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 
-import { useFefo, useBodegas } from '../hooks/inventario/useInventario';
-import { useApiQuery } from '../hooks/useApi';
+import { useFefo, useBodegas } from '../../../hooks/inventario/useInventario';
+import { useApiQuery } from '../../../hooks/useApi';
 
 const FEFO_DATA = {
   lote_sugerido: { id: 5, numero_lote: 'L-005', cantidad: '3000', fecha_vencimiento: '2026-06-01' },

@@ -3,8 +3,8 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
 import MockAdapter from 'axios-mock-adapter';
-import axiosClient from '../../api/axiosClient';
-import MateriasPrimasPage from '../../pages/catalogo/MateriasPrimasPage';
+import axiosClient from '../../../api/axiosClient';
+import MateriasPrimasPage from '../../../pages/catalogo/MateriasPrimasPage';
 
 let mock;
 let qc;
