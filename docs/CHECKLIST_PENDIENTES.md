@@ -2,9 +2,80 @@
 
 > **Actualizado:** Junio 2026  
 > **Leyenda de tamaño:** 🟢 pequeño (< 2h) · 🟡 mediano (2–6h) · 🔴 grande (> 6h)  
-> **Leyenda de prioridad:** `M` = Must Have · `S` = Should Have · `+` = más allá de requisitos
+> **Leyenda de prioridad:** `+I` = +Importante (próxima iteración) · `M` = Must Have · `S` = Should Have · `+` = más allá de requisitos
 
 Marcar con `[x]` a medida que se completen.
+
+---
+
+## 0. +Importante — bugs UX/seguridad detectados en `main` (2026-06-04)
+
+Hallazgos sobre la app desplegada en `main` (último commit: `ff23c1c` — responsive). Tienen prioridad sobre el resto del backlog hasta dejarlos en cero.
+
+### 0.1 Inputs sin `placeholder` (UX) 🟢
+
+Los formularios muestran campos vacíos sin texto guía. Usuarios nuevos no saben qué tipear.
+
+- [ ] Auditar **todos** los `<input>`, `<textarea>` y `<select>` del frontend y añadir `placeholder` significativo (ej.: "ej. 250.00", "kg", "Selecciona una bodega").
+- [ ] Caso especial: el `<input type="password">` puede usar `placeholder="••••••••"`.
+- [ ] Verificar contraste del placeholder (no debe parecer un valor real ya escrito).
+
+---
+
+### 0.2 Confirmación doble en acciones destructivas (UX/Seguridad) 🟢
+
+Hoy las acciones peligrosas (logout, desactivar usuario, descartar lote, anular OC, eliminar bodega/zona) se ejecutan con un solo click sin diálogo de "¿estás seguro?".
+
+- [ ] Crear un componente `<ConfirmDialog>` reutilizable que pida confirmación con dos pasos cuando la acción es **irreversible** o afecta a otros usuarios.
+  - Primer paso: modal con descripción del impacto.
+  - Segundo paso: usuario debe escribir la palabra clave (ej.: el email del usuario a desactivar, el código del lote a descartar).
+- [ ] Aplicar a: Cerrar sesión (Perfil), Desactivar usuario (1.1), Descartar lote, Anular orden de compra, Eliminar bodega/zona.
+- [ ] Tests: garantizar que el segundo click no avance hasta que se cumpla la condición.
+
+---
+
+### 0.3 Toasts/errores con descripción concreta (UX) 🟢
+
+Hoy aparecen toasts genéricos tipo "Error" o "Algo salió mal". El usuario no sabe qué pasó ni qué hacer.
+
+- [ ] Crear helper `formatApiError(error)` que extraiga: campo afectado, mensaje del backend, código HTTP y sugerencia.
+- [ ] Aplicar en **todos** los catch de `useMutation`/`try-catch` del frontend.
+- [ ] Ejemplo: en vez de "Error al crear materia prima" → "No se pudo crear: 'código' ya está en uso. Usa uno distinto."
+- [ ] Tests por página crítica (Login, NuevaRecepción, NuevoBatido, Compensatorios).
+
+---
+
+### 0.4 Eliminar `console.log` que exponen `username`/datos sensibles (Seguridad) 🟢
+
+En DevTools se ven prints con el email del usuario logueado. Riesgo de leak en sesiones compartidas/grabaciones de pantalla.
+
+- [ ] `grep -rn "console\." frontend/src` y revisar cada uno. Eliminar todos los que loguen objetos de usuario, tokens o respuestas del API.
+- [ ] Mantener sólo `console.error` controlados en interceptores y limpiar el payload antes de loguear.
+- [ ] Añadir regla de ESLint `no-console: ['error', { allow: ['warn', 'error'] }]` para evitar regresiones.
+- [ ] Verificar que en `build` de producción no haya rastros.
+
+---
+
+### 0.5 Reemplazar el campo que pide datos en JSON crudo (UX crítico) 🟡
+
+Algún formulario está pidiendo que el usuario tipee JSON directamente — un usuario de panadería no tiene por qué saber JSON.
+
+- [ ] Localizar el(los) formulario(s): probablemente en módulos de configuración, alertas o detalle de movimientos.
+  - Comando: `grep -rn "JSON\\|jsonField\\|textarea" frontend/src/pages` para mapear candidatos.
+- [ ] Reemplazar por un formulario con campos individuales tipados (selects, inputs numéricos, datepickers).
+- [ ] Si el backend usa `JSONField`, validar/serializar la entrada estructurada antes de enviarla.
+
+---
+
+### 0.6 Proveedores: respetar `activo` en flujo de Orden de Compra (Bug funcional) 🟡
+
+Al crear una OC, el dropdown de proveedores incluye proveedores **inactivos** (o, peor: los inactivos también pueden seleccionarse y la OC se crea).
+
+- [ ] Backend: el endpoint `GET /api/v1/recepcion/proveedores/` debe aceptar `?activo=true` y respetarlo. Verificar que `ProveedorViewSet.get_queryset` filtre correctamente.
+- [ ] Frontend (`NuevaRecepcionPage` / `OrdenesPage`): consumir solo proveedores activos en el selector de OC.
+- [ ] Validación de servidor: si llega `proveedor_id` inactivo en el POST, devolver `400` con mensaje claro.
+- [ ] Test backend: crear OC con proveedor inactivo → debe fallar.
+- [ ] Test frontend: el selector no lista inactivos.
 
 ---
 
@@ -333,6 +404,12 @@ Cuando hay un batido `EN_PROCESO`, el stock de Bodega PDP está parcialmente com
 
 | Prioridad | Ítem | Tamaño |
 |-----------|------|--------|
+| 🔥 +I | Placeholders en inputs (0.1) | 🟢 |
+| 🔥 +I | Confirmación doble en acciones destructivas (0.2) | 🟢 |
+| 🔥 +I | Errores con descripción concreta (0.3) | 🟢 |
+| 🔥 +I | Eliminar `console.log` con username (0.4) | 🟢 |
+| 🔥 +I | Reemplazar campo JSON crudo (0.5) | 🟡 |
+| 🔥 +I | Proveedores activo/inactivo en OC (0.6) | 🟡 |
 | 🚨 M | Gestión de usuarios (1.1) | 🔴 |
 | 🚨 M | Dashboard completo + exportación (1.3) | 🔴 |
 | 🚨 M | AlertaService implementar (2.10) | 🔴 |
