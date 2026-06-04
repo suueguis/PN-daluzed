@@ -71,11 +71,11 @@ Algún formulario está pidiendo que el usuario tipee JSON directamente — un u
 
 Al crear una OC, el dropdown de proveedores incluye proveedores **inactivos** (o, peor: los inactivos también pueden seleccionarse y la OC se crea).
 
-- [ ] Backend: el endpoint `GET /api/v1/recepcion/proveedores/` debe aceptar `?activo=true` y respetarlo. Verificar que `ProveedorViewSet.get_queryset` filtre correctamente.
-- [ ] Frontend (`NuevaRecepcionPage` / `OrdenesPage`): consumir solo proveedores activos en el selector de OC.
-- [ ] Validación de servidor: si llega `proveedor_id` inactivo en el POST, devolver `400` con mensaje claro.
-- [ ] Test backend: crear OC con proveedor inactivo → debe fallar.
-- [ ] Test frontend: el selector no lista inactivos.
+- [ ] Backend: el endpoint `GET /api/v1/catalogo/proveedores/` debe aceptar `?activo=true` y respetarlo. Verificar que `ProveedorViewSet.get_queryset` filtre correctamente. _(Pendiente: archivo bloqueado por PR #27; entra cuando ese PR mergee.)_
+- [x] Frontend (`NuevaOrdenPage`): consumir solo proveedores activos en el selector de OC. _(PR #32)_
+- [x] Validación de servidor: si llega `proveedor_id` inactivo en el POST, devolver `400` con mensaje claro. _(`OrdenCompraSerializer.validate_proveedor` → PR #32)_
+- [x] Test backend: crear OC con proveedor inactivo → debe fallar. _(PR #32)_
+- [x] Test frontend: el selector no lista inactivos. _(PR #32)_
 
 ---
 
