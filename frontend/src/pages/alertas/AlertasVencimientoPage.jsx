@@ -16,6 +16,7 @@ export default function AlertasVencimientoPage() {
             label="Días umbral"
             type="number"
             min={1}
+            placeholder="ej. 7"
             value={dias}
             onChange={(e) => setDias(Number(e.target.value) || 7)}
           />

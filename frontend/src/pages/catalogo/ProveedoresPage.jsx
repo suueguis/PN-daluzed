@@ -126,10 +126,10 @@ export default function ProveedoresPage() {
         }
       >
         <form className="flex flex-col gap-3" onSubmit={submit}>
-          <Input label="Nombre" name="nombre" value={form.nombre} onChange={(e) => setForm({ ...form, nombre: e.target.value })} />
-          <Input label="Contacto" name="contacto" value={form.contacto} onChange={(e) => setForm({ ...form, contacto: e.target.value })} />
-          <Input label="Teléfono" name="telefono" value={form.telefono} onChange={(e) => setForm({ ...form, telefono: e.target.value })} />
-          <Input label="Email" name="email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+          <Input label="Nombre" name="nombre" placeholder="ej. Distribuidora Andina" value={form.nombre} onChange={(e) => setForm({ ...form, nombre: e.target.value })} />
+          <Input label="Contacto" name="contacto" placeholder="Nombre del contacto" value={form.contacto} onChange={(e) => setForm({ ...form, contacto: e.target.value })} />
+          <Input label="Teléfono" name="telefono" placeholder="ej. 3001234567" value={form.telefono} onChange={(e) => setForm({ ...form, telefono: e.target.value })} />
+          <Input label="Email" name="email" type="email" placeholder="contacto@proveedor.com" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
           <label className="flex items-center gap-2 text-sm text-wine-900">
             <input
               type="checkbox"

@@ -146,7 +146,7 @@ export default function NuevoBatidoPage() {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <Select
               label="Producto terminado"
-              placeholder="Selecciona..."
+              placeholder="Selecciona producto…"
               options={ptOptions}
               error={errors.producto_terminado_id?.message}
               {...register('producto_terminado_id')}
@@ -242,7 +242,7 @@ export default function NuevoBatidoPage() {
                               handleMPChange(idx, e.target.value);
                             }}
                           >
-                            <option value="">MP...</option>
+                            <option value="" disabled>Selecciona materia prima…</option>
                             {mpOptions.map((o) => (
                               <option key={o.value} value={o.value}>
                                 {o.label}
@@ -279,7 +279,7 @@ export default function NuevoBatidoPage() {
                             className="rounded-xl border border-peach-300 bg-white px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-rose-300"
                             {...register(`ingredientes.${idx}.lote_id`)}
                           >
-                            <option value="">Lote...</option>
+                            <option value="" disabled>Selecciona lote…</option>
                             {(lotesPerRow[idx] ?? []).map((l) => (
                               <option key={l.id} value={l.id}>
                                 #{l.id} · {l.fecha_vencimiento} · {l.cantidad} disp.
@@ -303,7 +303,7 @@ export default function NuevoBatidoPage() {
                           type="number"
                           step="0.01"
                           min="0.01"
-                          placeholder="0.00"
+                          placeholder="ej. 250.00"
                           className="w-28 rounded-xl border border-peach-300 bg-white px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-rose-300"
                           {...register(`ingredientes.${idx}.cantidad`)}
                         />

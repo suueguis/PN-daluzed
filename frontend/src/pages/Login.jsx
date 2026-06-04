@@ -995,7 +995,7 @@ export default function LoginPage() {
                   type="email"
                   {...register("email")}
                   autoComplete="email"
-                  placeholder="correo@ejemplo.com"
+                  placeholder="tu.correo@daluzed.com"
                   aria-invalid={errors.email ? "true" : "false"}
                   className="w-full rounded-2xl py-3.5 pl-10 pr-4 border text-sm transition-shadow focus:outline-none focus:ring-2 focus:ring-[rgba(201,104,112,0.2)]"
                   style={{

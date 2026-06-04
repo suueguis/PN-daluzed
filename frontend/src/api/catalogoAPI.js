@@ -27,6 +27,10 @@ export const materiasPrimasAPI = {
 
 export const TIPOS_IMPORT = ['materias_primas', 'productos_terminados', 'proveedores'];
 
+export function descargarPlantilla(tipo) {
+  return axiosClient.get(`${BASE}/plantilla/`, { params: { tipo }, responseType: 'blob' });
+}
+
 export function importarCatalogo(file, tipo) {
   const form = new FormData();
   form.append('file', file);

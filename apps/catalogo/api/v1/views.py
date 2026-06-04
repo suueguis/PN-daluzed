@@ -167,6 +167,66 @@ class PresentacionViewSet(viewsets.ReadOnlyModelViewSet):
 # Importación masiva
 # ─────────────────────────────────────────────────────────────────────────────
 
+class PlantillaView(APIView):
+    """
+    GET /catalogo/plantilla/?tipo=materias_primas|productos_terminados|proveedores
+    Devuelve un archivo .xlsx con las columnas esperadas y una fila de ejemplo.
+    """
+
+    permission_classes = [allow_roles(*_CAT_READ)]
+
+    TEMPLATES = {
+        'materias_primas': {
+            'filename': 'plantilla_materias_primas.xlsx',
+            'headers': ['nombre', 'simbolo_unidad', 'categoria', 'punto_reorden',
+                        'dias_minimos_vencimiento', 'condicion_almacenamiento'],
+            'example': ['Harina de trigo', 'g', 'GALLETERIA', 5000, 30, 'AMBIENTE'],
+        },
+        'productos_terminados': {
+            'filename': 'plantilla_productos_terminados.xlsx',
+            'headers': ['nombre', 'simbolo_unidad', 'vida_util_dias'],
+            'example': ['Torta de vainilla', 'und', 14],
+        },
+        'proveedores': {
+            'filename': 'plantilla_proveedores.xlsx',
+            'headers': ['nombre', 'contacto', 'telefono', 'email'],
+            'example': ['Harinas del Sur', 'Ana López', '3001234567', 'ana@hsdelsur.co'],
+        },
+    }
+
+    def get(self, request):
+        import io
+        import openpyxl
+        from openpyxl.styles import Font
+        from django.http import HttpResponse
+
+        tipo = request.query_params.get('tipo', 'materias_primas')
+        if tipo not in self.TEMPLATES:
+            return Response(
+                {'detail': f'tipo debe ser uno de: {", ".join(self.TEMPLATES)}.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        tpl = self.TEMPLATES[tipo]
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = tipo
+
+        ws.append(tpl['headers'])
+        for cell in ws[1]:
+            cell.font = Font(bold=True)
+        ws.append(tpl['example'])
+
+        buf = io.BytesIO()
+        wb.save(buf)
+        buf.seek(0)
+
+        content_type = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        response = HttpResponse(buf.read(), content_type=content_type)
+        response['Content-Disposition'] = f'attachment; filename="{tpl["filename"]}"'
+        return response
+
+
 class ImportarCatalogoView(APIView):
     """
     Importación masiva desde Excel (.xlsx) o CSV.

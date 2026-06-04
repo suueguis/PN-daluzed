@@ -20,10 +20,10 @@ export default function NuevaOrdenPage() {
   const { fields, append, remove } = useFieldArray({ control, name: 'detalles' });
 
   const { data: provData } = useQuery({
-    queryKey: ['catalogo', 'proveedores'],
-    queryFn: () => catalogoForRecepcion.proveedores().then((r) => r.data),
+    queryKey: ['catalogo', 'proveedores', { activo: true }],
+    queryFn: () => catalogoForRecepcion.proveedores({ activo: true }).then((r) => r.data),
   });
-  const proveedores = provData?.results ?? provData ?? [];
+  const proveedores = (provData?.results ?? provData ?? []).filter((p) => p.activo !== false);
 
   const { data: mpsData } = useQuery({
     queryKey: ['catalogo', 'materias-primas'],
@@ -75,7 +75,7 @@ export default function NuevaOrdenPage() {
               <Select
                 label="Proveedor"
                 options={provOptions}
-                placeholder="— Seleccionar proveedor —"
+                placeholder="Selecciona proveedor…"
                 error={errors.proveedor_id?.message}
                 {...field}
               />
@@ -106,7 +106,7 @@ export default function NuevaOrdenPage() {
                   <Select
                     label="Materia prima"
                     options={mpOptions}
-                    placeholder="— MP —"
+                    placeholder="Selecciona materia prima…"
                     error={errors.detalles?.[idx]?.materia_prima_id?.message}
                     {...f}
                   />
@@ -120,7 +120,7 @@ export default function NuevaOrdenPage() {
                   <Select
                     label="Presentación"
                     options={presOptions}
-                    placeholder="— Presentación —"
+                    placeholder="Selecciona presentación…"
                     error={errors.detalles?.[idx]?.presentacion_id?.message}
                     {...f}
                   />

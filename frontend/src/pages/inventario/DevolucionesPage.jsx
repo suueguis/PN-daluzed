@@ -38,6 +38,7 @@ export default function DevolucionesPage() {
             label="Lote a Devolver"
             options={loteOptions}
             value={loteId}
+            placeholder="Selecciona lote…"
             onChange={(e) => setLoteId(e.target.value)}
           />
         </div>

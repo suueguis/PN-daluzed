@@ -13,6 +13,7 @@ import {
   useUnidadesQuery,
   useImportarCatalogo,
 } from '../../hooks/catalogo/useCatalogo';
+import { descargarPlantilla } from '../../api/catalogoAPI';
 import { Toolbar, ActionsCell, YesNo } from './_shared.jsx';
 import { extractRows, useFilteredList, useSearch } from './_shared.js';
 import MateriaPrimaForm from './MateriaPrimaForm';
@@ -56,6 +57,7 @@ export default function MateriasPrimasPage() {
   const [confirm, setConfirm] = useState(null);
 
   const fileInputRef = useRef(null);
+  const [descargando, setDescargando] = useState(false);
 
   const open = (row) => {
     setEditing(row || { id: null });
@@ -113,6 +115,23 @@ export default function MateriasPrimasPage() {
 
   const triggerImport = () => fileInputRef.current?.click();
 
+  async function handleDescargarPlantilla() {
+    setDescargando(true);
+    try {
+      const { data: blob } = await descargarPlantilla('materias_primas');
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'plantilla_materias_primas.xlsx';
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      toast.error('No se pudo descargar la plantilla');
+    } finally {
+      setDescargando(false);
+    }
+  }
+
   return (
     <>
       <Toolbar
@@ -132,6 +151,13 @@ export default function MateriasPrimasPage() {
                 options={CATEGORIA_OPTS}
               />
             </div>
+            <Button
+              variant="ghost"
+              onClick={handleDescargarPlantilla}
+              disabled={descargando}
+            >
+              {descargando ? 'Descargando…' : 'Descargar plantilla'}
+            </Button>
             <Button
               variant="secondary"
               onClick={triggerImport}
