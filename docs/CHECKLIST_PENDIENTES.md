@@ -49,10 +49,10 @@ Hoy aparecen toasts genéricos tipo "Error" o "Algo salió mal". El usuario no s
 
 En DevTools se ven prints con el email del usuario logueado. Riesgo de leak en sesiones compartidas/grabaciones de pantalla.
 
-- [ ] `grep -rn "console\." frontend/src` y revisar cada uno. Eliminar todos los que loguen objetos de usuario, tokens o respuestas del API.
-- [ ] Mantener sólo `console.error` controlados en interceptores y limpiar el payload antes de loguear.
-- [ ] Añadir regla de ESLint `no-console: ['error', { allow: ['warn', 'error'] }]` para evitar regresiones.
-- [ ] Verificar que en `build` de producción no haya rastros.
+- [x] `grep -rn "console\." frontend/src` y revisar cada uno. Eliminar todos los que loguen objetos de usuario, tokens o respuestas del API. _(0 hallazgos al cierre del item — PR #31)_
+- [x] Mantener sólo `console.error` controlados en interceptores y limpiar el payload antes de loguear. _(interceptor de `axiosClient` no loguea)_
+- [x] Añadir regla de ESLint `no-console: ['error', { allow: ['warn', 'error'] }]` para evitar regresiones. _(PR #31)_
+- [x] Verificar que en `build` de producción no haya rastros.
 
 ---
 
