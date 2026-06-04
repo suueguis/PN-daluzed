@@ -371,3 +371,47 @@ class RecepcionMercanciaTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertTrue(Lote.objects.filter(numero_lote='LOT-A').exists())
         self.assertTrue(Lote.objects.filter(numero_lote='LOT-B').exists())
+
+
+URL_ORDENES = '/api/v1/recepcion/ordenes/'
+
+
+class OrdenCompraProveedorActivoTestCase(APITestCase):
+    """0.6: una OC no debe crearse contra un proveedor inactivo."""
+
+    def setUp(self) -> None:
+        self.user = User.objects.create_user(
+            email='inventario@daluzed.com',
+            password='Daluzed2026!',
+            role='INVENTARIO',
+        )
+        refresh = RefreshToken.for_user(self.user)
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f'Bearer {str(refresh.access_token)}'
+        )
+        self.proveedor_activo = Proveedor.objects.create(
+            nombre='Proveedor Activo', activo=True,
+        )
+        self.proveedor_inactivo = Proveedor.objects.create(
+            nombre='Proveedor Inactivo', activo=False,
+        )
+
+    def test_oc_con_proveedor_activo_se_crea(self) -> None:
+        response = self.client.post(
+            URL_ORDENES,
+            {'proveedor_id': self.proveedor_activo.id, 'detalles': []},
+            format='json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(OrdenCompra.objects.count(), 1)
+
+    def test_oc_con_proveedor_inactivo_es_rechazada(self) -> None:
+        response = self.client.post(
+            URL_ORDENES,
+            {'proveedor_id': self.proveedor_inactivo.id, 'detalles': []},
+            format='json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(OrdenCompra.objects.count(), 0)
+        self.assertIn('proveedor', response.json())
+        self.assertIn('inactivo', str(response.json()['proveedor']).lower())

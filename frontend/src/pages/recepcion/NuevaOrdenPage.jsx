@@ -19,10 +19,10 @@ export default function NuevaOrdenPage() {
   const { fields, append, remove } = useFieldArray({ control, name: 'detalles' });
 
   const { data: provData } = useQuery({
-    queryKey: ['catalogo', 'proveedores'],
-    queryFn: () => catalogoForRecepcion.proveedores().then((r) => r.data),
+    queryKey: ['catalogo', 'proveedores', { activo: true }],
+    queryFn: () => catalogoForRecepcion.proveedores({ activo: true }).then((r) => r.data),
   });
-  const proveedores = provData?.results ?? provData ?? [];
+  const proveedores = (provData?.results ?? provData ?? []).filter((p) => p.activo !== false);
 
   const { data: mpsData } = useQuery({
     queryKey: ['catalogo', 'materias-primas'],
