@@ -1,7 +1,7 @@
 # apps/recepcion/api/v1/serializers.py
 from decimal import Decimal
 from rest_framework import serializers
-from apps.catalogo.models import MateriaPrima, Presentacion
+from apps.catalogo.models import MateriaPrima, Presentacion, Proveedor
 from apps.recepcion.models import OrdenCompra, RecepcionMercancia
 
 
@@ -38,3 +38,13 @@ class OrdenCompraSerializer(serializers.ModelSerializer):
     class Meta:
         model = OrdenCompra
         fields = ['id', 'proveedor', 'fecha_creacion', 'estado', 'usuario_creador']
+
+    def to_internal_value(self, data):
+        if 'proveedor_id' in data and 'proveedor' not in data:
+            data = {**data, 'proveedor': data['proveedor_id']}
+        return super().to_internal_value(data)
+
+    def validate_proveedor(self, value: Proveedor) -> Proveedor:
+        if not value.activo:
+            raise serializers.ValidationError('Proveedor inactivo.')
+        return value
