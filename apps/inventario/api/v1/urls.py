@@ -3,6 +3,7 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import (
     BodegaViewSet,
+    ZonaBodegaViewSet,
     LoteListView,
     StockView,
     ReordenView,
@@ -15,6 +16,7 @@ from .views import (
 
 router = DefaultRouter()
 router.register('bodegas', BodegaViewSet, basename='bodega')
+router.register('zonas',   ZonaBodegaViewSet, basename='zona')
 router.register('traslados', TrasladoViewSet, basename='traslado')
 
 urlpatterns = [

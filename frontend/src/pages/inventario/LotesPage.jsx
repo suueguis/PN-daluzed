@@ -11,6 +11,7 @@ import Modal from '../../components/ui/Modal';
 import { formatDate, formatDecimal } from '../../utils/formatters';
 import DevolucionForm from './DevolucionForm';
 import DescarteForm from './DescarteForm';
+import TrazabilidadModal from './TrazabilidadModal';
 
 const VENCIMIENTO_OPTIONS = [
   { value: '', label: 'Todos' },
@@ -40,7 +41,7 @@ export default function LotesPage() {
   const [bodegaFiltro, setBodegaFiltro] = useState('');
   const [vencFiltro, setVencFiltro] = useState('');
   const [loteAccion, setLoteAccion] = useState(null);
-  const [modal, setModal] = useState(null); // 'devolucion' | 'descarte'
+  const [modal, setModal] = useState(null); // 'devolucion' | 'descarte' | 'trazabilidad'
 
   const params = {};
   if (mpFiltro) params.materia_prima = mpFiltro;
@@ -107,7 +108,7 @@ export default function LotesPage() {
             <table className="w-full text-sm">
               <thead className="bg-cream-100">
                 <tr>
-                  {['# Lote', 'Materia Prima', 'Bodega', 'Cantidad', 'Vencimiento', 'Estado', 'Acciones'].map((h) => (
+                  {['# Lote', 'Materia Prima', 'Bodega', 'Cantidad', 'Vencimiento', 'Estado', 'Historial', 'Acciones'].map((h) => (
                     <th key={h} className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-wine-700">
                       {h}
                     </th>
@@ -128,6 +129,11 @@ export default function LotesPage() {
                       <td className="px-4 py-3 tabular-nums text-wine-900">{formatDate(lote.fecha_vencimiento)}</td>
                       <td className="px-4 py-3">
                         <Badge tone={vencimientoBadgeTone(dias)}>{vencimientoLabel(dias)}</Badge>
+                      </td>
+                      <td className="px-4 py-3">
+                        <Button size="sm" variant="ghost" onClick={() => abrirAccion(lote, 'trazabilidad')}>
+                          Ver historial
+                        </Button>
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex gap-2">
@@ -171,6 +177,12 @@ export default function LotesPage() {
           <DescarteForm lote={loteAccion} onSuccess={cerrarModal} onCancel={cerrarModal} />
         )}
       </Modal>
+
+      {/* Modal trazabilidad */}
+      <TrazabilidadModal
+        lote={modal === 'trazabilidad' ? loteAccion : null}
+        onClose={cerrarModal}
+      />
     </div>
   );
 }

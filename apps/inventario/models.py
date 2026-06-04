@@ -17,12 +17,28 @@ class Bodega(models.Model):
         return f"{self.nombre} ({self.tipo})"
 
 
+class ZonaBodega(models.Model):
+    bodega = models.ForeignKey(Bodega, on_delete=models.CASCADE, related_name='zonas')
+    nombre = models.CharField(max_length=100)
+    descripcion = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ['nombre']
+        unique_together = [('bodega', 'nombre')]
+
+    def __str__(self):
+        return f"{self.nombre} — {self.bodega.nombre}"
+
+
 class Lote(models.Model):
     materia_prima = models.ForeignKey(
         MateriaPrima, on_delete=models.PROTECT, related_name='lotes'
     )
     bodega = models.ForeignKey(
         Bodega, on_delete=models.PROTECT, related_name='lotes'
+    )
+    zona = models.ForeignKey(
+        ZonaBodega, null=True, blank=True, on_delete=models.SET_NULL, related_name='lotes'
     )
     proveedor = models.ForeignKey(
         Proveedor, null=True, blank=True, on_delete=models.SET_NULL, related_name='lotes'
