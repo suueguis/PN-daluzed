@@ -16,9 +16,9 @@ Hallazgos sobre la app desplegada en `main` (último commit: `ff23c1c` — respo
 
 Los formularios muestran campos vacíos sin texto guía. Usuarios nuevos no saben qué tipear.
 
-- [ ] Auditar **todos** los `<input>`, `<textarea>` y `<select>` del frontend y añadir `placeholder` significativo (ej.: "ej. 250.00", "kg", "Selecciona una bodega").
-- [ ] Caso especial: el `<input type="password">` puede usar `placeholder="••••••••"`.
-- [ ] Verificar contraste del placeholder (no debe parecer un valor real ya escrito).
+- [x] Auditar **todos** los `<input>`, `<textarea>` y `<select>` del frontend y añadir `placeholder` significativo (ej.: "ej. 250.00", "kg", "Selecciona una bodega"). _(PR #34; pendientes archivos bloqueados Dashboard/Perfil/BodegasPage/MateriasPrimasPage — entran con sus PRs respectivos)_
+- [x] Caso especial: el `<input type="password">` puede usar `placeholder="••••••••"`. _(ya existía en Login)_
+- [x] Verificar contraste del placeholder (no debe parecer un valor real ya escrito). _(Input/Select usan `placeholder:text-wine-700/40`)_
 
 ---
 
