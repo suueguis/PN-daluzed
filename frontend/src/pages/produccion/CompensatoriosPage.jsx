@@ -11,6 +11,7 @@ import Select from '../../components/ui/Select';
 import Modal from '../../components/ui/Modal';
 import Table from '../../components/ui/Table';
 import Spinner from '../../components/ui/Spinner';
+import KeyValueEditor from '../../components/ui/KeyValueEditor';
 import { useApiQuery } from '../../hooks/useApi';
 import { produccionAPI } from '../../api/produccionAPI';
 import { formatDateTime } from '../../utils/formatters';
@@ -50,6 +51,7 @@ export default function CompensatoriosPage() {
     register,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors },
   } = useForm({ resolver: zodResolver(schema) });
 
@@ -159,31 +161,45 @@ export default function CompensatoriosPage() {
             />
           </div>
 
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-semibold text-wine-700 uppercase tracking-wide">
-              Datos originales (JSON)
-            </label>
-            <textarea
-              rows={3}
-              placeholder='{"cantidad": 10}'
-              className="rounded-xl border border-peach-300 bg-white px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-rose-300"
-              {...register('datos_originales')}
+          <div className="flex flex-col gap-3 rounded-xl border border-peach-200 p-3">
+            <KeyValueEditor
+              label="Datos originales"
+              helper="Añade los campos que estaban antes del ajuste. Los números se detectan automáticamente."
+              onChange={(obj) =>
+                setValue('datos_originales', JSON.stringify(obj), { shouldValidate: true })
+              }
             />
+            <label className="text-xs text-wine-600 flex flex-col gap-1">
+              Texto JSON (también editable)
+              <textarea
+                rows={3}
+                placeholder='{"cantidad": 10}'
+                className="w-full rounded-xl border border-peach-300 bg-white px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-rose-300"
+                {...register('datos_originales')}
+              />
+            </label>
             {errors.datos_originales && (
               <span className="text-xs text-cherry-500">{errors.datos_originales.message}</span>
             )}
           </div>
 
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-semibold text-wine-700 uppercase tracking-wide">
-              Datos corregidos (JSON)
-            </label>
-            <textarea
-              rows={3}
-              placeholder='{"cantidad": 8}'
-              className="rounded-xl border border-peach-300 bg-white px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-rose-300"
-              {...register('datos_corregidos')}
+          <div className="flex flex-col gap-3 rounded-xl border border-peach-200 p-3">
+            <KeyValueEditor
+              label="Datos corregidos"
+              helper="Añade los campos como deben quedar tras el ajuste."
+              onChange={(obj) =>
+                setValue('datos_corregidos', JSON.stringify(obj), { shouldValidate: true })
+              }
             />
+            <label className="text-xs text-wine-600 flex flex-col gap-1">
+              Texto JSON (también editable)
+              <textarea
+                rows={3}
+                placeholder='{"cantidad": 8}'
+                className="w-full rounded-xl border border-peach-300 bg-white px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-rose-300"
+                {...register('datos_corregidos')}
+              />
+            </label>
             {errors.datos_corregidos && (
               <span className="text-xs text-cherry-500">{errors.datos_corregidos.message}</span>
             )}
