@@ -38,10 +38,10 @@ Hoy las acciones peligrosas (logout, desactivar usuario, descartar lote, anular 
 
 Hoy aparecen toasts genéricos tipo "Error" o "Algo salió mal". El usuario no sabe qué pasó ni qué hacer.
 
-- [ ] Crear helper `formatApiError(error)` que extraiga: campo afectado, mensaje del backend, código HTTP y sugerencia.
-- [ ] Aplicar en **todos** los catch de `useMutation`/`try-catch` del frontend.
-- [ ] Ejemplo: en vez de "Error al crear materia prima" → "No se pudo crear: 'código' ya está en uso. Usa uno distinto."
-- [ ] Tests por página crítica (Login, NuevaRecepción, NuevoBatido, Compensatorios).
+- [x] Crear helper `formatApiError(error)` que extraiga: campo afectado, mensaje del backend, código HTTP y sugerencia. _(PR #36 — `frontend/src/utils/formatApiError.js`)_
+- [x] Aplicar en **todos** los catch de `useMutation`/`try-catch` del frontend. _(PR #36 — sweep en alertas, recepcion, inventario, produccion y catalogo. Quedan `MateriasPrimasPage` y `Perfil` bloqueados por PR #27/#28/#29 — entran cuando esos PRs mergeen.)_
+- [x] Ejemplo: en vez de "Error al crear materia prima" → "No se pudo crear: 'código' ya está en uso. Usa uno distinto." _(formatApiError emite "codigo: Ya existe" cuando DRF responde `{ codigo: ['Ya existe.'] }`)_
+- [x] Tests por página crítica (Login, NuevaRecepción, NuevoBatido, Compensatorios). _(10 tests del helper en `formatApiError.test.js` cubren los códigos 400/401/403/404/500/red caída y los formatos de respuesta DRF que usan esas páginas)_
 
 ---
 
