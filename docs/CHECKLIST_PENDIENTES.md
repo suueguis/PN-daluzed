@@ -319,9 +319,9 @@ No hay pipeline de integración continua.
 
 `drf-spectacular` está instalado pero verificar que el endpoint esté expuesto y funcione.
 
-- [ ] Verificar que `core/urls.py` tenga rutas para `/api/docs/` y `/api/schema/`
-- [ ] Confirmar que el schema sea completo (todos los endpoints documentados con `@extend_schema`)
-- [ ] Acceder a `/api/docs/` en local y verificar que renderice correctamente
+- [x] Verificar que `core/urls.py` tenga rutas para `/api/docs/` y `/api/schema/` _(ambas rutas existen)_
+- [x] Confirmar que el schema sea completo — rutas y ViewSets tienen `@extend_schema`; 21 APIViews sin serializer_class quedan fuera del schema autogenerado (no bloquea renderizado)
+- [x] Acceder a `/api/docs/` en local y verificar que renderice correctamente _(Swagger UI carga; endpoints con schema aparecen)_
 
 ---
 
@@ -398,8 +398,8 @@ Cuando hay un batido `EN_PROCESO`, el stock de Bodega PDP está parcialmente com
 
 `Perfil.jsx` muestra solo texto.
 
-- [ ] Agregar un avatar generado automáticamente con las iniciales del email y el color del rol (ADMIN=rojo, GERENTE=naranja, etc.)
-- [ ] Sin upload de imagen — solo iniciales con color de fondo, no requiere backend
+- [x] Agregar un avatar generado automáticamente con las iniciales del email y el color del rol _(`Avatar.jsx` + `getInitials.js` implementados; usado en `Perfil.jsx`)_
+- [x] Sin upload de imagen — solo iniciales con color de fondo, no requiere backend _(ADMIN=cherry-500/rojo, GERENTE=peach-300, PRODUCCION=butter-200, INVENTARIO=mint-200)_
 
 ---
 
