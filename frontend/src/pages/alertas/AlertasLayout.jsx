@@ -1,7 +1,6 @@
 import { NavLink, Outlet } from 'react-router-dom';
 
 import Badge from '../../components/ui/Badge';
-import RoleGate from '../../components/auth/RoleGate';
 import useAlertasStore from '../../store/alertasStore';
 import useAuthStore from '../../store/authStore';
 import { cn } from '../../utils/cn';
