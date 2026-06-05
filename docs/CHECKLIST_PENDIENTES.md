@@ -250,8 +250,8 @@ Los destinatarios de WhatsApp y email deberían poderse cambiar sin tocar códig
 
 Depende de que se implementen las zonas (punto 1.4). Una vez implementadas:
 
-- [ ] **Backend:** endpoint `GET /api/v1/indicadores/utilizacion-bodega/` que calcule stock actual / capacidad configurada por zona
-- [ ] **Frontend:** tarjeta o sección en Dashboard con barras de progreso por zona
+- [x] **Backend:** endpoint `GET /api/v1/indicadores/utilizacion-bodega/` que calcule stock actual / capacidad configurada por zona
+- [x] **Frontend:** tarjeta o sección en Dashboard con barras de progreso por zona
 
 ---
 

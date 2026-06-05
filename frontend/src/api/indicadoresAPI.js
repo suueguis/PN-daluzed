@@ -14,3 +14,7 @@ export const exportarAPI = {
     return axiosClient.get('/indicadores/exportar/', { params, responseType: 'blob' });
   },
 };
+
+export const indicadoresAPI = {
+  utilizacionBodega: () => axiosClient.get('/indicadores/utilizacion-bodega/').then((r) => r.data),
+};

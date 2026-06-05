@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { materiasPrimasAPI } from '../api/catalogoAPI';
 import { alertasAPI } from '../api/alertasAPI';
 import { produccionAPI } from '../api/produccionAPI';
-import { kpisAPI, exportarAPI } from '../api/indicadoresAPI';
+import { kpisAPI, exportarAPI, indicadoresAPI } from '../api/indicadoresAPI';
 import useAuthStore from '../store/authStore';
 import Badge from '../components/ui/Badge';
 import Spinner from '../components/ui/Spinner';
@@ -76,6 +76,13 @@ export default function Dashboard() {
   const { data: vencData, isLoading: vencLoading } = useQuery({
     queryKey: ['dashboard', 'kpis', 'vencimientos'],
     queryFn: async () => { const { data } = await kpisAPI.vencimientos(7); return data; },
+    staleTime: 60_000,
+    refetchInterval: 60_000,
+  });
+
+  const { data: utilizacionData, isLoading: utilizacionLoading } = useQuery({
+    queryKey: ['dashboard', 'utilizacion-bodega'],
+    queryFn: indicadoresAPI.utilizacionBodega,
     staleTime: 60_000,
     refetchInterval: 60_000,
   });
@@ -202,6 +209,47 @@ export default function Dashboard() {
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+      </section>
+
+      {/* ── Utilización de bodega por zona ─────────────────────────────── */}
+      <section aria-label="Utilización de bodega por zona">
+        <h2 className="mb-3 font-crushed text-xl text-wine-900">Utilización de bodegas</h2>
+        {utilizacionLoading ? (
+          <div className="flex justify-center py-6"><Spinner /></div>
+        ) : (
+          <div className="space-y-3 rounded-2xl border border-peach-200 bg-white p-4">
+            {utilizacionData?.utilizacion_por_zona?.length > 0 ? (
+              utilizacionData.utilizacion_por_zona.map((zona) => (
+                <div key={zona.zona_id} className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-semibold text-wine-900">{zona.zona_nombre}</p>
+                      <p className="text-xs text-wine-700">{zona.bodega_nombre}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs font-mono text-wine-900">{formatDecimal(zona.stock_actual)} / {formatDecimal(zona.capacidad_maxima)}</p>
+                      <p className="text-xs font-semibold text-wine-700">{zona.porcentaje_utilizacion.toFixed(1)}%</p>
+                    </div>
+                  </div>
+                  <div className="h-2 w-full overflow-hidden rounded-full bg-wine-200">
+                    <div
+                      style={{ width: `${Math.min(zona.porcentaje_utilizacion, 100)}%` }}
+                      className={`h-full ${
+                        zona.porcentaje_utilizacion >= 80
+                          ? 'bg-cherry-500'
+                          : zona.porcentaje_utilizacion >= 60
+                          ? 'bg-rose-500'
+                          : 'bg-mint-400'
+                      }`}
+                    />
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-wine-700">Sin datos de utilización.</p>
+            )}
           </div>
         )}
       </section>

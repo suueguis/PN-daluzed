@@ -186,3 +186,48 @@ class ExportarView(APIView):
         response = HttpResponse(buf.read(), content_type='application/pdf')
         response['Content-Disposition'] = f'attachment; filename="{filename}"'
         return response
+
+
+class UtilizacionBodegaView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        from apps.inventario.models import ZonaBodega
+        from django.db.models import Sum, F, Value
+        from django.db.models.functions import Coalesce
+
+        zonas = (
+            ZonaBodega.objects
+            .select_related('bodega')
+            .annotate(
+                stock_actual=Coalesce(Sum('lotes__cantidad'), Value(0))
+            )
+            .values(
+                'id',
+                'nombre',
+                'bodega__nombre',
+                'bodega__tipo',
+                'capacidad_maxima',
+                'stock_actual',
+            )
+        )
+
+        data = []
+        for zona in zonas:
+            capacidad = float(zona['capacidad_maxima']) or 1
+            stock = float(zona['stock_actual']) or 0
+            porcentaje = min(100, (stock / capacidad * 100)) if capacidad > 0 else 0
+
+            data.append({
+                'zona_id': zona['id'],
+                'zona_nombre': zona['nombre'],
+                'bodega_nombre': zona['bodega__nombre'],
+                'bodega_tipo': zona['bodega__tipo'],
+                'stock_actual': str(stock),
+                'capacidad_maxima': str(zona['capacidad_maxima']),
+                'porcentaje_utilizacion': round(porcentaje, 1),
+            })
+
+        return Response({
+            'utilizacion_por_zona': sorted(data, key=lambda x: x['bodega_nombre'])
+        })
