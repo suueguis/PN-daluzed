@@ -8,6 +8,13 @@ export const alertasAPI = {
   produccion:   ()             => axiosClient.get('/alertas/produccion-vencida/').then((r) => r.data),
   resolver:     (id, mensaje = '') =>
     axiosClient.post(`/alertas/${id}/resolver/`, { mensaje }).then((r) => r.data),
+  obtenerConfiguracion: () =>
+    axiosClient.get('/alertas/configuracion/').then((r) => {
+      const items = r.data;
+      return Array.isArray(items) ? items[0] : items;
+    }),
+  actualizarConfiguracion: (id, data) =>
+    axiosClient.patch(`/alertas/configuracion/${id}/`, data).then((r) => r.data),
 };
 
 export default alertasAPI;

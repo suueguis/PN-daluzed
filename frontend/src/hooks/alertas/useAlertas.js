@@ -58,3 +58,23 @@ export function useResolverAlerta() {
     onError: (err) => toast.error(formatApiError(err, 'No se pudo resolver la alerta')),
   });
 }
+
+export function useConfiguracionAlerta() {
+  return useQuery({
+    queryKey: ['alertas', 'configuracion'],
+    queryFn: alertasAPI.obtenerConfiguracion,
+    staleTime: 60_000,
+  });
+}
+
+export function useActualizarConfiguracion() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }) => alertasAPI.actualizarConfiguracion(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['alertas', 'configuracion'] });
+      toast.success('Configuración actualizada');
+    },
+    onError: (err) => toast.error(formatApiError(err, 'No se pudo actualizar la configuración')),
+  });
+}

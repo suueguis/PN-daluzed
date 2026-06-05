@@ -1,19 +1,29 @@
 import { NavLink, Outlet } from 'react-router-dom';
 
 import Badge from '../../components/ui/Badge';
+import RoleGate from '../../components/auth/RoleGate';
 import useAlertasStore from '../../store/alertasStore';
+import useAuthStore from '../../store/authStore';
 import { cn } from '../../utils/cn';
 
-const tabs = [
-  { to: '',                    label: 'Activas',            end: true },
-  { to: 'reorden',             label: 'Reorden' },
-  { to: 'vencimiento',         label: 'Vencimiento' },
-  { to: 'produccion-vencida',  label: 'Producción vencida' },
-];
+const getTabs = (role) => {
+  const baseTabs = [
+    { to: '',                    label: 'Activas',            end: true },
+    { to: 'reorden',             label: 'Reorden' },
+    { to: 'vencimiento',         label: 'Vencimiento' },
+    { to: 'produccion-vencida',  label: 'Producción vencida' },
+  ];
+  if (role === 'ADMIN') {
+    baseTabs.push({ to: 'configuracion', label: 'Configuración' });
+  }
+  return baseTabs;
+};
 
 export default function AlertasLayout() {
   const activasCount = useAlertasStore((s) => s.alertas.length);
   const isConnected = useAlertasStore((s) => s.isConnected);
+  const role = useAuthStore((s) => s.user?.role);
+  const tabs = getTabs(role);
 
   return (
     <div className="flex flex-col gap-4">

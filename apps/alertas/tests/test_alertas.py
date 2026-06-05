@@ -306,3 +306,81 @@ class AlertaSignalTestCase(TestCase):
             activa=True,
         ).first()
         self.assertIsNotNone(alerta)
+
+
+class ConfiguracionAletaAPITestCase(APITestCase):
+    """
+    Tests para ConfiguracionAlerta CRUD endpoint.
+    RF-ALR-05: Configuración de canales de alerta.
+    """
+
+    def setUp(self):
+        self.admin = User.objects.create_user(
+            email='admin@daluzed.com',
+            password='Daluzed2026!',
+            role='ADMIN',
+        )
+        self.inventario = User.objects.create_user(
+            email='inventario@daluzed.com',
+            password='Daluzed2026!',
+            role='INVENTARIO',
+        )
+        self.admin_token = RefreshToken.for_user(self.admin).access_token
+        self.inventario_token = RefreshToken.for_user(self.inventario).access_token
+
+    def test_alr_010_admin_puede_crear_configuracion(self):
+        """ADMIN puede crear ConfiguracionAlerta."""
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.admin_token}')
+        data = {
+            'whatsapp_numero': '+573001234567',
+            'email_gerencia': 'gerencia@daluzed.com',
+            'email_produccion': 'produccion@daluzed.com',
+            'dias_umbral_vencimiento': 5,
+        }
+        response = self.client.post('/api/v1/alertas/configuracion/', data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['whatsapp_numero'], '+573001234567')
+
+    def test_alr_011_no_admin_no_puede_crear(self):
+        """INVENTARIO no puede crear ConfiguracionAlerta."""
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.inventario_token}')
+        data = {
+            'whatsapp_numero': '+573001234567',
+            'email_gerencia': 'gerencia@daluzed.com',
+            'email_produccion': 'produccion@daluzed.com',
+            'dias_umbral_vencimiento': 5,
+        }
+        response = self.client.post('/api/v1/alertas/configuracion/', data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_alr_012_admin_puede_actualizar_configuracion(self):
+        """ADMIN puede actualizar ConfiguracionAlerta."""
+        from apps.alertas.models import ConfiguracionAlerta
+        ConfiguracionAlerta.objects.all().delete()  # Limpia previas
+        config = ConfiguracionAlerta.objects.create(
+            whatsapp_numero='+573001234567',
+            email_gerencia='old@daluzed.com',
+        )
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.admin_token}')
+        data = {
+            'whatsapp_numero': '+573009999999',
+            'email_gerencia': 'new@daluzed.com',
+            'email_produccion': 'produccion@daluzed.com',
+            'dias_umbral_vencimiento': 10,
+        }
+        response = self.client.patch(f'/api/v1/alertas/configuracion/{config.id}/', data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        config.refresh_from_db()
+        self.assertEqual(config.email_gerencia, 'new@daluzed.com')
+
+    def test_alr_013_admin_puede_leer_configuracion(self):
+        """ADMIN puede leer ConfiguracionAlerta."""
+        from apps.alertas.models import ConfiguracionAlerta
+        ConfiguracionAlerta.objects.create(
+            whatsapp_numero='+573001234567',
+            email_gerencia='gerencia@daluzed.com',
+        )
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.admin_token}')
+        response = self.client.get('/api/v1/alertas/configuracion/', format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertGreater(len(response.data), 0)
