@@ -21,6 +21,7 @@ from .serializers import (
 )
 from apps.authentication.permissions import allow_roles
 from apps.authentication.services import AuthService
+from apps.auditoria.services import registrar_operacion, get_client_ip
 
 User = get_user_model()
 
@@ -116,6 +117,7 @@ class LoginView(APIView):
         data = AuthService.generate_tokens_for_user(user)
         response = Response(data, status=status.HTTP_200_OK)
         _set_refresh_cookie(response, data['refresh'])
+        registrar_operacion(user, 'LOGIN', {'email': user.email}, get_client_ip(request))
         return response
 
 
@@ -187,6 +189,9 @@ class LogoutView(APIView):
         try:
             token = RefreshToken(refresh_token)
             token.blacklist()
+            registrar_operacion(
+                request.user, 'LOGOUT', {'email': request.user.email}, get_client_ip(request)
+            )
             response = Response(
                 {"detail": "Sesión cerrada exitosamente."},
                 status=status.HTTP_200_OK,
@@ -292,4 +297,10 @@ class UserViewSet(viewsets.GenericViewSet):
             )
         user.is_active = False
         user.save(update_fields=['is_active'])
+        registrar_operacion(
+            request.user,
+            'USUARIO_DESACTIVADO',
+            {'usuario_desactivado': user.email},
+            get_client_ip(request),
+        )
         return Response(UserSerializer(user).data)
