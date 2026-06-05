@@ -112,4 +112,33 @@ describe('OrdenesPage', () => {
       expect(screen.getByText(/no hay órdenes de compra/i)).toBeInTheDocument();
     });
   });
+
+  it('OC PARCIAL muestra badge Parcial y el botón de acción habilitado', async () => {
+    const parcialMock = [
+      {
+        id: 4, proveedor_nombre: 'Prov. Delta', fecha_creacion: '2026-06-01', estado: 'PARCIAL',
+        detalles: [{ id: 1, saldo_pendiente: '5.00', cantidad_presentacion: '10.00', cantidad_recibida: '5.00' }],
+      },
+    ];
+    ordenesAPI.list.mockResolvedValue({ data: parcialMock });
+    renderPage();
+
+    expect(await screen.findByText('Parcial')).toBeInTheDocument();
+    const btn = await screen.findByRole('button', { name: /completar/i });
+    expect(btn).not.toBeDisabled();
+  });
+
+  it('OC PARCIAL muestra saldo pendiente en la columna de estado', async () => {
+    const parcialMock = [
+      {
+        id: 4, proveedor_nombre: 'Prov. Delta', fecha_creacion: '2026-06-01', estado: 'PARCIAL',
+        detalles: [{ id: 1, saldo_pendiente: '5.00', cantidad_presentacion: '10.00', cantidad_recibida: '5.00' }],
+      },
+    ];
+    ordenesAPI.list.mockResolvedValue({ data: parcialMock });
+    renderPage();
+
+    await screen.findByText('Parcial');
+    expect(await screen.findByText(/5 pendiente/)).toBeInTheDocument();
+  });
 });

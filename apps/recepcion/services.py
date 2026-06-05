@@ -3,7 +3,7 @@ from datetime import date
 from django.db import transaction
 
 from apps.inventario.models import Bodega, Lote, MovimientoInventario
-from .models import OrdenCompra, RecepcionMercancia
+from .models import OrdenCompra, RecepcionMercancia, DetalleOrdenCompra
 
 
 class VidaUtilInsuficienteError(Exception):
@@ -53,9 +53,31 @@ class RecepcionService:
                 notas=f'Recepción OC #{orden_compra.pk}',
             )
 
-        return RecepcionMercancia.objects.create(
+        recepcion = RecepcionMercancia.objects.create(
             orden_compra=orden_compra,
             usuario=usuario,
             confirmada=True,
             justificacion_vencimiento=justificacion_vencimiento,
         )
+
+        # Update cantidad_recibida on matching OC details and derive new OC state
+        for d in detalles:
+            detalle_oc = DetalleOrdenCompra.objects.filter(
+                orden=orden_compra,
+                materia_prima=d['materia_prima'],
+                presentacion=d['presentacion'],
+            ).first()
+            if detalle_oc:
+                detalle_oc.cantidad_recibida += d['cantidad_presentacion']
+                detalle_oc.save(update_fields=['cantidad_recibida'])
+
+        detalles_oc = list(orden_compra.detalles.all())
+        all_received = all(dl.cantidad_recibida >= dl.cantidad_presentacion for dl in detalles_oc)
+        any_received = any(dl.cantidad_recibida > 0 for dl in detalles_oc)
+        if all_received:
+            orden_compra.estado = 'RECIBIDA'
+        elif any_received:
+            orden_compra.estado = 'PARCIAL'
+        orden_compra.save(update_fields=['estado'])
+
+        return recepcion
