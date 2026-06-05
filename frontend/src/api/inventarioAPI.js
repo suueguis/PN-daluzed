@@ -39,3 +39,7 @@ export const descartesAPI = {
 export const trazabilidadAPI = {
   get: (loteId) => axiosClient.get(`/inventario/trazabilidad/${loteId}/`),
 };
+
+export const kardexAPI = {
+  get: (params) => axiosClient.get('/inventario/kardex/', { params }).then((r) => r.data),
+};

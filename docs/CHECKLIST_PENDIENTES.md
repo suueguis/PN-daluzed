@@ -179,10 +179,10 @@ El endpoint `POST /api/v1/catalogo/importar/` ya existe (`ImportarCatalogoView`)
 
 Historial cronológico de todos los movimientos de una MP: entradas, traslados, consumos, devoluciones, descartes.
 
-- [ ] **Backend:** crear endpoint `GET /api/v1/inventario/kardex/?materia_prima={id}&desde=&hasta=` que devuelva `MovimientoInventario` filtrado con saldo acumulado calculado
-- [ ] **Frontend:** agregar pestaña "Kardex" en `InventarioLayout` o botón "Ver kardex" en `StockPage`
-- [ ] Tabla con columnas: Fecha · Tipo · Lote · Bodega origen → destino · Cantidad · Saldo acumulado
-- [ ] Filtros por rango de fechas y tipo de movimiento
+- [x] **Backend:** crear endpoint `GET /api/v1/inventario/kardex/?materia_prima={id}&desde=&hasta=` que devuelva `MovimientoInventario` filtrado con saldo acumulado calculado
+- [x] **Frontend:** agregar pestaña "Kardex" en `InventarioLayout` o botón "Ver kardex" en `StockPage`
+- [x] Tabla con columnas: Fecha · Tipo · Lote · Bodega origen → destino · Cantidad · Saldo acumulado
+- [x] Filtros por rango de fechas y tipo de movimiento
 
 ---
 

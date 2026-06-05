@@ -47,6 +47,26 @@ class MovimientoSerializer(serializers.ModelSerializer):
         ]
 
 
+# ── Kardex ───────────────────────────────────────────────────────────────────
+
+class KardexRowSerializer(serializers.ModelSerializer):
+    bodega_origen_nombre = serializers.CharField(source='bodega_origen.nombre', read_only=True, allow_null=True)
+    bodega_destino_nombre = serializers.CharField(source='bodega_destino.nombre', read_only=True, allow_null=True)
+    numero_lote = serializers.CharField(source='lote.numero_lote', read_only=True, allow_null=True)
+    usuario_email = serializers.CharField(source='usuario.email', read_only=True, allow_null=True)
+    saldo = serializers.DecimalField(max_digits=14, decimal_places=2, read_only=True)
+
+    class Meta:
+        model = MovimientoInventario
+        fields = [
+            'id', 'fecha', 'tipo',
+            'numero_lote', 'lote',
+            'bodega_origen', 'bodega_origen_nombre',
+            'bodega_destino', 'bodega_destino_nombre',
+            'cantidad', 'saldo', 'usuario_email', 'notas',
+        ]
+
+
 # ── Traslado ──────────────────────────────────────────────────────────────────
 
 class TrasladoCreateSerializer(serializers.Serializer):

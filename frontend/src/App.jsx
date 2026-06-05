@@ -25,6 +25,7 @@ import BodegasPage from "./pages/inventario/BodegasPage";
 import TrasladosPage from "./pages/inventario/TrasladosPage";
 import DevolucionesPage from "./pages/inventario/DevolucionesPage";
 import DescartesPage from "./pages/inventario/DescartesPage";
+import KardexPage from "./pages/inventario/KardexPage";
 import RecepcionLayout from "./pages/recepcion/RecepcionLayout";
 import OrdenesPage from "./pages/recepcion/OrdenesPage";
 import NuevaOrdenPage from "./pages/recepcion/NuevaOrdenPage";
@@ -95,6 +96,7 @@ function App() {
             <Route path="traslados"    element={<TrasladosPage />} />
             <Route path="devoluciones" element={<DevolucionesPage />} />
             <Route path="descartes"    element={<DescartesPage />} />
+            <Route path="kardex"       element={<KardexPage />} />
           </Route>
           <Route path="/recepcion"     element={<RecepcionLayout />}>
             <Route index element={<Navigate to="ordenes" replace />} />

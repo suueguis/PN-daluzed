@@ -8,6 +8,7 @@ const tabs = [
   { to: '/inventario/traslados',  label: 'Traslados' },
   { to: '/inventario/devoluciones', label: 'Devoluciones' },
   { to: '/inventario/descartes',  label: 'Descartes' },
+  { to: '/inventario/kardex',     label: 'Kardex' },
 ];
 
 export default function InventarioLayout() {
