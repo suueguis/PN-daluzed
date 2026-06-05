@@ -6,12 +6,13 @@ export const ROLES = {
 };
 
 export const menuItems = [
-  { path: '/dashboard',  label: 'Inicio',     roles: ['*'] },
-  { path: '/catalogo',   label: 'Catálogo',   roles: ['ADMIN', 'GERENTE', 'INVENTARIO'] },
-  { path: '/inventario', label: 'Inventario', roles: ['ADMIN', 'GERENTE', 'INVENTARIO'] },
-  { path: '/recepcion',  label: 'Recepción',  roles: ['ADMIN', 'INVENTARIO'] },
-  { path: '/produccion', label: 'Producción', roles: ['ADMIN', 'PRODUCCION'] },
-  { path: '/alertas',    label: 'Alertas',    roles: ['*'] },
+  { path: '/dashboard',      label: 'Inicio',    roles: ['*'] },
+  { path: '/catalogo',       label: 'Catálogo',  roles: ['ADMIN', 'GERENTE', 'INVENTARIO'] },
+  { path: '/inventario',     label: 'Inventario',roles: ['ADMIN', 'GERENTE', 'INVENTARIO'] },
+  { path: '/recepcion',      label: 'Recepción', roles: ['ADMIN', 'INVENTARIO'] },
+  { path: '/produccion',     label: 'Producción',roles: ['ADMIN', 'PRODUCCION'] },
+  { path: '/alertas',        label: 'Alertas',   roles: ['*'] },
+  { path: '/admin/usuarios', label: 'Usuarios',  roles: ['ADMIN'] },
 ];
 
 export function canAccess(item, userRole) {

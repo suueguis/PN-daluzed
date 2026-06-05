@@ -84,18 +84,18 @@ Al crear una OC, el dropdown de proveedores incluye proveedores **inactivos** (o
 
 El modelo `User` existe, pero no hay endpoints CRUD ni UI. El Admin no puede crear ni desactivar usuarios desde el sistema.
 
-- [ ] **Backend:** crear `UserViewSet` en `apps/authentication/api/v1/views.py`
+- [x] **Backend:** crear `UserViewSet` en `apps/authentication/api/v1/views.py`
   - `GET /api/v1/auth/usuarios/` — listar usuarios (solo ADMIN)
   - `POST /api/v1/auth/usuarios/` — crear usuario con rol
   - `PATCH /api/v1/auth/usuarios/{id}/` — editar rol o datos
   - `POST /api/v1/auth/usuarios/{id}/desactivar/` — soft deactivate (`is_active=False`)
   - Usuarios desactivados no pueden hacer login (verificar en `LoginView`)
-- [ ] **Frontend:** crear página `/admin/usuarios`
+- [x] **Frontend:** crear página `/admin/usuarios`
   - Tabla de usuarios con email, rol, estado activo/inactivo
   - Modal para crear nuevo usuario (email + rol + contraseña temporal)
-  - Botón desactivar con confirmación
+  - Botón desactivar con confirmación (ConfirmDialog con email como palabra clave)
   - Solo visible en sidebar para rol `ADMIN` (usar `RoleGate`)
-- [ ] Agregar ruta en `AppLayout` / router y en `menuItems` de `routes.js` con `roles: ['ADMIN']`
+- [x] Agregar ruta en `AppLayout` / router y en `menuItems` de `routes.js` con `roles: ['ADMIN']`
 
 ---
 
@@ -439,3 +439,5 @@ Cuando hay un batido `EN_PROCESO`, el stock de Bodega PDP está parcialmente com
 | ✨ + | Detalle expandible lote (4.4) | 🟢 |
 | ✨ + | Stock comprometido PDP (4.5) | 🟡 |
 | ✨ + | Avatar por iniciales (4.6) | 🟢 |
+
+despues de acabarlos todos, hay que crear de nuevo los seeds actualizados con todo lo nuevo hecho.

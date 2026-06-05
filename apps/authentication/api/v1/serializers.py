@@ -1,7 +1,45 @@
 # apps/authentication/api/v1/serializers.py
+from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import serializers
+
+User = get_user_model()
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'email', 'role', 'is_active', 'date_joined']
+        read_only_fields = ['id', 'email', 'is_active', 'date_joined']
+
+
+class CreateUserSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True)
+
+    class Meta:
+        model = User
+        fields = ['email', 'password', 'role']
+
+    def validate_password(self, value: str) -> str:
+        try:
+            validate_password(value)
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError(list(exc.messages))
+        return value
+
+    def create(self, validated_data: dict) -> User:
+        return User.objects.create_user(
+            email=validated_data['email'],
+            password=validated_data['password'],
+            role=validated_data.get('role', 'INVENTARIO'),
+        )
+
+
+class PatchUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['role']
 
 
 class LoginSerializer(serializers.Serializer):
