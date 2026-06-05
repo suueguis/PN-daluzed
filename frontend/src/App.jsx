@@ -17,6 +17,7 @@ import AlertasActivasPage from "./pages/alertas/AlertasActivasPage";
 import AlertasReordenPage from "./pages/alertas/AlertasReordenPage";
 import AlertasVencimientoPage from "./pages/alertas/AlertasVencimientoPage";
 import AlertasProduccionPage from "./pages/alertas/AlertasProduccionPage";
+import ConfiguracionAletasPage from "./pages/alertas/ConfiguracionAletasPage";
 import useAuthStore from "./store/authStore";
 import InventarioLayout from "./pages/inventario/InventarioLayout";
 import StockPage from "./pages/inventario/StockPage";
@@ -112,6 +113,7 @@ function App() {
             <Route path="reorden"              element={<AlertasReordenPage />} />
             <Route path="vencimiento"          element={<AlertasVencimientoPage />} />
             <Route path="produccion-vencida"   element={<AlertasProduccionPage />} />
+            <Route path="configuracion"        element={<ConfiguracionAletasPage />} />
           </Route>
           <Route
             path="/admin/usuarios"

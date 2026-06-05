@@ -1,14 +1,14 @@
 # apps/alertas/api/v1/views.py
 from django.shortcuts import get_object_or_404
-from rest_framework import status
+from rest_framework import status, viewsets
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 
-from apps.alertas.models import Alerta
+from apps.alertas.models import Alerta, ConfiguracionAlerta
 from apps.alertas.services import AlertaService
 from apps.authentication.permissions import allow_roles
 from apps.catalogo.models import MateriaPrima
-from .serializers import AlertaSerializer
+from .serializers import AlertaSerializer, ConfiguracionAletaSerializer
 
 _ALR_READ  = ('ADMIN', 'GERENTE', 'PRODUCCION', 'INVENTARIO')
 _ALR_WRITE = ('ADMIN', 'INVENTARIO', 'PRODUCCION')
@@ -71,3 +71,9 @@ def alertas_produccion_vencida(request):
         for lote in lotes
     ]
     return Response(data)
+
+
+class ConfiguracionAletaViewSet(viewsets.ModelViewSet):
+    queryset = ConfiguracionAlerta.objects.all()
+    serializer_class = ConfiguracionAletaSerializer
+    permission_classes = [allow_roles('ADMIN')]

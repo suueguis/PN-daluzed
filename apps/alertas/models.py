@@ -5,6 +5,25 @@ from apps.catalogo.models import MateriaPrima
 from apps.inventario.models import Bodega, Lote
 
 
+class ConfiguracionAlerta(models.Model):
+    whatsapp_numero = models.CharField(
+        max_length=20, blank=True,
+        help_text='Número de WhatsApp (incluir código país, ej: +573001234567)'
+    )
+    email_gerencia = models.EmailField(blank=True)
+    email_produccion = models.EmailField(blank=True)
+    dias_umbral_vencimiento = models.PositiveIntegerField(
+        default=7,
+        help_text='Días antes del vencimiento para generar alerta'
+    )
+
+    class Meta:
+        verbose_name_plural = 'Configuración de Alertas'
+
+    def __str__(self):
+        return 'Configuración Global de Alertas'
+
+
 class Alerta(models.Model):
     TIPO_CHOICES = [
         ('STOCK_BAJO',          'Stock por debajo del punto de reorden'),

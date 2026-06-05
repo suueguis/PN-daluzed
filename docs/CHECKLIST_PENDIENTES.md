@@ -239,10 +239,10 @@ Registro de quién hizo qué, cuándo y desde qué IP. No existe en el sistema.
 
 Los destinatarios de WhatsApp y email deberían poderse cambiar sin tocar código ni hacer redeploy.
 
-- [ ] **Backend:** modelo `ConfiguracionAlerta` con campos `whatsapp_numero`, `email_gerencia`, `email_produccion`, `dias_umbral_vencimiento`
-- [ ] Endpoint CRUD solo para ADMIN
+- [x] **Backend:** modelo `ConfiguracionAlerta` con campos `whatsapp_numero`, `email_gerencia`, `email_produccion`, `dias_umbral_vencimiento`
+- [x] Endpoint CRUD solo para ADMIN
+- [x] **Frontend:** página de configuración en el módulo de alertas (visible solo para ADMIN)
 - [ ] Usar esa configuración en `AlertaService` en vez de variables de entorno hardcodeadas
-- [ ] **Frontend:** página de configuración en el módulo de alertas (visible solo para ADMIN)
 
 ---
 
