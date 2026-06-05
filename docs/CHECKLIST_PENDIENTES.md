@@ -211,8 +211,8 @@ Verificar si una OC con 10 unidades puede recibirse en 2 momentos distintos (5 +
 
 `Perfil.jsx` solo muestra datos de solo lectura. El usuario no puede cambiar su propia contraseña.
 
-- [ ] **Backend:** endpoint `POST /api/v1/auth/cambiar-contrasena/` que reciba `contraseña_actual` + `nueva_contraseña` + `confirmar_contraseña`
-- [ ] **Frontend:** sección "Cambiar contraseña" en `Perfil.jsx` con los 3 campos y validación
+- [x] **Backend:** endpoint `POST /api/v1/auth/cambiar-contrasena/` — `CambiarContrasenaView` con validación completa _(ya existía)_
+- [x] **Frontend:** sección "Cambiar contraseña" en `Perfil.jsx` con los 3 campos, validación de coincidencia y error handling _(ya existía; testeado en `Perfil.test.jsx`)_
 
 ---
 
