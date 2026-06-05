@@ -27,6 +27,7 @@ _REC_WRITE = ('ADMIN', 'INVENTARIO')
 from apps.catalogo.models import MateriaPrima, Presentacion
 from apps.recepcion.models import OrdenCompra, RecepcionMercancia, DetalleOrdenCompra
 from apps.recepcion.services import RecepcionService, VidaUtilInsuficienteError
+from apps.auditoria.services import registrar_operacion, get_client_ip
 from .serializers import (
     RecepcionCreateSerializer,
     RecepcionMercanciaSerializer,
@@ -234,6 +235,12 @@ class RecepcionViewSet(
             )
         except VidaUtilInsuficienteError as exc:
             return Response({'detail': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+        registrar_operacion(
+            request.user,
+            'RECEPCION_CREADA',
+            {'recepcion_id': recepcion.pk, 'oc_id': recepcion.orden_compra_id},
+            get_client_ip(request),
+        )
         return Response(
             RecepcionMercanciaSerializer(recepcion).data,
             status=status.HTTP_201_CREATED,

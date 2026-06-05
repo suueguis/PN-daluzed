@@ -10,6 +10,7 @@ from apps.inventario.models import Bodega, ZonaBodega, Lote, MovimientoInventari
 _INV_READ  = ('ADMIN', 'GERENTE', 'INVENTARIO')
 _INV_WRITE = ('ADMIN', 'INVENTARIO')
 from apps.inventario.services import InventarioService, calcular_kardex
+from apps.auditoria.services import registrar_operacion, get_client_ip
 from .serializers import (
     BodegaSerializer,
     ZonaBodegaSerializer,
@@ -138,6 +139,12 @@ class TrasladoViewSet(
             )
         except ValueError as exc:
             return Response({'detail': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+        registrar_operacion(
+            request.user,
+            'TRASLADO',
+            {'movimiento_id': movimiento.pk, 'lote_id': movimiento.lote_id},
+            get_client_ip(request),
+        )
         return Response(MovimientoSerializer(movimiento).data, status=status.HTTP_201_CREATED)
 
 

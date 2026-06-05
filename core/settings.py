@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'apps.produccion',
     'apps.alertas',
     'apps.indicadores',
+    'apps.auditoria',
 ]
 
 # ──────────────────────────────────────────────

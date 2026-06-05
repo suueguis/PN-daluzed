@@ -37,6 +37,7 @@ import ProduccionLayout from "./pages/produccion/ProduccionLayout";
 import IndicadoresLayout from "./pages/indicadores/IndicadoresLayout";
 import ReportesPage from "./pages/indicadores/ReportesPage";
 import UsuariosPage from "./pages/admin/UsuariosPage";
+import BitacoraPage from "./pages/admin/BitacoraPage";
 import RoleGate from "./components/RoleGate";
 
 function parseJwt(token) {
@@ -126,6 +127,14 @@ function App() {
             element={
               <RoleGate allowed={['ADMIN']} fallback={<Navigate to="/dashboard" replace />}>
                 <UsuariosPage />
+              </RoleGate>
+            }
+          />
+          <Route
+            path="/admin/bitacora"
+            element={
+              <RoleGate allowed={['ADMIN']} fallback={<Navigate to="/dashboard" replace />}>
+                <BitacoraPage />
               </RoleGate>
             }
           />

@@ -14,6 +14,7 @@ export const menuItems = [
   { path: '/alertas',        label: 'Alertas',     roles: ['*'] },
   { path: '/indicadores',    label: 'Indicadores', roles: ['ADMIN', 'GERENTE'] },
   { path: '/admin/usuarios', label: 'Usuarios',    roles: ['ADMIN'] },
+  { path: '/admin/bitacora', label: 'Bitácora',    roles: ['ADMIN'] },
 ];
 
 export function canAccess(item, userRole) {

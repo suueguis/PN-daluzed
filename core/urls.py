@@ -27,6 +27,9 @@ urlpatterns = [
     # ── Indicadores v1 ────────────────────────────────────────────
     path('api/v1/indicadores/', include('apps.indicadores.api.v1.urls')),
 
+    # ── Auditoría v1 ──────────────────────────────────────────────
+    path('api/v1/auditoria/', include('apps.auditoria.api.v1.urls')),
+
     # ── Swagger / OpenAPI ─────────────────────────────────────────
     path('api/schema/',          SpectacularAPIView.as_view(),        name='schema'),
     path('api/docs/',            SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),

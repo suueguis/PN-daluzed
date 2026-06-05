@@ -19,6 +19,7 @@ from apps.produccion.services import (
     LimiteBatidosError,
     DespachoIrreversibleError,
 )
+from apps.auditoria.services import registrar_operacion, get_client_ip
 from .serializers import (
     BatidoCreateSerializer,
     BatidoSerializer,
@@ -56,6 +57,12 @@ class BatidoViewSet(
             )
         except (StockInsuficienteError, LimiteBatidosError) as exc:
             return Response({'detail': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+        registrar_operacion(
+            request.user if request.user.is_authenticated else None,
+            'BATIDO_CREADO',
+            {'batido_id': batido.pk, 'producto': batido.producto_terminado.nombre},
+            get_client_ip(request),
+        )
         return Response(
             BatidoSerializer(batido).data, status=status.HTTP_201_CREATED,
         )
@@ -87,6 +94,12 @@ class DespachoViewSet(
             )
         except DespachoIrreversibleError as exc:
             return Response({'detail': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+        registrar_operacion(
+            request.user if request.user.is_authenticated else None,
+            'DESPACHO',
+            {'lote_pt_id': lote_pt.pk},
+            get_client_ip(request),
+        )
         return Response(
             LoteProductoTerminadoSerializer(lote_pt).data,
             status=status.HTTP_200_OK,
@@ -118,6 +131,12 @@ class CompensatorioViewSet(
             datos_corregidos=vd['datos_corregidos'],
             descripcion=vd['descripcion'],
             usuario=request.user if request.user.is_authenticated else None,
+        )
+        registrar_operacion(
+            request.user if request.user.is_authenticated else None,
+            'COMPENSATORIO',
+            {'compensatorio_id': comp.pk, 'tipo_afectado': comp.tipo_afectado},
+            get_client_ip(request),
         )
         return Response(
             MovimientoCompensatorioSerializer(comp).data,

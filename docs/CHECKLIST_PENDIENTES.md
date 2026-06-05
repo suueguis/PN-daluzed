@@ -220,7 +220,7 @@ Verificar si una OC con 10 unidades puede recibirse en 2 momentos distintos (5 +
 
 Registro de quién hizo qué, cuándo y desde qué IP. No existe en el sistema.
 
-- [ ] **Backend:** crear modelo `BitacoraOperacion`:
+- [x] **Backend:** crear modelo `BitacoraOperacion`:
   ```python
   class BitacoraOperacion(models.Model):
       usuario = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
@@ -229,9 +229,9 @@ Registro de quién hizo qué, cuándo y desde qué IP. No existe en el sistema.
       ip = models.GenericIPAddressField(null=True)
       fecha = models.DateTimeField(auto_now_add=True)
   ```
-- [ ] Registrar en servicios críticos: login, logout, recepción, traslado, batido, compensatorio, despacho
-- [ ] Endpoint `GET /api/v1/auditoria/bitacora/` solo para ADMIN
-- [ ] **Frontend:** página `/admin/bitacora` con tabla filtrable por usuario, acción y fecha
+- [x] Registrar en servicios críticos: login, logout, recepción, traslado, batido, compensatorio, despacho, desactivar usuario
+- [x] Endpoint `GET /api/v1/auditoria/bitacora/` solo para ADMIN
+- [x] **Frontend:** página `/admin/bitacora` con tabla filtrable por usuario, acción y fecha
 
 ---
 
