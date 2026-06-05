@@ -384,3 +384,66 @@ class ConfiguracionAletaAPITestCase(APITestCase):
         response = self.client.get('/api/v1/alertas/configuracion/', format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertGreater(len(response.data), 0)
+
+
+class AlertaServiceConfigTestCase(TestCase):
+    """
+    ALR-014..016: AlertaService lee de ConfiguracionAlerta en vez de hardcoded values.
+    RF-ALR-05
+    """
+
+    def setUp(self):
+        self.gramos = UnidadMedida.objects.create(nombre='GramosConf', simbolo='gc')
+        self.mp = MateriaPrima.objects.create(
+            nombre='Vainilla',
+            unidad_medida=self.gramos,
+            punto_reorden=100,
+        )
+        self.bodega = Bodega.objects.create(nombre='BP Config', tipo='PRINCIPAL')
+
+    def test_alr_014_verificar_vencimientos_usa_dias_umbral_de_config(self):
+        """verificar_vencimientos() sin argumento usa dias_umbral_vencimiento de ConfiguracionAlerta."""
+        from apps.alertas.models import ConfiguracionAlerta
+        ConfiguracionAlerta.objects.create(dias_umbral_vencimiento=3)
+        Lote.objects.create(
+            materia_prima=self.mp,
+            bodega=self.bodega,
+            cantidad=500,
+            fecha_vencimiento=date.today() + timedelta(days=2),
+            fecha_entrada=date.today(),
+        )
+        AlertaService.verificar_vencimientos()
+        alerta = Alerta.objects.filter(tipo='VENCIMIENTO_PROXIMO', activa=True).first()
+        self.assertIsNotNone(alerta)
+
+    def test_alr_015_verificar_vencimientos_sin_config_usa_fallback(self):
+        """verificar_vencimientos() sin ConfiguracionAlerta usa 7 días como fallback."""
+        from apps.alertas.models import ConfiguracionAlerta
+        ConfiguracionAlerta.objects.all().delete()
+        Lote.objects.create(
+            materia_prima=self.mp,
+            bodega=self.bodega,
+            cantidad=500,
+            fecha_vencimiento=date.today() + timedelta(days=5),
+            fecha_entrada=date.today(),
+        )
+        AlertaService.verificar_vencimientos()
+        alerta = Alerta.objects.filter(tipo='VENCIMIENTO_PROXIMO', activa=True).first()
+        self.assertIsNotNone(alerta)
+
+    @patch('apps.alertas.services.twilio_client')
+    def test_alr_016_enviar_whatsapp_usa_numero_de_config(self, mock_twilio):
+        """enviar_whatsapp() sin destinatario explícito usa whatsapp_numero de ConfiguracionAlerta."""
+        from apps.alertas.models import ConfiguracionAlerta
+        ConfiguracionAlerta.objects.create(whatsapp_numero='+573009876543')
+        mock_twilio.messages.create = MagicMock(return_value=MagicMock(sid='SM_CFG'))
+        alerta = Alerta.objects.create(
+            tipo='STOCK_BAJO',
+            materia_prima=self.mp,
+            bodega=self.bodega,
+            activa=True,
+            mensaje='Test config wiring.',
+        )
+        AlertaService.enviar_whatsapp(alerta)
+        kwargs = mock_twilio.messages.create.call_args[1]
+        self.assertIn('+573009876543', kwargs['to'])

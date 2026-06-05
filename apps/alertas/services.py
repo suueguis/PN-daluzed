@@ -14,9 +14,11 @@ from django.core.mail import send_mail  # noqa: F401  (patched en tests)
 from django.db.models import Sum
 from django.utils import timezone
 
+from typing import Optional
+
 from apps.catalogo.models import MateriaPrima
 from apps.inventario.models import Bodega, Lote
-from .models import Alerta
+from .models import Alerta, ConfiguracionAlerta
 
 
 # Channels y Twilio son opcionales en este momento: dejamos referencias
@@ -26,6 +28,10 @@ twilio_client = None
 
 
 class AlertaService:
+
+    @staticmethod
+    def _get_config() -> Optional['ConfiguracionAlerta']:
+        return ConfiguracionAlerta.objects.first()
 
     # ── Stock bajo (RF-ALR-01) ───────────────────────────────────────
     @staticmethod
@@ -70,7 +76,10 @@ class AlertaService:
 
     # ── Vencimiento próximo (RF-ALR-02) ──────────────────────────────
     @staticmethod
-    def verificar_vencimientos(dias_umbral=7):
+    def verificar_vencimientos(dias_umbral: Optional[int] = None):
+        if dias_umbral is None:
+            config = AlertaService._get_config()
+            dias_umbral = config.dias_umbral_vencimiento if config else 7
         hoy = date.today()
         fecha_corte = hoy + timedelta(days=dias_umbral)
         lotes = Lote.objects.filter(
@@ -161,7 +170,18 @@ class AlertaService:
 
     # ── Envío por WhatsApp (RF-ALR-02 — Twilio) ──────────────────────
     @staticmethod
-    def enviar_whatsapp(alerta, destinatario='+573000000000', remitente='+14155238886'):
+    def enviar_whatsapp(
+        alerta,
+        destinatario: Optional[str] = None,
+        remitente: str = '+14155238886',
+    ):
+        if destinatario is None:
+            config = AlertaService._get_config()
+            destinatario = (
+                config.whatsapp_numero
+                if config and config.whatsapp_numero
+                else '+573000000000'
+            )
         nombre_mp = alerta.materia_prima.nombre if alerta.materia_prima else ''
         body = f'[Daluzed] {alerta.tipo} — {nombre_mp}: {alerta.mensaje}'
         return twilio_client.messages.create(
@@ -172,7 +192,10 @@ class AlertaService:
 
     # ── Envío por email (RF-ALR-02 — SMTP) ───────────────────────────
     @staticmethod
-    def enviar_email(alerta, destinatario):
+    def enviar_email(alerta, destinatario: Optional[str] = None):
+        config = AlertaService._get_config()
+        if destinatario is None:
+            destinatario = config.email_gerencia if config and config.email_gerencia else ''
         nombre_mp = alerta.materia_prima.nombre if alerta.materia_prima else 'inventario'
         subject = f'Alerta de {nombre_mp} — {alerta.tipo}'
         body = alerta.mensaje
@@ -182,3 +205,22 @@ class AlertaService:
             'noreply@daluzed.com',
             [destinatario],
         )
+
+    # ── Notificación multi-canal (RF-ALR-05) ─────────────────────────
+    @staticmethod
+    def notificar_todos(alerta) -> dict:
+        """Send alert via all configured channels (WhatsApp + email)."""
+        config = AlertaService._get_config()
+        results: dict = {}
+        if config and config.whatsapp_numero and twilio_client is not None:
+            results['whatsapp'] = AlertaService.enviar_whatsapp(alerta, config.whatsapp_numero)
+        destinatarios = [
+            addr for addr in [
+                config.email_gerencia if config else '',
+                config.email_produccion if config else '',
+            ] if addr
+        ]
+        for addr in destinatarios:
+            AlertaService.enviar_email(alerta, addr)
+        results['emails'] = destinatarios
+        return results
