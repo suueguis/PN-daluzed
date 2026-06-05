@@ -57,8 +57,7 @@ describe('DetalleRecepcionPage', () => {
 
     const createObjURL = vi.fn(() => 'blob:test');
     const revokeObjURL = vi.fn();
-    global.URL.createObjectURL = createObjURL;
-    global.URL.revokeObjectURL = revokeObjURL;
+    vi.stubGlobal('URL', { createObjectURL: createObjURL, revokeObjectURL: revokeObjURL });
 
     renderPage();
     const btn = await screen.findByRole('button', { name: /descargar pdf/i });
