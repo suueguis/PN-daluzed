@@ -70,7 +70,11 @@ class ProveedorViewSet(viewsets.ModelViewSet):
         return [allow_roles(*_CAT_WRITE)()]
 
     def get_queryset(self):
-        return Proveedor.objects.all().order_by('nombre')
+        qs = Proveedor.objects.all().order_by('nombre')
+        activo = self.request.query_params.get('activo')
+        if activo is not None:
+            qs = qs.filter(activo=activo.lower() == 'true')
+        return qs
 
 
 # ─────────────────────────────────────────────────────────────────────────────
