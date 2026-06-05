@@ -10,9 +10,10 @@ SECRET_KEY = os.environ.get(
     'django-insecure-du%@q$=_rmt$=9d%(-5w+3exfi34b@nz*e8ch#7y%7mea!hwm&',
 )
 
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'True').lower() not in ('false', '0', 'no')
 
-ALLOWED_HOSTS = []
+_allowed = os.environ.get('ALLOWED_HOSTS', '')
+ALLOWED_HOSTS = [h.strip() for h in _allowed.split(',') if h.strip()] if _allowed else ['*'] if DEBUG else []
 
 INSTALLED_APPS = [
     # Daphne debe ir ANTES de django.contrib.staticfiles
@@ -170,4 +171,5 @@ USE_I18N      = True
 USE_TZ        = True
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
