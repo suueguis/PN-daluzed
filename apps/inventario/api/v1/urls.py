@@ -12,6 +12,7 @@ from .views import (
     DevolucionView,
     DescarteView,
     TrazabilidadView,
+    KardexView,
 )
 
 router = DefaultRouter()
@@ -27,5 +28,6 @@ urlpatterns = [
     path('devoluciones/',                   DevolucionView.as_view(), name='inv_devoluciones'),
     path('descartes/',                      DescarteView.as_view(),  name='inv_descartes'),
     path('trazabilidad/<int:lote_id>/',     TrazabilidadView.as_view(), name='inv_trazabilidad'),
+    path('kardex/',                         KardexView.as_view(),       name='inv_kardex'),
     path('', include(router.urls)),
 ]

@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { bodegasAPI, lotesAPI, fefoAPI, trasladosAPI, devolucionesAPI, descartesAPI, trazabilidadAPI } from '../../api/inventarioAPI';
+import { bodegasAPI, lotesAPI, fefoAPI, trasladosAPI, devolucionesAPI, descartesAPI, trazabilidadAPI, kardexAPI } from '../../api/inventarioAPI';
 
 // ── Keys ─────────────────────────────────────────────────────────────────────
 
@@ -126,5 +126,13 @@ export function useCreateDescarte() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['inventario', 'lotes'] });
     },
+  });
+}
+
+export function useKardex(params) {
+  return useQuery({
+    queryKey: ["inventario", "kardex", params],
+    queryFn: () => kardexAPI.get(params),
+    enabled: !!params?.materia_prima,
   });
 }

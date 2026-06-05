@@ -9,10 +9,11 @@ from apps.inventario.models import Bodega, ZonaBodega, Lote, MovimientoInventari
 
 _INV_READ  = ('ADMIN', 'GERENTE', 'INVENTARIO')
 _INV_WRITE = ('ADMIN', 'INVENTARIO')
-from apps.inventario.services import InventarioService
+from apps.inventario.services import InventarioService, calcular_kardex
 from .serializers import (
     BodegaSerializer,
     ZonaBodegaSerializer,
+    KardexRowSerializer,
     LoteSerializer,
     MovimientoSerializer,
     TrasladoCreateSerializer,
@@ -185,3 +186,26 @@ class TrazabilidadView(APIView):
             'lote_id': lote_id,
             'movimientos': MovimientoSerializer(movimientos, many=True).data,
         })
+
+
+# ── Kardex ───────────────────────────────────────────────────────────────────
+
+class KardexView(APIView):
+    permission_classes = [allow_roles(*_INV_READ)]
+
+    def get(self, request):
+        mp_id = request.query_params.get('materia_prima')
+        if not mp_id:
+            return Response({'detail': 'El parámetro materia_prima es requerido.'}, status=400)
+
+        from apps.catalogo.models import MateriaPrima
+        if not MateriaPrima.objects.filter(pk=mp_id).exists():
+            return Response({'detail': 'Materia prima no encontrada.'}, status=404)
+
+        rows = calcular_kardex(
+            materia_prima_id=mp_id,
+            desde=request.query_params.get('desde'),
+            hasta=request.query_params.get('hasta'),
+            tipo=request.query_params.get('tipo'),
+        )
+        return Response(KardexRowSerializer(rows, many=True).data)

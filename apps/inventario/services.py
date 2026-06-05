@@ -100,3 +100,39 @@ class InventarioService:
             usuario=usuario,
             notas=motivo,
         )
+
+
+_KARDEX_ENTRADAS = frozenset({'RECEPCION'})
+_KARDEX_SALIDAS  = frozenset({'CONSUMO', 'DEVOLUCION', 'DESCARTE'})
+
+
+def calcular_kardex(
+    materia_prima_id: int,
+    desde: str | None = None,
+    hasta: str | None = None,
+    tipo: str | None = None,
+) -> list[MovimientoInventario]:
+    qs = (
+        MovimientoInventario.objects
+        .filter(lote__materia_prima_id=materia_prima_id)
+        .select_related('lote', 'bodega_origen', 'bodega_destino', 'usuario')
+        .order_by('fecha')
+    )
+    if desde:
+        qs = qs.filter(fecha__date__gte=desde)
+    if hasta:
+        qs = qs.filter(fecha__date__lte=hasta)
+
+    saldo = 0
+    rows: list[MovimientoInventario] = []
+    for mov in qs:
+        if mov.tipo in _KARDEX_ENTRADAS:
+            saldo += mov.cantidad
+        elif mov.tipo in _KARDEX_SALIDAS:
+            saldo -= mov.cantidad
+        mov.saldo = saldo
+        if tipo and mov.tipo != tipo:
+            continue
+        rows.append(mov)
+
+    return rows
