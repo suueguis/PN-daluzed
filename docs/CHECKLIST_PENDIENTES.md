@@ -200,10 +200,10 @@ El botón "Imprimir" en `DetalleRecepcionPage` abre `window.print()`. Eso no es 
 
 Verificar si una OC con 10 unidades puede recibirse en 2 momentos distintos (5 + 5), conservando saldo pendiente.
 
-- [ ] **Backend:** verificar que `OrdenCompra` tenga campo de cantidad recibida vs cantidad pedida por línea
-- [ ] Si no existe: agregar `cantidad_recibida` a `DetalleOrdenCompra` y lógica que actualice el estado de la OC (`PENDIENTE` → `PARCIAL` → `RECIBIDA`)
-- [ ] **Frontend:** en `OrdenesPage`, mostrar estado `PARCIAL` con el saldo pendiente visible
-- [ ] Permitir registrar una segunda recepción contra la misma OC mientras tenga saldo pendiente
+- [x] **Backend:** verificar que `OrdenCompra` tenga campo de cantidad recibida vs cantidad pedida por línea
+- [x] Si no existe: agregar `cantidad_recibida` a `DetalleOrdenCompra` y lógica que actualice el estado de la OC (`PENDIENTE` → `PARCIAL` → `RECIBIDA`)
+- [x] **Frontend:** en `OrdenesPage`, mostrar estado `PARCIAL` con el saldo pendiente visible
+- [x] Permitir registrar una segunda recepción contra la misma OC mientras tenga saldo pendiente
 
 ---
 

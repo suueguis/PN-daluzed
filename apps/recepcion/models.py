@@ -8,6 +8,7 @@ from apps.catalogo.models import MateriaPrima, Presentacion, Proveedor
 class OrdenCompra(models.Model):
     ESTADO_CHOICES = [
         ('PENDIENTE',  'Pendiente'),
+        ('PARCIAL',    'Parcial'),
         ('RECIBIDA',   'Recibida'),
         ('CANCELADA',  'Cancelada'),
     ]
@@ -32,6 +33,7 @@ class DetalleOrdenCompra(models.Model):
     materia_prima = models.ForeignKey(MateriaPrima, on_delete=models.PROTECT)
     presentacion = models.ForeignKey(Presentacion, on_delete=models.PROTECT)
     cantidad_presentacion = models.DecimalField(max_digits=10, decimal_places=2)
+    cantidad_recibida = models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
     def __str__(self):
         return f"{self.materia_prima} × {self.cantidad_presentacion} ({self.presentacion})"

@@ -10,11 +10,13 @@ import Select from '../../components/ui/Select';
 const ESTADO_OPTIONS = [
   { value: '',          label: 'Todos los estados' },
   { value: 'PENDIENTE', label: 'Pendiente' },
+  { value: 'PARCIAL',   label: 'Parcial' },
   { value: 'RECIBIDA',  label: 'Recibida' },
   { value: 'CANCELADA', label: 'Cancelada' },
 ];
 
-const ESTADO_TONE = { PENDIENTE: 'warning', RECIBIDA: 'success', CANCELADA: 'danger' };
+const ESTADO_TONE = { PENDIENTE: 'warning', PARCIAL: 'info', RECIBIDA: 'success', CANCELADA: 'danger' };
+const ESTADO_LABEL = { PENDIENTE: 'Pendiente', PARCIAL: 'Parcial', RECIBIDA: 'Recibida', CANCELADA: 'Cancelada' };
 
 export default function OrdenesPage() {
   const navigate = useNavigate();
@@ -29,14 +31,24 @@ export default function OrdenesPage() {
 
   const columns = [
     { key: 'id',             header: '# OC',     render: (r) => `OC-${r.id}` },
-    { key: 'proveedor',      header: 'Proveedor', render: (r) => r.proveedor },
+    { key: 'proveedor',      header: 'Proveedor', render: (r) => r.proveedor_nombre ?? r.proveedor },
     { key: 'fecha_creacion', header: 'Fecha',     render: (r) => r.fecha_creacion },
     {
       key: 'estado',
       header: 'Estado',
-      render: (r) => (
-        <Badge tone={ESTADO_TONE[r.estado] ?? 'neutral'}>{r.estado}</Badge>
-      ),
+      render: (r) => {
+        const saldoPendiente = r.detalles?.reduce((s, d) => s + parseFloat(d.saldo_pendiente ?? 0), 0);
+        return (
+          <div className="flex items-center gap-2">
+            <Badge tone={ESTADO_TONE[r.estado] ?? 'neutral'}>
+              {ESTADO_LABEL[r.estado] ?? r.estado}
+            </Badge>
+            {r.estado === 'PARCIAL' && saldoPendiente > 0 && (
+              <span className="text-xs text-wine-700/70">({saldoPendiente.toFixed(0)} pendiente)</span>
+            )}
+          </div>
+        );
+      },
     },
     {
       key: 'acciones',
@@ -46,10 +58,10 @@ export default function OrdenesPage() {
         <Button
           size="sm"
           variant="ghost"
-          disabled={r.estado !== 'PENDIENTE'}
+          disabled={r.estado !== 'PENDIENTE' && r.estado !== 'PARCIAL'}
           onClick={() => navigate(`/recepcion/recepciones/nueva?oc=${r.id}`)}
         >
-          Registrar recepción
+          {r.estado === 'PARCIAL' ? 'Completar recepción' : 'Registrar recepción'}
         </Button>
       ),
     },
