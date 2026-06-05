@@ -34,6 +34,8 @@ import RecepcionesPage from "./pages/recepcion/RecepcionesPage";
 import NuevaRecepcionPage from "./pages/recepcion/NuevaRecepcionPage";
 import DetalleRecepcionPage from "./pages/recepcion/DetalleRecepcionPage";
 import ProduccionLayout from "./pages/produccion/ProduccionLayout";
+import IndicadoresLayout from "./pages/indicadores/IndicadoresLayout";
+import ReportesPage from "./pages/indicadores/ReportesPage";
 import UsuariosPage from "./pages/admin/UsuariosPage";
 import RoleGate from "./components/RoleGate";
 
@@ -108,6 +110,10 @@ function App() {
             <Route path="recepciones/:id"      element={<DetalleRecepcionPage />} />
           </Route>
           <Route path="/produccion/*"  element={<ProduccionLayout />} />
+          <Route path="/indicadores"   element={<IndicadoresLayout />}>
+            <Route index element={<Navigate to="reportes" replace />} />
+            <Route path="reportes" element={<ReportesPage />} />
+          </Route>
           <Route path="/alertas"       element={<AlertasLayout />}>
             <Route index                       element={<AlertasActivasPage />} />
             <Route path="reorden"              element={<AlertasReordenPage />} />

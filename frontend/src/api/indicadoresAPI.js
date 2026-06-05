@@ -18,3 +18,12 @@ export const exportarAPI = {
 export const indicadoresAPI = {
   utilizacionBodega: () => axiosClient.get('/indicadores/utilizacion-bodega/').then((r) => r.data),
 };
+
+export const reporteSemanalAPI = {
+  get: (params) => axiosClient.get('/indicadores/reporte-semanal/', { params }).then((r) => r.data),
+  descargarExcel: (desde, hasta) =>
+    axiosClient.get('/indicadores/reporte-semanal/', {
+      params: { desde, hasta, formato: 'xlsx' },
+      responseType: 'blob',
+    }),
+};

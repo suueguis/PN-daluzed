@@ -1,14 +1,16 @@
 import io
 from datetime import date, timedelta
 
-from django.db.models import Sum
+from django.db.models import Count, Sum
+from django.db.models.functions import TruncWeek
 from django.http import HttpResponse
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.inventario.models import Lote
-from apps.produccion.models import LoteProductoTerminado
+from apps.produccion.models import Batido, LoteProductoTerminado
+from apps.recepcion.models import RecepcionMercancia
 
 
 class KpisView(APIView):
@@ -231,3 +233,115 @@ class UtilizacionBodegaView(APIView):
         return Response({
             'utilizacion_por_zona': sorted(data, key=lambda x: x['bodega_nombre'])
         })
+
+
+class ReporteSemanalView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        try:
+            hasta: date = date.fromisoformat(request.query_params['hasta']) if 'hasta' in request.query_params else date.today()
+            desde: date = date.fromisoformat(request.query_params['desde']) if 'desde' in request.query_params else hasta - timedelta(weeks=4)
+        except ValueError:
+            return Response({'detail': 'Formato de fecha inválido. Use YYYY-MM-DD.'}, status=400)
+
+        semanas = self._agrupar_por_semana(desde, hasta)
+
+        if request.query_params.get('formato') == 'xlsx':
+            return self._exportar_excel(semanas, desde, hasta)
+
+        return Response({'desde': str(desde), 'hasta': str(hasta), 'semanas': semanas})
+
+    def _agrupar_por_semana(self, desde: date, hasta: date) -> list[dict]:
+        batidos_qs = (
+            Batido.objects
+            .filter(fecha_produccion__range=(desde, hasta))
+            .annotate(semana=TruncWeek('fecha_produccion'))
+            .values('semana')
+            .annotate(total=Count('id'))
+            .order_by('semana')
+        )
+        recepciones_qs = (
+            RecepcionMercancia.objects
+            .filter(fecha__range=(desde, hasta))
+            .annotate(semana=TruncWeek('fecha'))
+            .values('semana')
+            .annotate(total=Count('id'))
+            .order_by('semana')
+        )
+        despachos_qs = (
+            LoteProductoTerminado.objects
+            .filter(fecha_despacho__isnull=False, fecha_despacho__range=(desde, hasta))
+            .annotate(semana=TruncWeek('fecha_despacho'))
+            .values('semana')
+            .annotate(total=Count('id'), unidades=Sum('cantidad'))
+            .order_by('semana')
+        )
+
+        data: dict[str, dict] = {}
+
+        def _key(semana_dt) -> str:
+            return semana_dt.strftime('%Y-%m-%d')
+
+        def _ensure(k: str) -> None:
+            data.setdefault(k, {
+                'semana_inicio': k,
+                'batidos': 0,
+                'recepciones': 0,
+                'despachos': 0,
+                'unidades_despachadas': '0',
+            })
+
+        for row in batidos_qs:
+            k = _key(row['semana'])
+            _ensure(k)
+            data[k]['batidos'] = row['total']
+
+        for row in recepciones_qs:
+            k = _key(row['semana'])
+            _ensure(k)
+            data[k]['recepciones'] = row['total']
+
+        for row in despachos_qs:
+            k = _key(row['semana'])
+            _ensure(k)
+            data[k]['despachos'] = row['total']
+            data[k]['unidades_despachadas'] = str(row['unidades'] or 0)
+
+        return sorted(data.values(), key=lambda x: x['semana_inicio'])
+
+    def _exportar_excel(self, semanas: list[dict], desde: date, hasta: date) -> HttpResponse:
+        import openpyxl
+        from openpyxl.styles import Font
+
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = 'Reporte Semanal'
+
+        ws.append([f'Reporte semanal Daluzed — {desde} al {hasta}'])
+        ws['A1'].font = Font(bold=True, size=13)
+        ws.append([])
+
+        headers = ['Semana (inicio lunes)', 'Batidos', 'Recepciones', 'Despachos', 'Unidades despachadas']
+        ws.append(headers)
+        for cell in ws[3]:
+            cell.font = Font(bold=True)
+
+        for sem in semanas:
+            ws.append([
+                sem['semana_inicio'],
+                sem['batidos'],
+                sem['recepciones'],
+                sem['despachos'],
+                float(sem['unidades_despachadas']),
+            ])
+
+        buf = io.BytesIO()
+        wb.save(buf)
+        buf.seek(0)
+
+        content_type = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        filename = f'reporte_semanal_{desde}_{hasta}.xlsx'
+        response = HttpResponse(buf.read(), content_type=content_type)
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        return response
