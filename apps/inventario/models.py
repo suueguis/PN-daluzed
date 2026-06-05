@@ -21,6 +21,10 @@ class ZonaBodega(models.Model):
     bodega = models.ForeignKey(Bodega, on_delete=models.CASCADE, related_name='zonas')
     nombre = models.CharField(max_length=100)
     descripcion = models.TextField(blank=True)
+    capacidad_maxima = models.DecimalField(
+        max_digits=12, decimal_places=2, default=1000,
+        help_text='Capacidad máxima en gramos o unidades (según MP)'
+    )
 
     class Meta:
         ordering = ['nombre']
