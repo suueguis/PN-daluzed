@@ -8,10 +8,14 @@ from apps.catalogo.models import UnidadMedida, MateriaPrima, ProductoTerminado
 from apps.inventario.models import Bodega, Lote
 from apps.produccion.models import Batido, LoteProductoTerminado
 
+from apps.recepcion.models import OrdenCompra, RecepcionMercancia
+from apps.catalogo.models import Proveedor
+
 User = get_user_model()
 
-URL_KPI      = '/api/v1/indicadores/kpis/'
-URL_EXPORTAR = '/api/v1/indicadores/exportar/'
+URL_KPI            = '/api/v1/indicadores/kpis/'
+URL_EXPORTAR       = '/api/v1/indicadores/exportar/'
+URL_REPORTE_SEMANAL = '/api/v1/indicadores/reporte-semanal/'
 
 
 class IndicadoresTestCase(APITestCase):
@@ -148,4 +152,108 @@ class IndicadoresTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('spreadsheetml', response['Content-Type'])
         self.assertIn('Content-Disposition', response)
+        self.assertIn('.xlsx', response['Content-Disposition'])
+
+
+class ReporteSemanalTestCase(APITestCase):
+    """IND-006 al IND-008: Reporte histórico semanal de operaciones."""
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            email='gerente2@daluzed.com',
+            password='Daluzed2026!',
+            role='GERENTE',
+        )
+        refresh = RefreshToken.for_user(self.user)
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {str(refresh.access_token)}')
+
+        gramos = UnidadMedida.objects.create(nombre='GramosR', simbolo='gr')
+        unidades = UnidadMedida.objects.create(nombre='UnidadesR', simbolo='uR')
+        mp = MateriaPrima.objects.create(nombre='Azúcar', unidad_medida=gramos, punto_reorden=1000)
+        pt = ProductoTerminado.objects.create(
+            nombre='Torta de chocolate', vida_util_dias=7, unidad_medida=unidades
+        )
+        proveedor = Proveedor.objects.create(nombre='Dist. Central', activo=True)
+        bodega = Bodega.objects.create(nombre='Bodega Rep', tipo='PRINCIPAL')
+
+        hoy = date.today()
+        lunes_pasado = hoy - timedelta(days=hoy.weekday() + 7)
+
+        # Batido en la semana pasada
+        batido = Batido.objects.create(
+            producto_terminado=pt,
+            fecha_produccion=lunes_pasado + timedelta(days=1),
+            hora_inicio='08:00',
+            estado='COMPLETADO',
+            usuario=self.user,
+        )
+        lote_pt = LoteProductoTerminado.objects.create(
+            batido=batido,
+            estado='EN_PUNTO_DE_VENTA',
+            cantidad=50,
+            fecha_produccion=lunes_pasado + timedelta(days=1),
+            fecha_vencimiento=lunes_pasado + timedelta(days=8),
+            fecha_despacho=lunes_pasado + timedelta(days=2),
+        )
+
+        # Recepción en la semana pasada
+        oc = OrdenCompra.objects.create(proveedor=proveedor, estado='RECIBIDA', usuario_creador=self.user)
+        RecepcionMercancia.objects.create(
+            orden_compra=oc,
+            fecha=lunes_pasado + timedelta(days=1),
+            usuario=self.user,
+        )
+
+        self.desde = str(lunes_pasado)
+        self.hasta = str(lunes_pasado + timedelta(days=6))
+
+    # ── IND-006 ───────────────────────────────────────────────────────
+    def test_ind_006_reporte_semanal_estructura(self):
+        """
+        GET /indicadores/reporte-semanal/?desde=&hasta= devuelve
+        estructura con clave 'semanas' y campos por semana.
+        RF-IND-06
+        """
+        response = self.client.get(URL_REPORTE_SEMANAL, {'desde': self.desde, 'hasta': self.hasta})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('semanas', response.data)
+        self.assertIn('desde', response.data)
+        self.assertIn('hasta', response.data)
+        semanas = response.data['semanas']
+        self.assertGreater(len(semanas), 0)
+        primera = semanas[0]
+        for campo in ('semana_inicio', 'batidos', 'recepciones', 'despachos', 'unidades_despachadas'):
+            self.assertIn(campo, primera)
+
+    # ── IND-007 ───────────────────────────────────────────────────────
+    def test_ind_007_reporte_semanal_conteos_correctos(self):
+        """
+        Los conteos de batidos, recepciones y despachos reflejan
+        los registros creados en setUp dentro del rango de fechas.
+        RF-IND-06
+        """
+        response = self.client.get(URL_REPORTE_SEMANAL, {'desde': self.desde, 'hasta': self.hasta})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        semanas = response.data['semanas']
+        total_batidos = sum(s['batidos'] for s in semanas)
+        total_recepciones = sum(s['recepciones'] for s in semanas)
+        total_despachos = sum(s['despachos'] for s in semanas)
+        self.assertGreaterEqual(total_batidos, 1)
+        self.assertGreaterEqual(total_recepciones, 1)
+        self.assertGreaterEqual(total_despachos, 1)
+
+    # ── IND-008 ───────────────────────────────────────────────────────
+    def test_ind_008_reporte_semanal_exportar_excel(self):
+        """
+        GET /indicadores/reporte-semanal/?formato=xlsx devuelve
+        archivo Excel con Content-Type spreadsheetml.
+        RF-IND-06
+        """
+        response = self.client.get(
+            URL_REPORTE_SEMANAL,
+            {'desde': self.desde, 'hasta': self.hasta, 'formato': 'xlsx'},
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('spreadsheetml', response['Content-Type'])
+        self.assertIn('attachment', response['Content-Disposition'])
         self.assertIn('.xlsx', response['Content-Disposition'])

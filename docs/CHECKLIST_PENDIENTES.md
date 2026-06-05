@@ -257,9 +257,9 @@ Depende de que se implementen las zonas (punto 1.4). Una vez implementadas:
 
 ### 2.9 Reportes históricos semanales (RF-IND-06) 🟡
 
-- [ ] **Backend:** endpoint `GET /api/v1/indicadores/reporte-semanal/?desde=&hasta=` que devuelva batidos, recepciones y despachos agrupados por semana
-- [ ] Exportable a Excel (reutilizar la infraestructura del punto 1.3)
-- [ ] **Frontend:** sección "Reportes" en el módulo de indicadores con selector de semana y tabla de resultados
+- [x] **Backend:** endpoint `GET /api/v1/indicadores/reporte-semanal/?desde=&hasta=` que devuelva batidos, recepciones y despachos agrupados por semana
+- [x] Exportable a Excel (reutilizar la infraestructura del punto 1.3)
+- [x] **Frontend:** sección "Reportes" en el módulo de indicadores con selector de semana y tabla de resultados
 
 ---
 
