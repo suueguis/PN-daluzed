@@ -32,6 +32,8 @@ import RecepcionesPage from "./pages/recepcion/RecepcionesPage";
 import NuevaRecepcionPage from "./pages/recepcion/NuevaRecepcionPage";
 import DetalleRecepcionPage from "./pages/recepcion/DetalleRecepcionPage";
 import ProduccionLayout from "./pages/produccion/ProduccionLayout";
+import UsuariosPage from "./pages/admin/UsuariosPage";
+import RoleGate from "./components/RoleGate";
 
 function parseJwt(token) {
   try {
@@ -109,6 +111,14 @@ function App() {
             <Route path="vencimiento"          element={<AlertasVencimientoPage />} />
             <Route path="produccion-vencida"   element={<AlertasProduccionPage />} />
           </Route>
+          <Route
+            path="/admin/usuarios"
+            element={
+              <RoleGate allowed={['ADMIN']} fallback={<Navigate to="/dashboard" replace />}>
+                <UsuariosPage />
+              </RoleGate>
+            }
+          />
         </Route>
         <Route path="*" element={<Navigate to={accessToken ? "/dashboard" : "/login"} replace />} />
       </Routes>

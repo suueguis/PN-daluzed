@@ -3,7 +3,8 @@ from django.conf import settings
 from django.contrib.auth import authenticate, get_user_model
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework import status, viewsets
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
@@ -11,7 +12,14 @@ from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from drf_spectacular.utils import extend_schema, OpenApiResponse
 from axes.models import AccessAttempt
 
-from .serializers import LoginSerializer, CambiarContrasenaSerializer
+from .serializers import (
+    LoginSerializer,
+    CambiarContrasenaSerializer,
+    UserSerializer,
+    CreateUserSerializer,
+    PatchUserSerializer,
+)
+from apps.authentication.permissions import allow_roles
 from apps.authentication.services import AuthService
 
 User = get_user_model()
@@ -225,3 +233,63 @@ class CambiarContrasenaView(APIView):
             {"detail": "Contraseña actualizada correctamente."},
             status=status.HTTP_200_OK,
         )
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Gestión de usuarios (RF-AUT-04) — solo ADMIN
+# ─────────────────────────────────────────────────────────────────────────────
+
+class UserViewSet(viewsets.GenericViewSet):
+    """
+    CRUD de usuarios del sistema. Acceso exclusivo para rol ADMIN.
+    Nunca expone contraseñas. PATCH solo permite cambiar el campo `role`.
+    """
+    permission_classes = [allow_roles('ADMIN')]
+    queryset = User.objects.all().order_by('date_joined')
+
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return CreateUserSerializer
+        if self.action == 'partial_update':
+            return PatchUserSerializer
+        return UserSerializer
+
+    @extend_schema(summary="Listar usuarios", tags=["Usuarios"])
+    def list(self, request):
+        serializer = UserSerializer(self.get_queryset(), many=True)
+        return Response(serializer.data)
+
+    @extend_schema(summary="Crear usuario", tags=["Usuarios"])
+    def create(self, request):
+        serializer = CreateUserSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        user = serializer.save()
+        return Response(UserSerializer(user).data, status=status.HTTP_201_CREATED)
+
+    @extend_schema(summary="Editar rol de usuario", tags=["Usuarios"])
+    def partial_update(self, request, pk=None):
+        user = self.get_object()
+        if user == request.user:
+            return Response(
+                {"detail": "No puedes cambiar tu propio rol."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        serializer = PatchUserSerializer(user, data=request.data, partial=True)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.save()
+        return Response(UserSerializer(user).data)
+
+    @extend_schema(summary="Desactivar usuario", tags=["Usuarios"])
+    @action(detail=True, methods=['post'], url_path='desactivar')
+    def desactivar(self, request, pk=None):
+        user = self.get_object()
+        if user == request.user:
+            return Response(
+                {"detail": "No puedes desactivar tu propia cuenta."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        user.is_active = False
+        user.save(update_fields=['is_active'])
+        return Response(UserSerializer(user).data)
