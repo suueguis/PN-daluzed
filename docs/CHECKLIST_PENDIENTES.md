@@ -139,16 +139,16 @@ El dashboard actual tiene 3 tarjetas planas. El cliente necesita indicadores rea
 
 El modelo `Bodega` solo tiene `nombre` y `tipo`. No hay zonas.
 
-- [ ] **Backend:** agregar modelo `ZonaBodega`:
+- [x] **Backend:** agregar modelo `ZonaBodega`:
   ```python
   class ZonaBodega(models.Model):
       bodega = models.ForeignKey(Bodega, on_delete=models.CASCADE, related_name='zonas')
       nombre = models.CharField(max_length=100)  # ej: "Estante A", "Refrigeración"
       descripcion = models.TextField(blank=True)
   ```
-- [ ] Crear migración y endpoint CRUD en `inventario/api/v1/`
-- [ ] Asociar `Lote` a una `ZonaBodega` (opcional, `null=True` para no romper datos existentes)
-- [ ] **Frontend:** en `BodegasPage.jsx`, mostrar y gestionar las zonas de cada bodega (tabla expandible o modal)
+- [x] Crear migración y endpoint CRUD en `inventario/api/v1/`
+- [x] Asociar `Lote` a una `ZonaBodega` (opcional, `null=True` para no romper datos existentes)
+- [x] **Frontend:** en `BodegasPage.jsx`, mostrar y gestionar las zonas de cada bodega (tabla expandible o modal)
 
 ---
 
