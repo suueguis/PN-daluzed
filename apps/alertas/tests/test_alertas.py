@@ -211,6 +211,9 @@ class AlertasTestCase(TestCase):
             fecha_vencimiento=date.today() + timedelta(days=60),
             fecha_entrada=date.today(),
         )
+        # La señal post_save ya creó la alerta sin WS; la borramos para probar
+        # el envío explícito con enviar_ws=True sin que la deduplicación lo bloquee.
+        Alerta.objects.filter(tipo='STOCK_BAJO', materia_prima=self.mp).delete()
         # Act
         AlertaService.verificar_stock_reorden(self.mp, enviar_ws=True)
         # Assert
@@ -271,3 +274,35 @@ class AlertasTestCase(TestCase):
         args = mock_send_mail.call_args
         self.assertIn('Harina', args[0][0])  # asunto
         self.assertIn('gerencia@daluzed.com', args[0][3])  # destinatario
+
+
+class AlertaSignalTestCase(TestCase):
+    """ALR-009: La señal post_save en Lote dispara verificar_stock_reorden."""
+
+    def setUp(self):
+        self.gramos = UnidadMedida.objects.create(nombre='Gramos2', simbolo='g2')
+        self.mp = MateriaPrima.objects.create(
+            nombre='Azúcar',
+            unidad_medida=self.gramos,
+            punto_reorden=5000,
+        )
+        self.bodega = Bodega.objects.create(nombre='BP Signal', tipo='PRINCIPAL')
+
+    def test_alr_009_post_save_lote_crea_alerta_stock_bajo(self):
+        """
+        Guardar un Lote con stock por debajo del punto de reorden debe
+        crear automáticamente la alerta STOCK_BAJO vía señal.
+        """
+        Lote.objects.create(
+            materia_prima=self.mp,
+            bodega=self.bodega,
+            cantidad=2000,  # por debajo de punto_reorden=5000
+            fecha_vencimiento=date.today() + timedelta(days=60),
+            fecha_entrada=date.today(),
+        )
+        alerta = Alerta.objects.filter(
+            tipo='STOCK_BAJO',
+            materia_prima=self.mp,
+            activa=True,
+        ).first()
+        self.assertIsNotNone(alerta)

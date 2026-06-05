@@ -267,15 +267,15 @@ Depende de que se implementen las zonas (punto 1.4). Una vez implementadas:
 
 `test_alertas.py` importa `AlertaService` con el comentario `# servicio de negocio a implementar`. Las notificaciones WhatsApp y email son Must Have en el SRS.
 
-- [ ] Verificar con `grep -r "class AlertaService" apps/alertas/` si ya existe
-- [ ] Si no existe: implementar `apps/alertas/services.py` con:
+- [x] Verificar con `grep -r "class AlertaService" apps/alertas/` si ya existe
+- [x] Si no existe: implementar `apps/alertas/services.py` con:
   - `verificar_stock_reorden(mp)` — consulta lotes de BP y crea alerta si está bajo el punto de reorden
   - `verificar_vencimientos(dias_umbral)` — crea alertas para lotes próximos a vencer
   - `verificar_lotes_en_espera(horas_umbral)` — crea alertas para LoteProductoTerminado con > N horas en EN_ESPERA
   - `enviar_whatsapp(alerta)` — Twilio sandbox
   - `enviar_email(alerta, destinatario)` — SMTP
-- [ ] Conectar el servicio a señales Django (`post_save` en `Lote`) o a tareas Celery periódicas
-- [ ] Verificar que los 8 tests de `test_alertas.py` pasen
+- [x] Conectar el servicio a señales Django (`post_save` en `Lote`) — `apps/alertas/signals.py` conectado en `AlertasConfig.ready()`
+- [x] Verificar que los 8 tests de `test_alertas.py` pasen — 9/9 incluyendo ALR-009 (signal integration)
 
 ---
 
