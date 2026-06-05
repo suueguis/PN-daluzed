@@ -242,7 +242,7 @@ Los destinatarios de WhatsApp y email deberían poderse cambiar sin tocar códig
 - [x] **Backend:** modelo `ConfiguracionAlerta` con campos `whatsapp_numero`, `email_gerencia`, `email_produccion`, `dias_umbral_vencimiento`
 - [x] Endpoint CRUD solo para ADMIN
 - [x] **Frontend:** página de configuración en el módulo de alertas (visible solo para ADMIN)
-- [ ] Usar esa configuración en `AlertaService` en vez de variables de entorno hardcodeadas
+- [x] Usar esa configuración en `AlertaService` en vez de variables de entorno hardcodeadas
 
 ---
 
