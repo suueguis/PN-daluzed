@@ -70,7 +70,7 @@ Algún formulario está pidiendo que el usuario tipee JSON directamente — un u
 
 Al crear una OC, el dropdown de proveedores incluye proveedores **inactivos** (o, peor: los inactivos también pueden seleccionarse y la OC se crea).
 
-- [ ] Backend: el endpoint `GET /api/v1/catalogo/proveedores/` debe aceptar `?activo=true` y respetarlo. Verificar que `ProveedorViewSet.get_queryset` filtre correctamente. _(Pendiente: archivo bloqueado por PR #27; entra cuando ese PR mergee.)_
+- [x] Backend: `ProveedorViewSet.get_queryset` acepta `?activo=true/false` y filtra correctamente. Tests CAT-014b/c añadidos. _(desbloqueado en este PR)_
 - [x] Frontend (`NuevaOrdenPage`): consumir solo proveedores activos en el selector de OC. _(PR #32)_
 - [x] Validación de servidor: si llega `proveedor_id` inactivo en el POST, devolver `400` con mensaje claro. _(`OrdenCompraSerializer.validate_proveedor` → PR #32)_
 - [x] Test backend: crear OC con proveedor inactivo → debe fallar. _(PR #32)_
@@ -168,10 +168,10 @@ La sesión debe cerrarse tras 30 minutos de inactividad del usuario.
 
 El endpoint `POST /api/v1/catalogo/importar/` ya existe (`ImportarCatalogoView`). Solo falta la página.
 
-- [ ] **Frontend:** agregar botón "Importar CSV/Excel" en `MateriasPrimasPage.jsx`
-- [ ] Abrir modal con `<input type="file" accept=".csv,.xlsx">` y botón de subir
-- [ ] Mostrar resultado: filas importadas correctamente vs filas con error (la respuesta del backend ya debe incluirlo)
-- [ ] Descargar template de ejemplo (botón "Descargar plantilla" que llame a un endpoint o sirva un archivo estático)
+- [x] **Frontend:** botón "Importar Excel" en `MateriasPrimasPage.jsx` _(ya existía)_
+- [x] `<input type="file" accept=".xlsx,.csv">` oculto disparado por el botón _(ya existía)_
+- [x] Resultado: toast con procesados/creados/errores detallados por fila _(ya existía)_
+- [x] Descargar plantilla: botón "Descargar plantilla" llama a `descargarPlantilla()` _(ya existía)_
 
 ---
 

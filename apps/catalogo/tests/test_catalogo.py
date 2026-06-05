@@ -371,6 +371,31 @@ class ProveedorTestCase(APITestCase):
         self.assertEqual(total_mp, 2)
 
 
+    # ── CAT-014b ─────────────────────────────────────────────────────────
+    def test_cat_014b_filtro_activo_excluye_inactivos(self):
+        """
+        GET /catalogo/proveedores/?activo=true solo devuelve proveedores activos.
+        RF-CAT (0.6 — validación backend).
+        """
+        Proveedor.objects.create(nombre='Activo SA', activo=True)
+        Proveedor.objects.create(nombre='Inactivo SAS', activo=False)
+        response = self.client.get(self.URL_PROV + '?activo=true')
+        self.assertEqual(response.status_code, 200)
+        nombres = [p['nombre'] for p in response.data.get('results', response.data)]
+        self.assertIn('Activo SA', nombres)
+        self.assertNotIn('Inactivo SAS', nombres)
+
+    def test_cat_014c_sin_filtro_devuelve_todos(self):
+        """GET sin ?activo devuelve activos e inactivos."""
+        Proveedor.objects.create(nombre='Activo2 SA', activo=True)
+        Proveedor.objects.create(nombre='Inactivo2 SAS', activo=False)
+        response = self.client.get(self.URL_PROV)
+        self.assertEqual(response.status_code, 200)
+        nombres = [p['nombre'] for p in response.data.get('results', response.data)]
+        self.assertIn('Activo2 SA', nombres)
+        self.assertIn('Inactivo2 SAS', nombres)
+
+
 # ──────────────────────────────────────────────────────────────────────
 # CAT-015 al CAT-018 — Productos terminados y unidades de medida
 # ──────────────────────────────────────────────────────────────────────
