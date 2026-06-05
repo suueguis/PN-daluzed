@@ -285,10 +285,10 @@ Depende de que se implementen las zonas (punto 1.4). Una vez implementadas:
 
 No hay `Dockerfile` ni `docker-compose.yml` en el proyecto.
 
-- [ ] Crear `Dockerfile` para el backend Django (Python 3.12 slim, gunicorn, collectstatic)
-- [ ] Crear `docker-compose.yml` con servicios: `backend`, `postgres`, `redis`, `celery`
-- [ ] Verificar que el entorno levante con `docker compose up` en una sola instrucción
-- [ ] Agregar `.dockerignore`
+- [x] Crear `Dockerfile` para el backend Django (Python 3.12 slim, daphne/ASGI, collectstatic)
+- [x] Crear `docker-compose.yml` con servicios: `backend`, `postgres` _(redis y celery omitidos — proyecto no usa Celery; CHANNEL_LAYERS usa InMemoryChannelLayer)_
+- [x] Verificar que el entorno levante con `docker compose up` en una sola instrucción _(Dockerfile + compose + .env.example listos)_
+- [x] Agregar `.dockerignore`
 
 ---
 
