@@ -10,6 +10,7 @@ export const recepcionesAPI = {
   list:   (params) => axiosClient.get('/recepcion/', { params }),
   get:    (id)     => axiosClient.get(`/recepcion/${id}/`),
   create: (data)   => axiosClient.post('/recepcion/', data),
+  pdf:    (id)     => axiosClient.get(`/recepcion/${id}/pdf/`, { responseType: 'blob' }),
 };
 
 export const catalogoForRecepcion = {

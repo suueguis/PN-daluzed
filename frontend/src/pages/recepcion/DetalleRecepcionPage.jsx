@@ -1,6 +1,9 @@
+import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { recepcionesAPI } from '../../api/recepcionAPI';
+import { formatApiError } from '../../utils/formatApiError';
 import Badge from '../../components/ui/Badge';
 import Button from '../../components/ui/Button';
 import Spinner from '../../components/ui/Spinner';
@@ -17,6 +20,26 @@ function Field({ label, value }) {
 export default function DetalleRecepcionPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [downloading, setDownloading] = useState(false);
+
+  async function handleDownloadPdf() {
+    setDownloading(true);
+    try {
+      const { data: blob } = await recepcionesAPI.pdf(id);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `REC-${id}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      toast.error(formatApiError(err, 'No se pudo descargar el PDF'));
+    } finally {
+      setDownloading(false);
+    }
+  }
 
   const { data: recepcion, isLoading, isError } = useQuery({
     queryKey: ['recepcion', 'detalle', id],
@@ -50,8 +73,8 @@ export default function DetalleRecepcionPage() {
           <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>← Volver</Button>
           <h2 className="font-crushed text-2xl text-wine-900">Recepción REC-{recepcion.id}</h2>
         </div>
-        <Button variant="secondary" size="sm" onClick={() => window.print()}>
-          Imprimir
+        <Button variant="secondary" size="sm" onClick={handleDownloadPdf} disabled={downloading}>
+          {downloading ? 'Descargando…' : 'Descargar PDF'}
         </Button>
       </div>
 

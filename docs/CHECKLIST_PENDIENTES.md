@@ -190,9 +190,9 @@ Historial cronológico de todos los movimientos de una MP: entradas, traslados, 
 
 El botón "Imprimir" en `DetalleRecepcionPage` abre `window.print()`. Eso no es un PDF con membrete Daluzed.
 
-- [ ] **Backend:** endpoint `GET /api/v1/recepcion/recepciones/{id}/pdf/` que devuelva un PDF generado con logo Daluzed, datos del proveedor, detalles del lote, usuario y fecha
-- [ ] Usar `reportlab` o `weasyprint` + template HTML
-- [ ] **Frontend:** reemplazar el botón "Imprimir" por "Descargar PDF" que haga `window.open(url_del_pdf)`
+- [x] **Backend:** endpoint `GET /api/v1/recepcion/recepciones/{id}/pdf/` que devuelva un PDF generado con logo Daluzed, datos del proveedor, detalles del lote, usuario y fecha
+- [x] Usar `reportlab` o `weasyprint` + template HTML
+- [x] **Frontend:** reemplazar el botón "Imprimir" por "Descargar PDF" que haga `window.open(url_del_pdf)`
 
 ---
 
