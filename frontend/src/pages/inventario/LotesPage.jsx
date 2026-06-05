@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { differenceInDays, parseISO } from 'date-fns';
 import { useLotes, useBodegas } from '../../hooks/inventario/useInventario';
+import { getVencimientoTone, getVencimientoLabel } from '../../utils/vencimiento';
 import { useApiQuery } from '../../hooks/useApi';
 import Badge from '../../components/ui/Badge';
 import Button from '../../components/ui/Button';
@@ -20,21 +20,6 @@ const VENCIMIENTO_OPTIONS = [
   { value: '30', label: 'Próximos 30 días' },
 ];
 
-function diasRestantes(fechaStr) {
-  return differenceInDays(parseISO(fechaStr), new Date());
-}
-
-function vencimientoBadgeTone(dias) {
-  if (dias < 0) return 'danger';
-  if (dias <= 7) return 'warning';
-  return 'success';
-}
-
-function vencimientoLabel(dias) {
-  if (dias < 0) return `Vencido hace ${Math.abs(dias)}d`;
-  if (dias === 0) return 'Vence hoy';
-  return `${dias}d restantes`;
-}
 
 export default function LotesPage() {
   const [mpFiltro, setMpFiltro] = useState('');
@@ -119,7 +104,6 @@ export default function LotesPage() {
               </thead>
               <tbody>
                 {lotes.map((lote) => {
-                  const dias = diasRestantes(lote.fecha_vencimiento);
                   return (
                     <tr key={lote.id} className="border-t border-peach-200/60 hover:bg-cream-50">
                       <td className="px-4 py-3 tabular-nums text-wine-700">
@@ -130,7 +114,9 @@ export default function LotesPage() {
                       <td className="px-4 py-3 tabular-nums text-wine-900">{formatDecimal(lote.cantidad)}</td>
                       <td className="px-4 py-3 tabular-nums text-wine-900">{formatDate(lote.fecha_vencimiento)}</td>
                       <td className="px-4 py-3">
-                        <Badge tone={vencimientoBadgeTone(dias)}>{vencimientoLabel(dias)}</Badge>
+                        <Badge tone={getVencimientoTone(lote.fecha_vencimiento)}>
+                          {getVencimientoLabel(lote.fecha_vencimiento)}
+                        </Badge>
                       </td>
                       <td className="px-4 py-3">
                         <Button size="sm" variant="ghost" onClick={() => abrirAccion(lote, 'trazabilidad')}>

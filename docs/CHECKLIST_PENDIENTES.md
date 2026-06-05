@@ -347,10 +347,10 @@ No hay pipeline de integración continua.
 
 En `LotesPage` y donde se muestre una lista de lotes, agregar indicador visual:
 
-- [ ] Verde: vence en más de 30 días
-- [ ] Amarillo: vence entre 7 y 30 días
-- [ ] Rojo: vence en menos de 7 días o ya venció
-- [ ] Implementar con una función helper `getVencimientoTone(fecha_vencimiento)` y aplicar en la columna de fecha de vencimiento
+- [x] Verde: vence en más de 30 días
+- [x] Amarillo: vence entre 7 y 30 días
+- [x] Rojo: vence en menos de 7 días o ya venció
+- [x] Implementar con una función helper `getVencimientoTone(fecha_vencimiento)` en `src/utils/vencimiento.js` y aplicada en `LotesPage`
 
 ---
 
