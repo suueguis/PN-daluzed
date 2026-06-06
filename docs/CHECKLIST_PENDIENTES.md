@@ -335,9 +335,9 @@ No hay pipeline de integración continua.
 
 ### 3.6 Backup automático de BD (RNF-AVA-02) 🟢
 
-- [ ] Configurar backup diario de PostgreSQL en Railway (o el proveedor elegido)
-- [ ] Verificar retención mínima de 7 días
-- [ ] Documentar el proceso de restauración
+- [ ] Configurar backup diario de PostgreSQL en Railway (o el proveedor elegido) _(requiere activación manual en Railway Dashboard — ver docs/BACKUP_RESTORE.md)_
+- [ ] Verificar retención mínima de 7 días _(idem — paso manual post-deploy)_
+- [x] Documentar el proceso de restauración _(docs/BACKUP_RESTORE.md creado con instrucciones de setup, backup manual y restore)_
 
 ---
 
