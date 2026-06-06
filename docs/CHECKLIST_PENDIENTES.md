@@ -358,10 +358,10 @@ En `LotesPage` y donde se muestre una lista de lotes, agregar indicador visual:
 
 Ampliar el dashboard con visualizaciones que el gerente pueda leer de un vistazo:
 
-- [ ] Instalar `recharts` (ligero, React-native): `npm install recharts`
-- [ ] Gráfica de línea: batidos por día de la semana actual
-- [ ] Gráfica de barras: stock en Bodega Principal por categoría de MP
-- [ ] Visible solo para roles ADMIN y GERENTE
+- [x] Instalar `recharts` (ligero, React-native): `npm install recharts` _(v3.8.1)_
+- [x] Gráfica de línea: batidos por día de la semana actual _(LineChart con datos locales de batidosData)_
+- [x] Gráfica de barras: stock en Bodega Principal por categoría de MP _(BarChart agrupando stockBP por categoría + mpsData)_
+- [x] Visible solo para roles ADMIN y GERENTE _(canSeeCharts guard)_
 
 ---
 
