@@ -293,11 +293,11 @@ No hay `Dockerfile` ni `docker-compose.yml` en el proyecto.
 
 El sistema debe estar disponible desde Colombia antes del Corte 3.
 
-- [ ] Crear proyecto en Railway para el backend (Django + PostgreSQL + Redis)
-- [ ] Crear proyecto en Vercel para el frontend (React SPA)
-- [ ] Configurar variables de entorno de producción (`.env.production`)
-- [ ] Verificar HTTPS activo en ambos (RNF-SEC-02)
-- [ ] Verificar que CORS esté configurado para el dominio de Vercel
+- [ ] Crear proyecto en Railway para el backend (Django + PostgreSQL + Redis) _(setup manual en Railway Dashboard — ver docs/DEPLOYMENT.md)_
+- [ ] Crear proyecto en Vercel para el frontend (React SPA) _(setup manual en Vercel Dashboard — ver docs/DEPLOYMENT.md)_
+- [x] Configurar variables de entorno de producción (`env.production.example` + `VITE_API_URL` en axiosClient + `CORS_ALLOWED_ORIGINS_EXTRA` en settings)
+- [ ] Verificar HTTPS activo en ambos (RNF-SEC-02) _(automático en Railway/Vercel, verificar post-deploy)_
+- [x] Verificar que CORS esté configurado para el dominio de Vercel _(CORS_ALLOWED_ORIGINS_EXTRA env var; actualizar con URL real de Vercel)_
 
 ---
 
