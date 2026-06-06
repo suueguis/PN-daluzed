@@ -31,11 +31,15 @@ class BatidoCreateSerializer(serializers.Serializer):
 
 
 class BatidoSerializer(serializers.ModelSerializer):
+    producto_terminado_nombre = serializers.CharField(
+        source='producto_terminado.nombre', read_only=True
+    )
+
     class Meta:
         model = Batido
         fields = [
-            'id', 'producto_terminado', 'fecha_produccion', 'hora_inicio',
-            'estado', 'usuario', 'fecha_registro',
+            'id', 'producto_terminado', 'producto_terminado_nombre',
+            'fecha_produccion', 'hora_inicio', 'estado', 'usuario', 'fecha_registro',
         ]
 
 
