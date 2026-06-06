@@ -16,6 +16,7 @@ User = get_user_model()
 URL_KPI            = '/api/v1/indicadores/kpis/'
 URL_EXPORTAR       = '/api/v1/indicadores/exportar/'
 URL_REPORTE_SEMANAL = '/api/v1/indicadores/reporte-semanal/'
+URL_RESUMEN        = '/api/v1/indicadores/resumen/'
 
 
 class IndicadoresTestCase(APITestCase):
@@ -153,6 +154,38 @@ class IndicadoresTestCase(APITestCase):
         self.assertIn('spreadsheetml', response['Content-Type'])
         self.assertIn('Content-Disposition', response)
         self.assertIn('.xlsx', response['Content-Disposition'])
+
+    # ── IND-009 ───────────────────────────────────────────────────────
+    def test_ind_009_resumen_dashboard(self):
+        """
+        GET /indicadores/resumen/ devuelve los campos del resumen consolidado:
+        stock_bp_total, rotacion_inventario, periodo_rotacion, batidos_semana,
+        lotes_por_vencer_count y oc_pendientes.
+        RF-IND-01, RF-IND-07
+        """
+        response = self.client.get(URL_RESUMEN)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        for campo in (
+            'stock_bp_total', 'rotacion_inventario', 'periodo_rotacion',
+            'batidos_semana', 'lotes_por_vencer_count', 'oc_pendientes',
+        ):
+            self.assertIn(campo, response.data)
+
+        # stock BP: 30000 + 5000 = 35000 (creados en setUp)
+        self.assertAlmostEqual(float(response.data['stock_bp_total']), 35000.0)
+
+        # batidos_semana debe tener 7 entradas con campos día/fecha/batidos
+        semana = response.data['batidos_semana']
+        self.assertEqual(len(semana), 7)
+        self.assertIn('dia', semana[0])
+        self.assertIn('fecha', semana[0])
+        self.assertIn('batidos', semana[0])
+
+        # lotes por vencer en 7 días: hay 1 en setUp (fecha_vencimiento = hoy+4)
+        self.assertEqual(response.data['lotes_por_vencer_count'], 1)
+
+        # oc_pendientes: no hay OC en este setUp, debe ser 0
+        self.assertEqual(response.data['oc_pendientes'], 0)
 
 
 class ReporteSemanalTestCase(APITestCase):
