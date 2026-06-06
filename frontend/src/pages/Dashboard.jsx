@@ -1,6 +1,10 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
+import {
+  ResponsiveContainer, LineChart, Line, BarChart, Bar,
+  XAxis, YAxis, Tooltip, CartesianGrid,
+} from 'recharts';
 import { materiasPrimasAPI } from '../api/catalogoAPI';
 import { alertasAPI } from '../api/alertasAPI';
 import { produccionAPI } from '../api/produccionAPI';
@@ -92,6 +96,36 @@ export default function Dashboard() {
   const totalStockBP = stockBP.reduce((s, r) => s + parseFloat(r.cantidad_total), 0);
   const lotesVencer = vencData?.lotes_por_vencer ?? [];
 
+  const canSeeCharts = ['ADMIN', 'GERENTE'].includes(user?.role);
+
+  const batidosPorDia = useMemo(() => {
+    const list = Array.isArray(batidosData) ? batidosData : (batidosData?.results ?? []);
+    const todayDate = new Date();
+    const monday = new Date(todayDate);
+    monday.setDate(todayDate.getDate() - ((todayDate.getDay() + 6) % 7));
+    return ['Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sá', 'Do'].map((dia, i) => {
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + i);
+      const iso = d.toISOString().slice(0, 10);
+      return { dia, batidos: list.filter((b) => b.fecha_produccion === iso).length };
+    });
+  }, [batidosData]);
+
+  const CAT_LABEL = { GALLETERIA: 'Galletería', TORTA: 'Torta', BIZCOCHO: 'Bizcocho', GENERAL: 'General' };
+  const stockPorCategoria = useMemo(() => {
+    const mpsArr = Array.isArray(mpsData) ? mpsData : (mpsData?.results ?? []);
+    const catMap = Object.fromEntries(mpsArr.map((m) => [m.nombre, m.categoria ?? 'GENERAL']));
+    const totales = {};
+    for (const row of stockBP) {
+      const cat = catMap[row.materia_prima] ?? 'GENERAL';
+      totales[cat] = (totales[cat] ?? 0) + parseFloat(row.cantidad_total);
+    }
+    return Object.entries(totales).map(([cat, total]) => ({
+      categoria: CAT_LABEL[cat] ?? cat,
+      stock: Math.round(total),
+    }));
+  }, [stockBP, mpsData]);
+
   const cards = [
     {
       key:   'mp',
@@ -169,6 +203,59 @@ export default function Dashboard() {
           </Link>
         ))}
       </section>
+
+      {/* ── Gráficas — solo ADMIN / GERENTE ─────────────────────── */}
+      {canSeeCharts && (
+        <section aria-label="Gráficas de actividad">
+          <h2 className="mb-3 font-crushed text-xl text-wine-900">Actividad de la semana</h2>
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            {/* Batidos por día */}
+            <div className="rounded-2xl border border-peach-200 bg-white p-4">
+              <h3 className="mb-3 text-sm font-semibold text-wine-900">Batidos por día</h3>
+              <ResponsiveContainer width="100%" height={180}>
+                <LineChart data={batidosPorDia} margin={{ top: 4, right: 8, bottom: 0, left: -20 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#F0E0D0" />
+                  <XAxis dataKey="dia" tick={{ fontSize: 11, fill: '#7A4030' }} />
+                  <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: '#7A4030' }} />
+                  <Tooltip
+                    contentStyle={{ borderRadius: '10px', borderColor: '#EDD8C4', fontSize: 12 }}
+                    formatter={(v) => [v, 'Batidos']}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="batidos"
+                    stroke="#C96870"
+                    strokeWidth={2}
+                    dot={{ fill: '#C96870', r: 4 }}
+                    activeDot={{ r: 6 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Stock BP por categoría */}
+            <div className="rounded-2xl border border-peach-200 bg-white p-4">
+              <h3 className="mb-3 text-sm font-semibold text-wine-900">Stock Bodega Principal por categoría</h3>
+              {stockPorCategoria.length === 0 ? (
+                <p className="py-8 text-center text-sm text-wine-700/60">Sin datos de stock.</p>
+              ) : (
+                <ResponsiveContainer width="100%" height={180}>
+                  <BarChart data={stockPorCategoria} margin={{ top: 4, right: 8, bottom: 0, left: -20 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#F0E0D0" />
+                    <XAxis dataKey="categoria" tick={{ fontSize: 11, fill: '#7A4030' }} />
+                    <YAxis tick={{ fontSize: 11, fill: '#7A4030' }} />
+                    <Tooltip
+                      contentStyle={{ borderRadius: '10px', borderColor: '#EDD8C4', fontSize: 12 }}
+                      formatter={(v) => [formatDecimal(v), 'Stock']}
+                    />
+                    <Bar dataKey="stock" fill="#D4A882" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ── Lotes próximos a vencer ──────────────────────────────── */}
       <section aria-label="Lotes próximos a vencer">
