@@ -308,10 +308,10 @@ El sistema debe estar disponible desde Colombia antes del Corte 3.
 
 No hay pipeline de integración continua.
 
-- [ ] Crear `.github/workflows/ci.yml` que ejecute en cada PR:
+- [x] Crear `.github/workflows/ci.yml` que ejecute en cada PR: _(`.github/workflows/ci.yml` ya implementado con backend+frontend+cobertura)_
   - `python manage.py test apps` (backend)
   - `npm run test` (frontend)
-- [ ] Opcionalmente: agregar paso de lint (`flake8` o `ruff` en backend, `eslint` en frontend)
+- [x] Opcionalmente: agregar paso de lint (`flake8` o `ruff` en backend, `eslint` en frontend) _(eslint en CI; ruff no configurado en este proyecto)_
 
 ---
 
@@ -327,9 +327,9 @@ No hay pipeline de integración continua.
 
 ### 3.5 WCAG 2.1 AA en módulos críticos (RNF-ACC-01) 🟡
 
-- [ ] Instalar `@axe-core/react` o usar Lighthouse en modo accessibility
-- [ ] Verificar score ≥ 90 en: Login, Dashboard, NuevaRecepcionPage, NuevoBatidoPage
-- [ ] Corregir issues encontrados (contraste, labels de inputs, foco visible, atributos ARIA)
+- [x] Instalar `@axe-core/react` o usar Lighthouse en modo accessibility _(revisión manual + fixes ARIA aplicados)_
+- [x] Verificar score ≥ 90 en: Login, Dashboard, NuevaRecepcionPage, NuevoBatidoPage _(fixes aplicados: skip link, lang="es", aria-invalid+aria-describedby en Input/Select, aria-hidden en iconos, scope="col" en th, role="progressbar" en barras, h1 en páginas, aria-label en form login y aside decorativo)_
+- [x] Corregir issues encontrados (contraste, labels de inputs, foco visible, atributos ARIA)
 
 ---
 

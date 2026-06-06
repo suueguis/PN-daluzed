@@ -43,11 +43,11 @@ export default function TopBar({ onMenuClick }) {
       <div className="flex items-center gap-2 sm:gap-4">
         <button
           type="button"
-          aria-label="Alertas activas"
+          aria-label={alertasCount > 0 ? `Alertas activas (${alertasCount})` : 'Alertas activas'}
           onClick={() => navigate('/alertas')}
           className="relative rounded-full p-2 text-wine-900 transition-colors hover:bg-peach-100 focus:outline-none focus:ring-2 focus:ring-rose-300"
         >
-          <span aria-hidden className="text-xl">🔔</span>
+          <span aria-hidden="true" className="text-xl">🔔</span>
           {alertasCount > 0 && (
             <Badge
               tone="danger"

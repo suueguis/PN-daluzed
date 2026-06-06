@@ -137,7 +137,7 @@ export default function NuevoBatidoPage() {
 
   return (
     <div className="space-y-6">
-      <h2 className="font-crushed text-2xl text-wine-900">Registrar batido</h2>
+      <h1 className="font-crushed text-2xl text-wine-900">Registrar batido</h1>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {/* Header fields */}
@@ -213,6 +213,7 @@ export default function NuevoBatidoPage() {
                     {['Materia prima', 'Lote', 'Disponible', 'Cantidad', ''].map((h) => (
                       <th
                         key={h}
+                        scope="col"
                         className="px-3 py-2 text-left text-xs font-bold uppercase tracking-wide text-wine-700"
                       >
                         {h}

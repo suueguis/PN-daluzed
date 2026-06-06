@@ -23,6 +23,12 @@ export default function AppLayout() {
 
   return (
     <div className="flex h-screen flex-col bg-cream-50">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:m-2 focus:rounded-xl focus:bg-rose-500 focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white focus:shadow"
+      >
+        Saltar al contenido principal
+      </a>
       <TopBar onMenuClick={() => setSidebarOpen(true)} />
       <div className="flex flex-1 overflow-hidden">
         {sidebarOpen && (
@@ -33,7 +39,7 @@ export default function AppLayout() {
           />
         )}
         <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6">
+        <main id="main-content" className="flex-1 overflow-y-auto p-4 sm:p-6">
           <Outlet />
         </main>
       </div>
