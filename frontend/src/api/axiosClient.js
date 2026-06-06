@@ -3,7 +3,7 @@ import axios from 'axios'
 import useAuthStore from '../store/authStore'
 
 const axiosClient = axios.create({
-  baseURL: '/api/v1',
+  baseURL: `${import.meta.env.VITE_API_URL ?? ''}/api/v1`,
   headers: { 'Content-Type': 'application/json' },
   withCredentials: true,
 })
@@ -52,7 +52,7 @@ axiosClient.interceptors.response.use(
       try {
         // Cookie is sent automatically — no body needed
         const { data } = await axios.post(
-          '/api/v1/auth/token/refresh/',
+          `${import.meta.env.VITE_API_URL ?? ''}/api/v1/auth/token/refresh/`,
           {},
           { withCredentials: true }
         )

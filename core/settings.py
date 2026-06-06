@@ -157,9 +157,11 @@ SPECTACULAR_SETTINGS = {
 }
 
 
+_cors_extra = os.environ.get('CORS_ALLOWED_ORIGINS_EXTRA', '')
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:5173',
     'http://127.0.0.1:8000',
+    *[o.strip() for o in _cors_extra.split(',') if o.strip()],
 ]
 
 CORS_ALLOW_CREDENTIALS = True
