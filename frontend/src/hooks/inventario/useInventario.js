@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { bodegasAPI, lotesAPI, fefoAPI, trasladosAPI, devolucionesAPI, descartesAPI, trazabilidadAPI, kardexAPI } from '../../api/inventarioAPI';
+import { bodegasAPI, lotesAPI, fefoAPI, trasladosAPI, devolucionesAPI, descartesAPI, trazabilidadAPI, kardexAPI, stockPDPAPI } from '../../api/inventarioAPI';
 
 // ── Keys ─────────────────────────────────────────────────────────────────────
 
@@ -134,5 +134,14 @@ export function useKardex(params) {
     queryKey: ["inventario", "kardex", params],
     queryFn: () => kardexAPI.get(params),
     enabled: !!params?.materia_prima,
+  });
+}
+
+export function useStockPDP() {
+  return useQuery({
+    queryKey: ['inventario', 'stock-pdp'],
+    queryFn: stockPDPAPI.list,
+    staleTime: 60_000,
+    refetchInterval: 60_000,
   });
 }

@@ -195,6 +195,16 @@ class TrazabilidadView(APIView):
         })
 
 
+# ── Stock PDP comprometido ────────────────────────────────────────────────────
+
+class StockPDPView(APIView):
+    permission_classes = [allow_roles(*_INV_READ)]
+
+    def get(self, request):
+        data = InventarioService.consultar_stock_pdp_comprometido()
+        return Response(data)
+
+
 # ── Kardex ───────────────────────────────────────────────────────────────────
 
 class KardexView(APIView):

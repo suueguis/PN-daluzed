@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useLotes, useBodegas } from '../../hooks/inventario/useInventario';
+import { useLotes, useBodegas, useStockPDP } from '../../hooks/inventario/useInventario';
 import { useApiQuery } from '../../hooks/useApi';
 import Spinner from '../../components/ui/Spinner';
 import Button from '../../components/ui/Button';
@@ -15,6 +15,18 @@ export default function StockPage() {
     ['catalogo', 'materias-primas'],
     '/catalogo/materias-primas/',
   );
+  const { data: stockPDP = [], isLoading: loadingPDP } = useStockPDP();
+
+  const comprometidoMap = useMemo(() => {
+    const map = {};
+    for (const row of stockPDP) {
+      map[row.materia_prima_id] = {
+        comprometido: parseFloat(row.comprometido ?? 0),
+        disponible:   parseFloat(row.disponible   ?? 0),
+      };
+    }
+    return map;
+  }, [stockPDP]);
 
   const stockPivot = useMemo(() => {
     if (!mps.length || !bodegas.length) return [];
@@ -40,12 +52,15 @@ export default function StockPage() {
 
       const total = bp + pdp;
       const bajoPuntoReorden = bp <= parseFloat(mp.punto_reorden || 0);
+      const pdpInfo = comprometidoMap[mp.id];
+      const comprometido = pdpInfo?.comprometido ?? 0;
+      const disponible   = pdpInfo != null ? pdpInfo.disponible : pdp;
 
-      return { mp, bp, pdp, total, bajoPuntoReorden };
+      return { mp, bp, pdp, comprometido, disponible, total, bajoPuntoReorden };
     });
-  }, [mps, bodegas, lotes]);
+  }, [mps, bodegas, lotes, comprometidoMap]);
 
-  const isLoading = loadingLotes || loadingBodegas || loadingMps;
+  const isLoading = loadingLotes || loadingBodegas || loadingMps || loadingPDP;
 
   if (isLoading) {
     return (
@@ -69,23 +84,29 @@ export default function StockPage() {
         <table className="w-full text-sm">
           <thead className="bg-cream-100">
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-wine-700">
+              <th scope="col" className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-wine-700">
                 Materia Prima
               </th>
-              <th className="px-4 py-3 text-right text-xs font-bold uppercase tracking-wide text-wine-700">
+              <th scope="col" className="px-4 py-3 text-right text-xs font-bold uppercase tracking-wide text-wine-700">
                 Bodega Principal
               </th>
-              <th className="px-4 py-3 text-right text-xs font-bold uppercase tracking-wide text-wine-700">
-                Bodega PDP
+              <th scope="col" className="px-4 py-3 text-right text-xs font-bold uppercase tracking-wide text-wine-700">
+                Stock PDP
               </th>
-              <th className="px-4 py-3 text-right text-xs font-bold uppercase tracking-wide text-wine-700">
+              <th scope="col" className="px-4 py-3 text-right text-xs font-bold uppercase tracking-wide text-wine-700">
+                Comprometido
+              </th>
+              <th scope="col" className="px-4 py-3 text-right text-xs font-bold uppercase tracking-wide text-wine-700">
+                Disponible PDP
+              </th>
+              <th scope="col" className="px-4 py-3 text-right text-xs font-bold uppercase tracking-wide text-wine-700">
                 Total
               </th>
-              <th className="px-4 py-3 text-xs font-bold uppercase tracking-wide text-wine-700" />
+              <th scope="col" className="px-4 py-3 text-xs font-bold uppercase tracking-wide text-wine-700" />
             </tr>
           </thead>
           <tbody>
-            {stockPivot.map(({ mp, bp, pdp, total, bajoPuntoReorden }) => (
+            {stockPivot.map(({ mp, bp, pdp, comprometido, disponible, total, bajoPuntoReorden }) => (
               <tr
                 key={mp.id}
                 className={`border-t border-peach-200/60 ${
@@ -116,6 +137,18 @@ export default function StockPage() {
                 </td>
                 <td className="px-4 py-3 text-right tabular-nums text-wine-900">
                   {formatDecimal(pdp)}
+                </td>
+                <td className="px-4 py-3 text-right tabular-nums text-wine-700">
+                  {comprometido > 0 ? (
+                    <span className="font-semibold text-rose-600">{formatDecimal(comprometido)}</span>
+                  ) : (
+                    <span className="text-wine-700/50">—</span>
+                  )}
+                </td>
+                <td className="px-4 py-3 text-right tabular-nums font-semibold">
+                  <span className={disponible < comprometido ? 'text-cherry-500' : 'text-mint-600'}>
+                    {formatDecimal(disponible)}
+                  </span>
                 </td>
                 <td className="px-4 py-3 text-right tabular-nums font-semibold text-wine-900">
                   {formatDecimal(total)}
