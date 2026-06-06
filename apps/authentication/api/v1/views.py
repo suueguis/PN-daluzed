@@ -304,3 +304,16 @@ class UserViewSet(viewsets.GenericViewSet):
             get_client_ip(request),
         )
         return Response(UserSerializer(user).data)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Health check
+# ─────────────────────────────────────────────────────────────────────────────
+
+class HealthView(APIView):
+    """Lightweight endpoint for Railway healthchecks — no auth required."""
+    permission_classes = []
+    authentication_classes = []
+
+    def get(self, request):
+        return Response({"status": "ok"}, status=status.HTTP_200_OK)
