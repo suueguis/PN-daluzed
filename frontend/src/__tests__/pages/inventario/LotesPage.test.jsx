@@ -10,11 +10,18 @@ vi.mock('../../../hooks/inventario/useInventario', () => ({
   useBodegas: vi.fn(),
   useCreateDevolucion: vi.fn(() => ({ mutateAsync: vi.fn(), isPending: false })),
   useCreateDescarte: vi.fn(() => ({ mutateAsync: vi.fn(), isPending: false })),
-  useTrazabilidad: vi.fn(() => ({ data: undefined, isLoading: false })),
-}));
-vi.mock('../../../pages/inventario/TrazabilidadModal', () => ({
-  default: ({ lote, onClose }) =>
-    lote ? <div role="dialog" aria-label="trazabilidad"><button onClick={onClose}>Cerrar</button></div> : null,
+  useTrazabilidad: vi.fn(() => ({
+    data: {
+      movimientos: [
+        {
+          id: 1, tipo: 'RECEPCION', fecha: '2026-01-10T08:00:00Z',
+          bodega_origen_nombre: null, bodega_destino_nombre: 'Bodega Principal',
+          cantidad: '5000', notas: '',
+        },
+      ],
+    },
+    isLoading: false,
+  })),
 }));
 vi.mock('../../../hooks/useApi', () => ({
   useApiQuery: vi.fn(),
@@ -32,12 +39,14 @@ const LOTES = [
     materia_prima: 10, materia_prima_nombre: 'Harina',
     bodega: 1, bodega_nombre: 'Bodega Principal', bodega_tipo: 'PRINCIPAL',
     cantidad: '5000', fecha_vencimiento: VENCE_7,
+    fecha_entrada: '2026-01-01', proveedor_nombre: 'Proveedor A',
   },
   {
     id: 2, numero_lote: 'L-002',
     materia_prima: 11, materia_prima_nombre: 'Azúcar',
     bodega: 2, bodega_nombre: 'Bodega PDP', bodega_tipo: 'PDP',
     cantidad: '2000', fecha_vencimiento: VENCIDO,
+    fecha_entrada: null, proveedor_nombre: null,
   },
 ];
 
@@ -59,7 +68,6 @@ describe('LotesPage', () => {
 
   it('muestra todos los lotes por defecto', () => {
     render(<LotesPage />, { wrapper });
-    // nombres aparecen tanto en el select-filtro como en las celdas
     expect(screen.getAllByText('Harina').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Azúcar').length).toBeGreaterThan(0);
   });
@@ -87,14 +95,29 @@ describe('LotesPage', () => {
     expect(screen.getByRole('heading', { name: /Registrar Devolución/i })).toBeInTheDocument();
   });
 
-  it('muestra botón Ver historial en cada fila', () => {
+  it('muestra botón Ver detalle en cada fila con aria-expanded=false', () => {
     render(<LotesPage />, { wrapper });
-    expect(screen.getAllByRole('button', { name: /Ver historial/i })).toHaveLength(2);
+    const toggles = screen.getAllByRole('button', { name: /Ver detalle|Expandir detalle/i });
+    expect(toggles).toHaveLength(2);
+    toggles.forEach((btn) => expect(btn).toHaveAttribute('aria-expanded', 'false'));
   });
 
-  it('abre modal trazabilidad al hacer click en Ver historial', async () => {
+  it('expande la fila al hacer click en Ver detalle y muestra metadata del lote', async () => {
     render(<LotesPage />, { wrapper });
-    await userEvent.click(screen.getAllByRole('button', { name: /Ver historial/i })[0]);
-    expect(screen.getByRole('dialog', { name: 'trazabilidad' })).toBeInTheDocument();
+    const [firstToggle] = screen.getAllByRole('button', { name: /Ver detalle|Expandir detalle/i });
+    await userEvent.click(firstToggle);
+    expect(firstToggle).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByText('Proveedor A')).toBeInTheDocument();
+    expect(screen.getByText('Historial de movimientos')).toBeInTheDocument();
+  });
+
+  it('contrae la fila al hacer click en Cerrar', async () => {
+    render(<LotesPage />, { wrapper });
+    const [firstToggle] = screen.getAllByRole('button', { name: /Ver detalle|Expandir detalle/i });
+    await userEvent.click(firstToggle);
+    expect(firstToggle).toHaveAttribute('aria-expanded', 'true');
+    const cerrarBtn = screen.getByRole('button', { name: /Cerrar|Contraer/i });
+    await userEvent.click(cerrarBtn);
+    expect(firstToggle).toHaveAttribute('aria-expanded', 'false');
   });
 });
