@@ -379,9 +379,9 @@ Ampliar el dashboard con visualizaciones que el gerente pueda leer de un vistazo
 
 Al hacer click en una fila de `LotesPage`, expandir una sección inline con:
 
-- [ ] Historial de movimientos del lote (consumir el endpoint de trazabilidad existente)
-- [ ] Fecha de entrada, vencimiento, número de lote, proveedor
-- [ ] Sin navegar a una página nueva — usando un accordeon o row expansion
+- [x] Historial de movimientos del lote (consumir el endpoint de trazabilidad existente)
+- [x] Fecha de entrada, vencimiento, número de lote, proveedor _(proveedor_nombre añadido a LoteSerializer)_
+- [x] Sin navegar a una página nueva — usando un accordeon o row expansion _(toggle inline en tabla, colSpan=8)_
 
 ---
 
