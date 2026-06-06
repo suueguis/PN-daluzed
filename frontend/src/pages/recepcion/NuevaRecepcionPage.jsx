@@ -263,7 +263,7 @@ export default function NuevaRecepcionPage() {
     <div className="max-w-3xl space-y-6">
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>← Volver</Button>
-        <h2 className="font-crushed text-2xl text-wine-900">Nueva Recepción</h2>
+        <h1 className="font-crushed text-2xl text-wine-900">Nueva Recepción</h1>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">

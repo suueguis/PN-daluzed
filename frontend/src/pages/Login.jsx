@@ -918,6 +918,7 @@ export default function LoginPage() {
     >
       {/* ════════════ LEFT PANEL (lg+) ════════════ */}
       <aside
+        aria-hidden="true"
         className="hidden lg:flex lg:w-[42%] flex-col items-center justify-between py-10 px-8"
         style={{
           backgroundColor: "#F2D9C5",
@@ -971,6 +972,7 @@ export default function LoginPage() {
           {/* ── Form ── */}
           <form
             onSubmit={handleSubmit(onSubmit)}
+            aria-label="Inicio de sesión"
             className="flex flex-col gap-5"
             noValidate
           >

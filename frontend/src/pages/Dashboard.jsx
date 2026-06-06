@@ -187,7 +187,7 @@ export default function Dashboard() {
               <thead className="bg-cream-100">
                 <tr>
                   {['Materia Prima', 'Bodega', 'Cantidad', 'Vencimiento', 'Días restantes'].map((h) => (
-                    <th key={h} className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-wine-700">
+                    <th key={h} scope="col" className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-wine-700">
                       {h}
                     </th>
                   ))}
@@ -233,7 +233,14 @@ export default function Dashboard() {
                       <p className="text-xs font-semibold text-wine-700">{zona.porcentaje_utilizacion.toFixed(1)}%</p>
                     </div>
                   </div>
-                  <div className="h-2 w-full overflow-hidden rounded-full bg-wine-200">
+                  <div
+                    role="progressbar"
+                    aria-label={`Utilización de ${zona.zona_nombre}`}
+                    aria-valuenow={Math.round(zona.porcentaje_utilizacion)}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    className="h-2 w-full overflow-hidden rounded-full bg-wine-200"
+                  >
                     <div
                       style={{ width: `${Math.min(zona.porcentaje_utilizacion, 100)}%` }}
                       className={`h-full ${
@@ -259,20 +266,24 @@ export default function Dashboard() {
         <h2 className="mb-3 font-crushed text-xl text-wine-900">Exportar inventario</h2>
         <div className="flex flex-wrap items-end gap-3 rounded-2xl border border-peach-200 bg-cream-50 p-4">
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-semibold text-wine-700">Desde</label>
+            <label htmlFor="export-desde" className="text-xs font-semibold text-wine-700">Desde</label>
             <input
+              id="export-desde"
               type="date"
               value={exportDesde}
               onChange={(e) => setExportDesde(e.target.value)}
+              placeholder="ej. 2026-01-01"
               className="rounded-xl border border-peach-300 bg-white px-3 py-2 text-sm text-wine-900 focus:outline-none focus:ring-2 focus:ring-rose-300"
             />
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-semibold text-wine-700">Hasta</label>
+            <label htmlFor="export-hasta" className="text-xs font-semibold text-wine-700">Hasta</label>
             <input
+              id="export-hasta"
               type="date"
               value={exportHasta}
               onChange={(e) => setExportHasta(e.target.value)}
+              placeholder="ej. 2026-12-31"
               className="rounded-xl border border-peach-300 bg-white px-3 py-2 text-sm text-wine-900 focus:outline-none focus:ring-2 focus:ring-rose-300"
             />
           </div>

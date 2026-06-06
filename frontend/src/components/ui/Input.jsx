@@ -16,6 +16,8 @@ const Input = forwardRef(function Input(
       <input
         ref={ref}
         id={inputId}
+        aria-invalid={error ? 'true' : undefined}
+        aria-describedby={error ? `${inputId}-error` : undefined}
         className={cn(
           'rounded-xl border border-peach-300 bg-white px-3 py-2 text-sm',
           'focus:outline-none focus:ring-2 focus:ring-rose-300 focus:border-rose-300',
@@ -25,7 +27,11 @@ const Input = forwardRef(function Input(
         )}
         {...rest}
       />
-      {error && <span className="text-xs text-cherry-500">{error}</span>}
+      {error && (
+        <span id={`${inputId}-error`} role="alert" className="text-xs text-cherry-500">
+          {error}
+        </span>
+      )}
     </div>
   );
 });
