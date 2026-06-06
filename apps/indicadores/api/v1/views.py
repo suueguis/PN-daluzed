@@ -8,9 +8,9 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from apps.inventario.models import Lote
+from apps.inventario.models import Lote, MovimientoInventario
 from apps.produccion.models import Batido, LoteProductoTerminado
-from apps.recepcion.models import RecepcionMercancia
+from apps.recepcion.models import OrdenCompra, RecepcionMercancia
 
 
 class KpisView(APIView):
@@ -310,7 +310,7 @@ class ReporteSemanalView(APIView):
 
         return sorted(data.values(), key=lambda x: x['semana_inicio'])
 
-    def _exportar_excel(self, semanas: list[dict], desde: date, hasta: date) -> HttpResponse:
+    def _exportar_excel(self, semanas: list[dict], desde: date, hasta: date) -> HttpResponse:  # noqa: E501
         import openpyxl
         from openpyxl.styles import Font
 
@@ -345,3 +345,77 @@ class ReporteSemanalView(APIView):
         response = HttpResponse(buf.read(), content_type=content_type)
         response['Content-Disposition'] = f'attachment; filename="{filename}"'
         return response
+
+
+class ResumenView(APIView):
+    """
+    GET /api/v1/indicadores/resumen/
+    Resumen consolidado para el Dashboard gerencial.
+    Retorna stock BP total, rotación del último mes, batidos de la semana,
+    lotes próximos a vencer y OC pendientes/parciales.
+    RF-IND-01, RF-IND-07
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        hoy = date.today()
+        hace_30_dias = hoy - timedelta(days=30)
+
+        # ── Stock Bodega Principal ────────────────────────────────────
+        stock_bp_total = (
+            Lote.objects
+            .filter(bodega__tipo='PRINCIPAL')
+            .aggregate(total=Sum('cantidad'))['total'] or 0
+        )
+
+        # ── Rotación de inventario (último mes) ───────────────────────
+        consumo_mes = (
+            MovimientoInventario.objects
+            .filter(tipo='CONSUMO', fecha__date__gte=hace_30_dias)
+            .aggregate(total=Sum('cantidad'))['total'] or 0
+        )
+        stock_total_actual = (
+            Lote.objects.aggregate(total=Sum('cantidad'))['total'] or 0
+        )
+        rotacion = (float(consumo_mes) / float(stock_total_actual)) if stock_total_actual > 0 else 0
+
+        # ── Batidos de la semana actual (lunes → hoy) ────────────────
+        lunes = hoy - timedelta(days=hoy.weekday())
+        DIAS = ['Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sá', 'Do']
+        batidos_qs = (
+            Batido.objects
+            .filter(fecha_produccion__range=(lunes, hoy))
+            .values('fecha_produccion')
+            .annotate(total=Count('id'))
+        )
+        batidos_por_fecha: dict[str, int] = {
+            str(row['fecha_produccion']): row['total'] for row in batidos_qs
+        }
+        batidos_semana = []
+        for i in range(7):
+            d = lunes + timedelta(days=i)
+            batidos_semana.append({
+                'dia': DIAS[i],
+                'fecha': str(d),
+                'batidos': batidos_por_fecha.get(str(d), 0),
+            })
+
+        # ── Lotes próximos a vencer (7 días) ──────────────────────────
+        limite_venc = hoy + timedelta(days=7)
+        lotes_por_vencer_count = Lote.objects.filter(
+            fecha_vencimiento__range=(hoy, limite_venc)
+        ).count()
+
+        # ── OC pendientes o parciales ────────────────────────────────
+        oc_pendientes = OrdenCompra.objects.filter(
+            estado__in=['PENDIENTE', 'PARCIAL']
+        ).count()
+
+        return Response({
+            'stock_bp_total': str(stock_bp_total),
+            'rotacion_inventario': round(rotacion, 4),
+            'periodo_rotacion': f'{hace_30_dias} al {hoy}',
+            'batidos_semana': batidos_semana,
+            'lotes_por_vencer_count': lotes_por_vencer_count,
+            'oc_pendientes': oc_pendientes,
+        })

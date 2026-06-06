@@ -91,6 +91,13 @@ export default function Dashboard() {
     refetchInterval: 60_000,
   });
 
+  const { data: resumenData, isLoading: resumenLoading } = useQuery({
+    queryKey: ['dashboard', 'resumen'],
+    queryFn: indicadoresAPI.resumen,
+    staleTime: 60_000,
+    refetchInterval: 60_000,
+  });
+
   // ── Derived metrics ───────────────────────────────────────────────
   const stockBP = stockData?.stock_por_bodega?.filter((r) => r.bodega_tipo === 'PRINCIPAL') ?? [];
   const totalStockBP = stockBP.reduce((s, r) => s + parseFloat(r.cantidad_total), 0);
@@ -126,6 +133,10 @@ export default function Dashboard() {
     }));
   }, [stockBP, mpsData]);
 
+  const rotacion = resumenData?.rotacion_inventario ?? null;
+  const periodoRotacion = resumenData?.periodo_rotacion ?? '';
+  const ocPendientes = resumenData?.oc_pendientes ?? null;
+
   const cards = [
     {
       key:   'mp',
@@ -159,6 +170,22 @@ export default function Dashboard() {
       link:  '/inventario/lotes',
       tone:  'bg-rose-100/60 border-rose-200',
     },
+    {
+      key:   'rotacion',
+      label: 'Rotación inventario',
+      value: resumenLoading ? '…' : (rotacion !== null ? rotacion.toFixed(2) : '—'),
+      hint:  periodoRotacion || 'último mes',
+      link:  '/inventario/lotes',
+      tone:  'bg-peach-100/60 border-peach-200',
+    },
+    {
+      key:   'oc-pendientes',
+      label: 'OC pendientes',
+      value: resumenLoading ? '…' : (ocPendientes ?? '—'),
+      hint:  'órdenes sin recibir completamente',
+      link:  '/recepcion/ordenes',
+      tone:  'bg-wine-100/40 border-wine-200',
+    },
   ];
 
   async function handleExportar(formato) {
@@ -186,7 +213,7 @@ export default function Dashboard() {
       {/* ── Tarjetas resumen ─────────────────────────────────────── */}
       <section
         aria-label="Resumen rápido"
-        className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4"
+        className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
       >
         {cards.map((card) => (
           <Link

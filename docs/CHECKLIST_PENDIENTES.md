@@ -117,21 +117,18 @@ El dashboard actual tiene 3 tarjetas planas. El cliente necesita indicadores rea
 - [x] **Frontend:** ampliar `Dashboard.jsx` con tarjeta stock BP, tabla de lotes próximos a vencer (top 5), sección de exportar
 - [x] **Exportación PDF/Excel (RF-IND-05):** endpoints `/kpis/` y `/exportar/` + botón Exportar con rango de fechas en Dashboard
 - [x] **Panel en tiempo real (RF-IND-07):** `refetchInterval: 60_000` en todos los queries del Dashboard
-- [ ] **Backend:** crear endpoint `GET /api/v1/indicadores/resumen/` que devuelva:
+- [x] **Backend:** crear endpoint `GET /api/v1/indicadores/resumen/` que devuelva:
   - Total stock Bodega Principal (en gramos/unidades por MP)
   - Rotación de inventario del último mes (consumo total / stock promedio)
   - Batidos de la semana (agrupados por día)
   - Lotes próximos a vencer (en los próximos 7 días)
   - Total órdenes de compra pendientes
-- [ ] **Frontend:** ampliar `Dashboard.jsx` con al menos:
+- [x] **Frontend:** ampliar `Dashboard.jsx` con al menos:
   - Tarjeta de rotación de inventario con período visible
-  - Tabla de lotes próximos a vencer (top 5)
+  - Tabla de lotes próximos a vencer (top 5) _(ya existía)_
   - Contador de OC pendientes
-- [ ] **Exportación PDF/Excel (RF-IND-05):**
-  - Backend: endpoint `GET /api/v1/indicadores/exportar/?formato=pdf|excel&desde=&hasta=`
-  - Frontend: botón "Exportar" en Dashboard con selector de rango de fechas
-  - Usar `openpyxl` para Excel y `reportlab` o `weasyprint` para PDF en el backend
-- [ ] **Panel en tiempo real (RF-IND-07):** los KPIs del dashboard deben refrescarse automáticamente cada 60 segundos (usar `refetchInterval` en React Query) o via WebSocket si hay un evento de cambio
+- [x] **Exportación PDF/Excel (RF-IND-05):** _(ya implementado)_
+- [x] **Panel en tiempo real (RF-IND-07):** _(refetchInterval: 60_000 ya implementado)_
 
 ---
 

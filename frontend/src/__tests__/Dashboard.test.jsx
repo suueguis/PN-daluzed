@@ -23,6 +23,15 @@ beforeEach(() => {
     if (tipo === 'stock') return [200, { stock_por_bodega: [] }];
     return [200, { lotes_por_vencer: [] }];
   });
+  mock.onGet('/indicadores/utilizacion-bodega/').reply(200, { utilizacion_por_zona: [] });
+  mock.onGet('/indicadores/resumen/').reply(200, {
+    stock_bp_total: '0',
+    rotacion_inventario: 0,
+    periodo_rotacion: '2026-05-07 al 2026-06-06',
+    batidos_semana: [],
+    lotes_por_vencer_count: 0,
+    oc_pendientes: 0,
+  });
 });
 
 afterEach(() => {
@@ -40,12 +49,14 @@ function renderDashboard() {
 }
 
 describe('Dashboard', () => {
-  it('renderiza las 4 tarjetas resumen', async () => {
+  it('renderiza las 6 tarjetas resumen', async () => {
     renderDashboard();
     expect(await screen.findByText('Materias primas')).toBeInTheDocument();
     expect(screen.getByText('Alertas activas')).toBeInTheDocument();
     expect(screen.getByText('Batidos del día')).toBeInTheDocument();
     expect(screen.getByText('Stock Bodega Principal')).toBeInTheDocument();
+    expect(screen.getByText('Rotación inventario')).toBeInTheDocument();
+    expect(screen.getByText('OC pendientes')).toBeInTheDocument();
   });
 
   it('muestra saludo con rol del usuario', async () => {

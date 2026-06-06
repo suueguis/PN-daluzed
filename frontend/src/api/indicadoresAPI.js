@@ -17,6 +17,7 @@ export const exportarAPI = {
 
 export const indicadoresAPI = {
   utilizacionBodega: () => axiosClient.get('/indicadores/utilizacion-bodega/').then((r) => r.data),
+  resumen: () => axiosClient.get('/indicadores/resumen/').then((r) => r.data),
 };
 
 export const reporteSemanalAPI = {
