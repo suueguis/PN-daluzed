@@ -366,9 +366,9 @@ Ampliar el dashboard con visualizaciones que el gerente pueda leer de un vistazo
 
 `JornadaPage` existe pero muestra los batidos como tabla plana.
 
-- [ ] Agregar una vista de línea de tiempo donde cada batido aparezca con su hora de inicio, producto y estado (EN_PROCESO / COMPLETADO)
-- [ ] Permite ver de un vistazo cuántas máquinas están ocupadas en este momento
-- [ ] Toggle entre vista tabla y vista timeline
+- [x] Agregar una vista de línea de tiempo donde cada batido aparezca con su hora de inicio, producto y estado (EN_PROCESO / COMPLETADO)
+- [x] Permite ver de un vistazo cuántas máquinas están ocupadas en este momento _(banner "N máquinas en proceso")_
+- [x] Toggle entre vista tabla y vista timeline _(botones Tabla/Timeline con aria-pressed)_
 
 ---
 

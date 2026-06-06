@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
-import { CalendarDays } from 'lucide-react';
+import { CalendarDays, LayoutList, AlignLeft } from 'lucide-react';
 import Input from '../../components/ui/Input';
 import Table from '../../components/ui/Table';
 import Badge from '../../components/ui/Badge';
@@ -22,8 +22,77 @@ function StatCard({ label, value, tone = 'neutral' }) {
   );
 }
 
+function TimelineItem({ batido, isLast }) {
+  const isEnProceso = batido.estado === 'EN_PROCESO';
+  return (
+    <div className="relative flex gap-4">
+      {/* vertical line */}
+      {!isLast && (
+        <div className="absolute left-[11px] top-6 h-full w-0.5 bg-peach-200" />
+      )}
+      {/* dot */}
+      <div
+        className={`relative z-10 mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 ${
+          isEnProceso
+            ? 'border-rose-400 bg-rose-100'
+            : 'border-mint-400 bg-mint-100'
+        }`}
+      >
+        <div
+          className={`h-2 w-2 rounded-full ${
+            isEnProceso ? 'animate-pulse bg-rose-500' : 'bg-mint-500'
+          }`}
+        />
+      </div>
+      {/* content */}
+      <div className="mb-4 flex-1 rounded-xl border border-peach-200 bg-white p-3 shadow-sm">
+        <div className="flex items-start justify-between gap-2">
+          <div>
+            <p className="font-semibold text-wine-900">
+              {batido.producto_terminado_nombre ?? `Prod. #${batido.producto_terminado}`}
+            </p>
+            <p className="text-xs text-wine-700">
+              Batido #{batido.id} · inicio {batido.hora_inicio}
+            </p>
+          </div>
+          <Badge state={batido.estado} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TimelineView({ batidos, loading }) {
+  if (loading) {
+    return <div className="flex justify-center py-8"><Spinner size="lg" /></div>;
+  }
+  if (batidos.length === 0) {
+    return (
+      <p className="rounded-2xl border border-peach-200 bg-cream-50 px-5 py-4 text-sm text-wine-700">
+        Sin batidos para esta fecha.
+      </p>
+    );
+  }
+  const enProceso = batidos.filter((b) => b.estado === 'EN_PROCESO').length;
+  return (
+    <div className="space-y-3">
+      {enProceso > 0 && (
+        <p className="text-sm font-semibold text-rose-600">
+          {enProceso} máquina{enProceso > 1 ? 's' : ''} en proceso ahora
+        </p>
+      )}
+      <div>
+        {batidos.map((b, i) => (
+          <TimelineItem key={b.id} batido={b} isLast={i === batidos.length - 1} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function JornadaPage() {
   const [fecha, setFecha] = useState(format(new Date(), 'yyyy-MM-dd'));
+  const [vista, setVista] = useState('tabla');
 
   const { data: jornada, isLoading: loadingJornada } = useApiQuery(
     ['jornada', fecha],
@@ -42,9 +111,9 @@ export default function JornadaPage() {
   const columns = [
     { key: 'id', header: '#', cellClassName: 'font-mono text-xs text-wine-700' },
     {
-      key: 'producto_terminado',
+      key: 'producto_terminado_nombre',
       header: 'Producto',
-      render: (row) => `Prod. #${row.producto_terminado}`,
+      render: (row) => row.producto_terminado_nombre ?? `Prod. #${row.producto_terminado}`,
     },
     { key: 'hora_inicio', header: 'Hora inicio' },
     {
@@ -56,14 +125,50 @@ export default function JornadaPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <CalendarDays size={20} className="text-wine-700" />
-        <Input
-          label="Fecha"
-          type="date"
-          value={fecha}
-          onChange={(e) => setFecha(e.target.value)}
-        />
+      <div className="flex flex-wrap items-end gap-3">
+        <div className="flex items-center gap-3">
+          <CalendarDays size={20} className="text-wine-700" />
+          <Input
+            label="Fecha"
+            type="date"
+            value={fecha}
+            onChange={(e) => setFecha(e.target.value)}
+          />
+        </div>
+
+        {/* Toggle vista */}
+        <div
+          role="group"
+          aria-label="Cambiar vista"
+          className="ml-auto flex overflow-hidden rounded-xl border border-peach-300 bg-cream-50"
+        >
+          <button
+            type="button"
+            aria-pressed={vista === 'tabla'}
+            onClick={() => setVista('tabla')}
+            className={`flex items-center gap-1.5 px-3 py-2 text-xs font-semibold transition-colors ${
+              vista === 'tabla'
+                ? 'bg-wine-700 text-white'
+                : 'text-wine-700 hover:bg-peach-100'
+            }`}
+          >
+            <LayoutList size={14} />
+            Tabla
+          </button>
+          <button
+            type="button"
+            aria-pressed={vista === 'timeline'}
+            onClick={() => setVista('timeline')}
+            className={`flex items-center gap-1.5 px-3 py-2 text-xs font-semibold transition-colors ${
+              vista === 'timeline'
+                ? 'bg-wine-700 text-white'
+                : 'text-wine-700 hover:bg-peach-100'
+            }`}
+          >
+            <AlignLeft size={14} />
+            Timeline
+          </button>
+        </div>
       </div>
 
       {loadingJornada ? (
@@ -80,14 +185,18 @@ export default function JornadaPage() {
 
       <div className="space-y-2">
         <h3 className="font-semibold text-wine-900">Batidos del día</h3>
-        <Table
-          columns={columns}
-          data={batidos}
-          loading={loadingBatidos}
-          getRowKey={(r) => r.id}
-          emptyTitle="Sin batidos"
-          emptyDescription={`No hay batidos registrados para el ${formatDate(fecha)}.`}
-        />
+        {vista === 'tabla' ? (
+          <Table
+            columns={columns}
+            data={batidos}
+            loading={loadingBatidos}
+            getRowKey={(r) => r.id}
+            emptyTitle="Sin batidos"
+            emptyDescription={`No hay batidos registrados para el ${formatDate(fecha)}.`}
+          />
+        ) : (
+          <TimelineView batidos={batidos} loading={loadingBatidos} />
+        )}
       </div>
     </div>
   );
