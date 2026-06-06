@@ -101,6 +101,42 @@ class InventarioService:
             notas=motivo,
         )
 
+    @staticmethod
+    def consultar_stock_pdp_comprometido() -> list[dict]:
+        from django.db.models import Sum, Value
+        from django.db.models.functions import Coalesce
+        from apps.produccion.models import DetalleBatido
+
+        pdp_ids = list(Bodega.objects.filter(tipo='PDP').values_list('id', flat=True))
+        stock_rows = (
+            Lote.objects
+            .filter(bodega_id__in=pdp_ids, cantidad__gt=0)
+            .values('materia_prima_id', 'materia_prima__nombre')
+            .annotate(stock_pdp=Sum('cantidad'))
+        )
+        comprometido_map = {
+            r['materia_prima_id']: r['comprometido']
+            for r in (
+                DetalleBatido.objects
+                .filter(batido__estado='EN_PROCESO')
+                .values('materia_prima_id')
+                .annotate(comprometido=Sum('cantidad'))
+            )
+        }
+        result = []
+        for row in stock_rows:
+            mp_id = row['materia_prima_id']
+            stock = row['stock_pdp']
+            comprometido = comprometido_map.get(mp_id, 0)
+            result.append({
+                'materia_prima_id': mp_id,
+                'materia_prima_nombre': row['materia_prima__nombre'],
+                'stock_pdp': stock,
+                'comprometido': comprometido,
+                'disponible': max(0, stock - comprometido),
+            })
+        return result
+
 
 _KARDEX_ENTRADAS = frozenset({'RECEPCION'})
 _KARDEX_SALIDAS  = frozenset({'CONSUMO', 'DEVOLUCION', 'DESCARTE'})

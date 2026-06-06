@@ -7,12 +7,13 @@ import StockPage from '../../../pages/inventario/StockPage';
 vi.mock('../../../hooks/inventario/useInventario', () => ({
   useLotes: vi.fn(),
   useBodegas: vi.fn(),
+  useStockPDP: vi.fn(),
 }));
 vi.mock('../../../hooks/useApi', () => ({
   useApiQuery: vi.fn(),
 }));
 
-import { useLotes, useBodegas } from '../../../hooks/inventario/useInventario';
+import { useLotes, useBodegas, useStockPDP } from '../../../hooks/inventario/useInventario';
 import { useApiQuery } from '../../../hooks/useApi';
 
 const BODEGAS = [
@@ -45,6 +46,12 @@ describe('StockPage', () => {
     useLotes.mockReturnValue({ data: LOTES, isLoading: false });
     useBodegas.mockReturnValue({ data: BODEGAS, isLoading: false });
     useApiQuery.mockReturnValue({ data: MPS, isLoading: false });
+    useStockPDP.mockReturnValue({
+      data: [
+        { materia_prima_id: 10, materia_prima_nombre: 'Harina de trigo', stock_pdp: '2000', comprometido: '500', disponible: '1500' },
+      ],
+      isLoading: false,
+    });
   });
 
   it('muestra las materias primas en la tabla pivot', () => {
@@ -65,8 +72,14 @@ describe('StockPage', () => {
     render(<StockPage />, { wrapper });
     // Azúcar: BP=6000 > reorden=5000 → no debe marcar
     const textos = screen.queryAllByText(/Reorden:/i);
-    // Solo debe haber 1 (Harina), no 2
     expect(textos).toHaveLength(1);
+  });
+
+  it('muestra columnas Stock PDP, Comprometido y Disponible PDP', () => {
+    render(<StockPage />, { wrapper });
+    expect(screen.getByRole('columnheader', { name: /Stock PDP/i })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: /Comprometido/i })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: /Disponible PDP/i })).toBeInTheDocument();
   });
 
   it('muestra spinner mientras carga', () => {

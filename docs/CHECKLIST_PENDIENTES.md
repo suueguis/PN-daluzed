@@ -389,8 +389,8 @@ Al hacer click en una fila de `LotesPage`, expandir una sección inline con:
 
 Cuando hay un batido `EN_PROCESO`, el stock de Bodega PDP está parcialmente comprometido. El sistema actualmente no lo refleja visualmente.
 
-- [ ] Backend: calcular stock "disponible" = stock PDP − cantidad comprometida en batidos EN_PROCESO
-- [ ] Frontend: mostrar en `StockPage` dos columnas: "Stock PDP" y "Disponible para producción"
+- [x] Backend: calcular stock "disponible" = stock PDP − cantidad comprometida en batidos EN_PROCESO _(GET /api/v1/inventario/stock-pdp/ — InventarioService.consultar_stock_pdp_comprometido())_
+- [x] Frontend: mostrar en `StockPage` dos columnas: "Stock PDP" y "Disponible para producción" _(+ columna Comprometido; verde/rojo según disponibilidad)_
 
 ---
 

@@ -411,3 +411,64 @@ class TrasladoInventarioTestCase(APITestCase):
         tipos_en_historial = [m['tipo'] for m in response.data['movimientos']]
         self.assertIn('RECEPCION', tipos_en_historial)
         self.assertIn('TRASLADO', tipos_en_historial)
+
+
+class StockPDPComprometidoTestCase(APITestCase):
+    """INV-K-09, INV-K-10: Stock comprometido en Bodega PDP."""
+
+    URL = '/api/v1/inventario/stock-pdp/'
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            email='inv@daluzed.com', password='Daluzed2026!', role='INVENTARIO'
+        )
+        refresh = RefreshToken.for_user(self.user)
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {str(refresh.access_token)}')
+
+        from apps.catalogo.models import UnidadMedida, MateriaPrima, ProductoTerminado
+        from apps.produccion.models import Batido, DetalleBatido
+
+        um = UnidadMedida.objects.create(nombre='g', simbolo='g')
+        self.mp = MateriaPrima.objects.create(nombre='Harina', unidad_medida=um, punto_reorden=0)
+        self.bodega_pdp = Bodega.objects.create(nombre='PDP', tipo='PDP')
+        hoy = date.today()
+        self.lote = Lote.objects.create(
+            materia_prima=self.mp, bodega=self.bodega_pdp,
+            cantidad=10000, fecha_vencimiento=hoy + timedelta(days=30),
+        )
+        pt = ProductoTerminado.objects.create(nombre='Pan blanco', unidad_medida=um, vida_util_dias=3)
+        from django.utils import timezone
+        self.batido = Batido.objects.create(
+            producto_terminado=pt,
+            fecha_produccion=hoy,
+            hora_inicio='08:00',
+            estado='EN_PROCESO',
+            usuario=self.user,
+        )
+        DetalleBatido.objects.create(
+            batido=self.batido,
+            materia_prima=self.mp,
+            lote=self.lote,
+            cantidad=3000,
+        )
+
+    def test_inv_k_09_retorna_stock_y_comprometido(self):
+        """GET /inventario/stock-pdp/ devuelve stock_pdp, comprometido y disponible."""
+        response = self.client.get(self.URL)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        row = next((r for r in response.data if r['materia_prima_id'] == self.mp.id), None)
+        self.assertIsNotNone(row)
+        self.assertEqual(float(row['stock_pdp']), 10000)
+        self.assertEqual(float(row['comprometido']), 3000)
+        self.assertEqual(float(row['disponible']), 7000)
+
+    def test_inv_k_10_comprometido_cero_sin_batidos_en_proceso(self):
+        """Si no hay batidos EN_PROCESO, disponible == stock_pdp."""
+        self.batido.estado = 'COMPLETADO'
+        self.batido.save()
+        response = self.client.get(self.URL)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        row = next((r for r in response.data if r['materia_prima_id'] == self.mp.id), None)
+        self.assertIsNotNone(row)
+        self.assertEqual(float(row['comprometido']), 0)
+        self.assertEqual(float(row['disponible']), float(row['stock_pdp']))

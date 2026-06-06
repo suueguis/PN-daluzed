@@ -43,3 +43,7 @@ export const trazabilidadAPI = {
 export const kardexAPI = {
   get: (params) => axiosClient.get('/inventario/kardex/', { params }).then((r) => r.data),
 };
+
+export const stockPDPAPI = {
+  list: () => axiosClient.get('/inventario/stock-pdp/').then((r) => r.data),
+};

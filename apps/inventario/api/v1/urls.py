@@ -6,6 +6,7 @@ from .views import (
     ZonaBodegaViewSet,
     LoteListView,
     StockView,
+    StockPDPView,
     ReordenView,
     FefoView,
     TrasladoViewSet,
@@ -23,6 +24,7 @@ router.register('traslados', TrasladoViewSet, basename='traslado')
 urlpatterns = [
     path('lotes/',                          LoteListView.as_view(),  name='inv_lotes'),
     path('stock/',                          StockView.as_view(),     name='inv_stock'),
+    path('stock-pdp/',                      StockPDPView.as_view(),  name='inv_stock_pdp'),
     path('reorden/',                        ReordenView.as_view(),   name='inv_reorden'),
     path('fefo/',                           FefoView.as_view(),      name='inv_fefo'),
     path('devoluciones/',                   DevolucionView.as_view(), name='inv_devoluciones'),
