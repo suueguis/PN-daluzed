@@ -63,7 +63,14 @@ function App() {
           clearAuth();
         }
       })
-      .catch(() => clearAuth());
+      .catch(() => {
+        // Only clear auth if we have no session at all.
+        // Avoids wiping a just-created login when the refresh cookie
+        // fails cross-site (Vercel → Railway in production).
+        if (!useAuthStore.getState().accessToken) {
+          clearAuth();
+        }
+      });
   }, [setAuth, clearAuth]);
 
   if (isLoading) return null;

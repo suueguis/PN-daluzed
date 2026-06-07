@@ -49,8 +49,27 @@ Credenciales de prueba:
 | PRODUCCION | `produccion.demo@daluzed.com` | `Daluzed2026!` |
 | INVENTARIO | `inventario.demo@daluzed.com` | `Daluzed2026!` |
 
+Para poblar la base de datos con catálogo, bodegas, lotes, órdenes de compra, producción y alertas de ejemplo:
+
+```bash
+python manage.py seed_visual_data
+
+# Borra datos previos y los recrea desde cero (no elimina usuarios)
+python manage.py seed_visual_data --flush
+```
+
 Notas:
 
 - Los usuarios se crean con el campo `role` del modelo `User`.
 - No se asignan grupos de Django para que el JWT devuelva el mismo código de rol que usa el frontend.
 - El usuario `ADMIN` queda marcado como `is_staff` y `is_superuser` para facilitar pruebas del panel de administración.
+
+## Mantenimiento en producción
+
+Si el superuser de Railway da 403 en endpoints de producción o batidos, ejecutar desde la consola de Railway:
+
+```bash
+python manage.py fix_superuser_roles
+```
+
+Esto actualiza todos los superusers cuyo `role` quedó como `INVENTARIO` (valor por defecto anterior) a `ADMIN`.

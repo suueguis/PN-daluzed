@@ -9,12 +9,15 @@ const TIPO_LABEL = {
 };
 
 function buildWsUrl() {
-  // Backend escucha en ws://<host>:8000/ws/alertas/ en dev.
+  const apiUrl = import.meta.env.VITE_API_URL;
+  if (apiUrl) {
+    const wsProtocol = apiUrl.startsWith('https') ? 'wss' : 'ws';
+    const host = apiUrl.replace(/^https?:\/\//, '');
+    return `${wsProtocol}://${host}/ws/alertas/`;
+  }
+  // Dev fallback: backend on localhost:8000, frontend on Vite proxy
   const protocol = globalThis.location?.protocol === 'https:' ? 'wss' : 'ws';
-  const host = globalThis.location?.host?.includes('localhost')
-    ? 'localhost:8000'
-    : globalThis.location.host;
-  return `${protocol}://${host}/ws/alertas/`;
+  return `${protocol}://localhost:8000/ws/alertas/`;
 }
 
 const useAlertasStore = create((set, get) => ({
