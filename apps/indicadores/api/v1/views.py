@@ -194,15 +194,16 @@ class UtilizacionBodegaView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
+        from decimal import Decimal
         from apps.inventario.models import ZonaBodega
-        from django.db.models import Sum, F, Value
+        from django.db.models import Sum, Value
         from django.db.models.functions import Coalesce
 
         zonas = (
             ZonaBodega.objects
             .select_related('bodega')
             .annotate(
-                stock_actual=Coalesce(Sum('lotes__cantidad'), Value(0))
+                stock_actual=Coalesce(Sum('lotes__cantidad'), Value(Decimal('0')))
             )
             .values(
                 'id',
