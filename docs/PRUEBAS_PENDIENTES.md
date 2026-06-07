@@ -29,13 +29,17 @@
 
 | Archivo | IDs | Tests | Estado |
 |---------|-----|-------|--------|
-| `apps/catalogo/tests/test_catalogo.py` | CAT-001..018 | 18 | ✅ Real — APITestCase con BD real |
-| `apps/recepcion/tests/test_recepcion.py` | REC-001..010 | 10 | ✅ Real |
-| `apps/inventario/tests/test_inventario.py` | INV-001..012 | 12 | ✅ Real |
+| `apps/authentication/tests/test_autenticacion.py` | AUT-001..015 | 15 | ✅ Real |
+| `apps/authentication/tests/test_usuarios.py` | usuarios CRUD | 12 | ✅ Real |
+| `apps/catalogo/tests/test_catalogo.py` | CAT-001..018+ | 25 | ✅ Real — APITestCase con BD real |
+| `apps/inventario/tests/test_inventario.py` | INV-001..012+ | 14 | ✅ Real |
+| `apps/recepcion/tests/test_recepcion.py` | REC-001..010+ | 12 | ✅ Real |
 | `apps/produccion/tests/test_produccion.py` | PROD-001..014 | 14 | ✅ Real |
-| `apps/alertas/tests/test_alertas.py` | ALR-001..008 | 8 | ⚠️ Importa `AlertaService` que puede no existir |
+| `apps/alertas/tests/test_alertas.py` | ALR-001..008+ | 16 | ✅ Real — AlertaService implementado |
+| `apps/indicadores/tests/test_indicadores.py` | IND-001..005+ | 11 | ✅ Real |
+| `apps/auditoria/tests/test_auditoria.py` | AUD-001..006 | 6 | ✅ Real |
 
-**Total backend: 62 tests**
+**Total backend: 125 tests** (objetivo original: 107)
 
 ### 1.2 Frontend (implementado y real)
 
