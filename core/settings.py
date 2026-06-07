@@ -14,6 +14,7 @@ DEBUG = os.environ.get('DEBUG', 'True').lower() not in ('false', '0', 'no')
 
 _allowed = os.environ.get('ALLOWED_HOSTS', '')
 ALLOWED_HOSTS = [h.strip() for h in _allowed.split(',') if h.strip()] if _allowed else ['*'] if DEBUG else []
+ALLOWED_HOSTS.append('healthcheck.railway.app')
 
 INSTALLED_APPS = [
     # Daphne debe ir ANTES de django.contrib.staticfiles
@@ -158,10 +159,12 @@ SPECTACULAR_SETTINGS = {
 
 
 _cors_extra = os.environ.get('CORS_ALLOWED_ORIGINS_EXTRA', '')
+_cors_origins = os.environ.get('CORS_ALLOWED_ORIGINS', '')
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:5173',
     'http://127.0.0.1:8000',
     *[o.strip() for o in _cors_extra.split(',') if o.strip()],
+    *[o.strip() for o in _cors_origins.split(',') if o.strip()],
 ]
 
 CORS_ALLOW_CREDENTIALS = True

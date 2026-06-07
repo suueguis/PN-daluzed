@@ -54,7 +54,7 @@ function App() {
 
   useEffect(() => {
     axios
-      .post("/api/v1/auth/token/refresh/", {}, { withCredentials: true })
+      .post(`${import.meta.env.VITE_API_URL ?? ""}/api/v1/auth/token/refresh/`, {}, { withCredentials: true })
       .then(({ data }) => {
         const claims = parseJwt(data.access);
         if (claims?.username && claims?.role) {
