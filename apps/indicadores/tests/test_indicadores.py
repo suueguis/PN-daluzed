@@ -5,7 +5,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from datetime import date, timedelta
 
 from apps.catalogo.models import UnidadMedida, MateriaPrima, ProductoTerminado
-from apps.inventario.models import Bodega, Lote
+from apps.inventario.models import Bodega, ZonaBodega, Lote
 from apps.produccion.models import Batido, LoteProductoTerminado
 
 from apps.recepcion.models import OrdenCompra, RecepcionMercancia
@@ -13,10 +13,11 @@ from apps.catalogo.models import Proveedor
 
 User = get_user_model()
 
-URL_KPI            = '/api/v1/indicadores/kpis/'
-URL_EXPORTAR       = '/api/v1/indicadores/exportar/'
-URL_REPORTE_SEMANAL = '/api/v1/indicadores/reporte-semanal/'
-URL_RESUMEN        = '/api/v1/indicadores/resumen/'
+URL_KPI               = '/api/v1/indicadores/kpis/'
+URL_EXPORTAR          = '/api/v1/indicadores/exportar/'
+URL_REPORTE_SEMANAL   = '/api/v1/indicadores/reporte-semanal/'
+URL_RESUMEN           = '/api/v1/indicadores/resumen/'
+URL_UTILIZACION       = '/api/v1/indicadores/utilizacion-bodega/'
 
 
 class IndicadoresTestCase(APITestCase):
@@ -186,6 +187,50 @@ class IndicadoresTestCase(APITestCase):
 
         # oc_pendientes: no hay OC en este setUp, debe ser 0
         self.assertEqual(response.data['oc_pendientes'], 0)
+
+    # ── IND-010 ───────────────────────────────────────────────────────
+    def test_ind_010_utilizacion_bodega_con_zonas(self):
+        """
+        GET /indicadores/utilizacion-bodega/ devuelve la lista de zonas
+        con porcentaje de utilización calculado correctamente.
+        Regresión: Coalesce(Sum(DecimalField), Value(0)) fallaba con FieldError
+        en producción (tipos mixtos Decimal/Integer). RF-IND-01
+        """
+        zona = ZonaBodega.objects.create(
+            bodega=self.bodega_principal,
+            nombre='Zona A',
+            capacidad_maxima=50000,
+        )
+        Lote.objects.filter(bodega=self.bodega_principal).update(zona=zona)
+
+        response = self.client.get(URL_UTILIZACION)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('utilizacion_por_zona', response.data)
+        zonas = response.data['utilizacion_por_zona']
+        self.assertEqual(len(zonas), 1)
+        zona_data = zonas[0]
+        self.assertEqual(zona_data['zona_nombre'], 'Zona A')
+        self.assertEqual(zona_data['bodega_nombre'], 'Bodega Principal')
+        self.assertAlmostEqual(float(zona_data['stock_actual']), 35000.0)
+        self.assertAlmostEqual(zona_data['porcentaje_utilizacion'], 70.0)
+
+    def test_ind_011_utilizacion_bodega_sin_lotes(self):
+        """
+        GET /indicadores/utilizacion-bodega/ con zonas sin lotes asignados
+        devuelve stock_actual=0 y porcentaje=0. RF-IND-01
+        """
+        ZonaBodega.objects.create(
+            bodega=self.bodega_principal,
+            nombre='Zona Vacía',
+            capacidad_maxima=10000,
+        )
+
+        response = self.client.get(URL_UTILIZACION)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        zonas = response.data['utilizacion_por_zona']
+        self.assertEqual(len(zonas), 1)
+        self.assertAlmostEqual(float(zonas[0]['stock_actual']), 0.0)
+        self.assertAlmostEqual(zonas[0]['porcentaje_utilizacion'], 0.0)
 
 
 class ReporteSemanalTestCase(APITestCase):
