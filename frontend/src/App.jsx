@@ -54,7 +54,7 @@ function App() {
 
   useEffect(() => {
     axios
-      .post("/api/v1/auth/token/refresh/", {}, { withCredentials: true })
+      .post(`${import.meta.env.VITE_API_URL ?? ""}/api/v1/auth/token/refresh/`, {}, { withCredentials: true })
       .then(({ data }) => {
         const claims = parseJwt(data.access);
         if (claims?.username && claims?.role) {
@@ -63,7 +63,14 @@ function App() {
           clearAuth();
         }
       })
-      .catch(() => clearAuth());
+      .catch(() => {
+        // Only clear auth if we have no session at all.
+        // Avoids wiping a just-created login when the refresh cookie
+        // fails cross-site (Vercel → Railway in production).
+        if (!useAuthStore.getState().accessToken) {
+          clearAuth();
+        }
+      });
   }, [setAuth, clearAuth]);
 
   if (isLoading) return null;

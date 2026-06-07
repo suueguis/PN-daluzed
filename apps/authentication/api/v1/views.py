@@ -43,7 +43,7 @@ def _set_refresh_cookie(response, refresh_token: str) -> None:
         value=refresh_token,
         httponly=True,
         secure=not settings.DEBUG,
-        samesite='Lax',
+        samesite='Lax' if settings.DEBUG else 'None',
         max_age=int(lifetime.total_seconds()),
         path='/api/v1/auth/',
     )
