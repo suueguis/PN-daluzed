@@ -19,6 +19,17 @@ npm install
 npm run dev
 ```
 
+## Producción
+
+| Servicio | URL |
+|----------|-----|
+| Backend (Railway) | https://pn-daluzed-production.up.railway.app |
+| Frontend (Vercel) | https://frontend-two-chi-31.vercel.app |
+| Swagger | https://pn-daluzed-production.up.railway.app/api/docs/ |
+
+> **Backups Railway**: Los backups automáticos de PostgreSQL requieren plan Pro.
+> Con el plan gratuito/Hobby no están disponibles. Backup manual: exportar con `pg_dump` usando `DATABASE_PUBLIC_URL`.
+
 ## Datos de prueba
 
 Para pruebas manuales y validación visual de endpoints, existe un comando que crea un usuario por cada rol del sistema:
