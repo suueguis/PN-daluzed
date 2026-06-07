@@ -21,16 +21,18 @@ Plan de pruebas TDD (107 casos): `PLAN_DE_PRUEBAS_TDD.md`
 
 ## Estado actual de módulos
 
-| Módulo | App Django | Estado | Tests |
-|--------|-----------|--------|-------|
-| AUT — Autenticación | `apps.authentication` | ✅ Implementado | 15 casos (AUT-001..015) |
-| CAT — Catálogo Maestro | `apps.catalogo` | ✅ Implementado | 18 casos (CAT-001..018) |
-| INV — Inventario | `apps.inventario` | ✅ Implementado | 12 casos (INV-001..012) |
-| REC — Recepción | `apps.recepcion` | ✅ Implementado | 10 casos (REC-001..010) |
-| PROD — Producción | `apps.produccion` | ✅ Implementado | 14 casos (PROD-001..014) |
-| ALR — Alertas | `apps.alertas` | ✅ Implementado | 8 casos (ALR-001..008) |
-| IND — Indicadores | `apps.indicadores` | ✅ Implementado | 5 casos (IND-001..005) |
-| AUD — Auditoría | `apps.auditoria` | ✅ Implementado | 6 casos (AUD-001..006) |
+| Módulo | App Django | Estado | Tests implementados |
+|--------|-----------|--------|---------------------|
+| AUT — Autenticación | `apps.authentication` | ✅ Implementado | 27 (test_autenticacion.py: 15 + test_usuarios.py: 12) |
+| CAT — Catálogo Maestro | `apps.catalogo` | ✅ Implementado | 25 (test_catalogo.py) |
+| INV — Inventario | `apps.inventario` | ✅ Implementado | 14 (test_inventario.py) |
+| REC — Recepción | `apps.recepcion` | ✅ Implementado | 12 (test_recepcion.py) |
+| PROD — Producción | `apps.produccion` | ✅ Implementado | 14 (test_produccion.py) |
+| ALR — Alertas | `apps.alertas` | ✅ Implementado | 16 (test_alertas.py) |
+| IND — Indicadores | `apps.indicadores` | ✅ Implementado | 11 (test_indicadores.py) |
+| AUD — Auditoría | `apps.auditoria` | ✅ Implementado | 6 (test_auditoria.py) |
+
+**Total tests backend: 125** (supera el plan original de 107)
 
 ---
 
@@ -66,7 +68,9 @@ apps/
     routing.py     ← WebSocket URL patterns
   indicadores/     ← KpisView, UtilizacionBodegaView, ReporteSemanalView, ResumenView, ExportarView
   auditoria/
-    models.py      ← BitacoraOperacion — log de operaciones críticas (LOGIN, LOGOUT, etc.)
+    models.py      ← BitacoraOperacion — log de operaciones críticas
+                      ACCIONES: LOGIN, LOGOUT, RECEPCION_CREADA, TRASLADO,
+                                BATIDO_CREADO, COMPENSATORIO, DESPACHO, USUARIO_DESACTIVADO
     services.py    ← registrar_operacion(), get_client_ip() — llamados desde views de otros módulos
 core/
   settings.py      ← Lee DB y SECRET_KEY desde env vars (os.environ.get)
@@ -97,6 +101,23 @@ permission_classes = [allow_roles_rw(read=('ADMIN', 'GERENTE', 'INVENTARIO'), wr
 Los superusers (`is_superuser=True`) NO tienen bypass automático — deben tener `role='ADMIN'`.
 Para corregir superusers ya creados: `python manage.py fix_superuser_roles`.
 
+### Roles y permisos
+
+Los roles se almacenan como `CharField` en el modelo `User` (campo `role`, valores: `ADMIN`, `GERENTE`, `PRODUCCION`, `INVENTARIO`). **No se usan grupos de Django para el RBAC.** `AuthService.generate_tokens_for_user()` toma `user.groups.first()` como fallback (por si hubiera grupos asignados), pero en la práctica usa siempre `user.role`.
+
+```python
+first_group = user.groups.first()
+role = first_group.name if first_group else user.role  # en la práctica: siempre user.role
+```
+
+### Django-Axes — protección fuerza bruta
+
+Configurado en `core/settings.py`:
+- `AXES_FAILURE_LIMIT = 5` — bloquea tras 5 intentos fallidos
+- `AXES_COOLOFF_TIME = 1` — bloqueo dura 1 hora
+- `AXES_LOCKOUT_PARAMETERS = ['username', 'ip_address']` — bloquea por email + IP combinados
+- El login devuelve el número de intentos restantes en el mensaje de error para que el frontend lo muestre
+
 ### JWT y cookie de sesión
 
 - **Access token**: 30 min, en memoria (Zustand). Se inyecta como `Authorization: Bearer` en cada request via `axiosClient.js`.
@@ -108,15 +129,45 @@ Para corregir superusers ya creados: `python manage.py fix_superuser_roles`.
 ### WebSocket — Alertas en tiempo real (RF-ALR-05)
 
 - Servidor: Daphne (ASGI), configurado en `core/asgi.py` con `ProtocolTypeRouter`.
-- Canal: `InMemoryChannelLayer` (dev y prod actual). Migrar a Redis si se escala horizontalmente.
+- Canal: `InMemoryChannelLayer` (dev y prod actual). **Limitación**: no funciona con múltiples réplicas del contenedor — cada proceso tiene su propia capa en memoria. Para escalar horizontalmente, migrar a `channels_redis.core.RedisChannelLayer`.
 - URL: `ws://localhost:8000/ws/alertas/` (dev) / `wss://<railway-host>/ws/alertas/` (prod).
 - El frontend usa `VITE_API_URL` para construir la URL — no usa `window.location.host`.
 - Las alertas se disparan automáticamente vía señal `post_save` en `Lote` → `AlertaService`.
+- `AlertasConsumer` une todos los clientes al grupo `'alertas'` en connect y les retransmite mensajes tipo `alerta.nueva`.
 - Formato del mensaje WebSocket: `{ "tipo": "STOCK_BAJO"|"VENCIMIENTO_PROXIMO"|"EN_ESPERA_PENDIENTE", "mensaje": "...", "alerta_id": 42 }`.
+
+**AlertaService — métodos disponibles:**
+- `verificar_stock_reorden(materia_prima, enviar_ws=False)` — crea alerta STOCK_BAJO si BP < punto_reorden (deduplicada)
+- `verificar_vencimientos(dias_umbral=None)` — crea alertas VENCIMIENTO_PROXIMO para lotes dentro del umbral
+- `verificar_lotes_en_espera(horas_umbral=24)` — crea alertas EN_ESPERA_PENDIENTE si PT > N horas en EN_ESPERA
+- `resolver(alerta, mensaje_resolucion='')` — marca activa=False, registra fecha_resolucion
+- `_enviar_websocket(alerta)` — **privado** — publica en grupo Channels `'alertas'` (llamado desde `notificar_todos`)
+- `enviar_whatsapp(alerta)` — via Twilio (opcional, credenciales desde `ConfiguracionAlerta`)
+- `enviar_email(alerta, destinatario=None)` — via Django send_mail (opcional)
+- `notificar_todos(alerta)` — llama _enviar_websocket + enviar_whatsapp + enviar_email combinados
 
 ### Auditoría — `apps/auditoria`
 
-`registrar_operacion(user, operacion, detalle_dict, ip)` se llama desde views de otros módulos para registrar en `BitacoraOperacion`. Operaciones actuales registradas: `LOGIN`, `LOGOUT`, `USUARIO_DESACTIVADO`, y operaciones de recepción/producción. Para agregar una nueva operación, importar desde `apps.auditoria.services` y llamar al final del view exitoso.
+`registrar_operacion(user, operacion, detalle_dict, ip)` se llama desde views de otros módulos para registrar en `BitacoraOperacion`. Las 8 operaciones registradas actualmente:
+
+| Código | Dónde se llama |
+|--------|----------------|
+| `LOGIN` | `LoginView` |
+| `LOGOUT` | `LogoutView` |
+| `RECEPCION_CREADA` | `RecepcionViewSet.create` |
+| `TRASLADO` | `TrasladoViewSet.create` |
+| `BATIDO_CREADO` | `BatidoViewSet.create` |
+| `COMPENSATORIO` | `CompensatorioViewSet.create` |
+| `DESPACHO` | `DespachoViewSet.despachar` |
+| `USUARIO_DESACTIVADO` | `UserViewSet.desactivar` |
+
+Para agregar una nueva operación: importar `registrar_operacion` desde `apps.auditoria.services` y llamarlo al final del view exitoso.
+
+### OpenAPI / Swagger
+
+`drf-spectacular` genera la documentación automáticamente. Rutas disponibles:
+- `/api/schema/` — schema YAML descargable
+- `/api/docs/` — Swagger UI interactiva
 
 ---
 
@@ -134,11 +185,17 @@ frontend/src/
                                       TrasladosPage, DevolucionesPage, DescartesPage, KardexPage
     recepcion/                     ← OrdenesPage, NuevaOrdenPage, RecepcionesPage,
                                       NuevaRecepcionPage, DetalleRecepcionPage
-    produccion/                    ← ProduccionLayout (JornadaPage con toggle tabla/timeline)
-    alertas/                       ← AlertasActivasPage, AlertasReordenPage,
+    produccion/                    ← ProduccionLayout
+                                      JornadaPage (toggle tabla/timeline, banner máquinas activas)
+                                      BatidosPage, NuevoBatidoPage (FEFO ingredientes)
+                                      DespachosPage (FIFO, EN_ESPERA → EN_PUNTO_DE_VENTA)
+                                      CompensatoriosPage (KeyValueEditor, visible a todos los roles)
+    alertas/                       ← AlertasLayout
+                                      AlertasActivasPage, AlertasReordenPage,
                                       AlertasVencimientoPage, AlertasProduccionPage,
-                                      ConfiguracionAletasPage
-    indicadores/                   ← ReportesPage (tabla + descarga XLSX)
+                                      ConfiguracionAletasPage (solo ADMIN)
+    indicadores/                   ← IndicadoresLayout
+                                      ReportesPage (KPIs + tabla + descarga PDF/XLSX)
     admin/                         ← UsuariosPage (solo ADMIN), BitacoraPage (solo ADMIN)
   store/
     authStore.js     ← Zustand: { accessToken, user: {username, role}, isLoading }
@@ -327,7 +384,8 @@ python manage.py fix_superuser_roles
 | `DEBUG` | `False` — crítico para SameSite=None en la cookie |
 | `DJANGO_SECRET_KEY` | Clave larga aleatoria |
 | `ALLOWED_HOSTS` | Dominio de Railway, ej. `pn-daluzed-production.up.railway.app` |
-| `CORS_ALLOWED_ORIGINS` | URL exacta de Vercel, ej. `https://frontend-two-chi-31.vercel.app` |
+| `CORS_ALLOWED_ORIGINS` | URL exacta de Vercel (CSV si son varias), ej. `https://frontend-two-chi-31.vercel.app` |
+| `CORS_ALLOWED_ORIGINS_EXTRA` | Alternativa — mismo formato, se fusiona con `CORS_ALLOWED_ORIGINS` en settings |
 | `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT` | Asignados por Railway automáticamente |
 
 ### Variables de entorno — Vercel (frontend)
@@ -359,8 +417,16 @@ python manage.py seed_visual_data      # opcional — datos de prueba visuales
 | Archivo | Propósito |
 |---------|-----------|
 | `AGENTS.md` | Este archivo — instrucciones para el CLI |
-| `contexto.md` | Contexto completo del cliente y decisiones técnicas |
-| `PLAN_DE_PRUEBAS_TDD.md` | 107 casos de prueba con código completo |
+| `docs/contexto.md` | Contexto completo del cliente y decisiones técnicas |
+| `docs/API_REFERENCE.md` | Referencia completa de todos los endpoints REST por módulo |
+| `docs/MODELO_DATOS.md` | Esquema de BD completo — todos los modelos, campos y relaciones |
+| `docs/PERMISOS_MATRIZ.md` | Matriz de qué roles pueden acceder a cada endpoint |
+| `docs/WEBSOCKET_PROTOCOL.md` | Protocolo WebSocket de alertas — formato de mensajes, ciclo de vida |
+| `docs/PLAN_DE_PRUEBAS_TDD.md` | Plan original de 107 casos de prueba |
+| `docs/DEPLOYMENT.md` | Runbook de despliegue Railway + Vercel paso a paso |
+| `docs/BACKUP_RESTORE.md` | Instrucciones de backup/restore PostgreSQL en Railway |
+| `docs/CHECKLIST_PENDIENTES.md` | Backlog de mejoras y bugs con estado de completitud |
+| `docs/PRUEBAS_PENDIENTES.md` | Guía de tests pendientes con código listo para copiar |
 | `.claude/settings.json` | Permisos y configuración del CLI |
 | `.github/workflows/ci.yml` | GitHub Actions CI |
 | `.github/CONTRIBUTING.md` | Guía de contribución para el equipo |

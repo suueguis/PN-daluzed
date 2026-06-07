@@ -39,6 +39,9 @@ npm install
 # Run linter (catches style issues)
 npm run lint
 
+# Run Vitest unit + component tests
+npm test
+
 # Verify build succeeds
 npm run build
 ```
@@ -49,7 +52,7 @@ npm run build
 python manage.py test && python manage.py check
 
 # Frontend
-cd frontend && npm run lint && npm run build
+cd frontend && npm run lint && npm test && npm run build
 ```
 
 ## Commit Message Format
@@ -92,6 +95,7 @@ When you push to GitHub, our CI pipeline automatically runs:
 ### Frontend Pipeline
 - ✅ Dependencies install
 - ✅ ESLint passes (no style violations)
+- ✅ Vitest passes (unit + component tests)
 - ✅ Build succeeds (Vite bundles correctly)
 
 **All checks must pass** before merge is allowed.

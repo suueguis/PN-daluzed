@@ -49,7 +49,7 @@ Credenciales de prueba:
 | PRODUCCION | `produccion.demo@daluzed.com` | `Daluzed2026!` |
 | INVENTARIO | `inventario.demo@daluzed.com` | `Daluzed2026!` |
 
-Para poblar la base de datos con catálogo, bodegas, lotes, órdenes de compra, producción y alertas de ejemplo:
+Para poblar la base de datos con datos de ejemplo que cubren todos los módulos (catálogo, bodegas con zonas, lotes activos, órdenes de compra en distintos estados, batidos de producción, lotes de producto terminado, alertas activas e historial de auditoría):
 
 ```bash
 python manage.py seed_visual_data

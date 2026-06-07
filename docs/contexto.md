@@ -114,7 +114,7 @@ cuadras para trasladar. │ (PDV) │
 | **Jefe de producción**        | Visualización + autorización   | Consulta stock. Ve costos. Consulta para decisiones de producción.                                                                          |
 | **Administrador del sistema** | Gestión técnica                | Crea/edita/desactiva usuarios. Accede a bitácora completa.                                                                                  |
 
-**Nota de implementación:** Los 4 roles son grupos en Django (Administrador, Gerencia, JefeInventario, JefeProduccion). El modelo User también tiene un campo role CharField como campo propio. El endpoint de login devuelve el rol tomado del **primer grupo Django** del usuario (con fallback al campo role del modelo).
+**Nota de implementación:** Los 4 roles se almacenan en el campo `role` (CharField) del modelo `User`. **No se usan grupos de Django como mecanismo primario.** `AuthService.generate_tokens_for_user()` usa `user.groups.first()` como fallback histórico, pero en la práctica el sistema opera siempre con `user.role`. Los usuarios creados con `seed_demo_users` no tienen grupos asignados — el JWT devuelve el valor de `user.role` directamente. Ver `apps/authentication/services.py`.
 
 **Visibilidad de costos:** TODOS los roles pueden ver información de costos. No hay datos privados entre roles (sueldos/nómina están completamente fuera del sistema).
 
@@ -244,16 +244,16 @@ El cliente tiene 13+ formatos manuales físicos. El sistema los reemplaza progre
 
 **7\. MÓDULOS DEL SISTEMA (SRS)**
 
-| **Módulo**                   | **Código** | **Corte** | **Estado**       |
-| ---------------------------- | ---------- | --------- | ---------------- |
-| Autenticación y Autorización | AUT        | 1         | 🔄 En desarrollo |
-| Catálogo Maestro             | CAT        | 1         | ⏳ Pendiente     |
-| Inventario                   | INV        | 2         | ⏳ Pendiente     |
-| Recepción                    | REC        | 2         | ⏳ Pendiente     |
-| Producción y Despacho        | PROD       | 2         | ⏳ Pendiente     |
-| Alertas y Notificaciones     | ALR        | 3         | ⏳ Pendiente     |
-| Indicadores y Reportes       | IND        | 3         | ⏳ Pendiente     |
-| Auditoría y Trazabilidad     | AUD        | 3         | ⏳ Pendiente     |
+| **Módulo**                   | **Código** | **Corte** | **Estado**        |
+| ---------------------------- | ---------- | --------- | ----------------- |
+| Autenticación y Autorización | AUT        | 1         | ✅ Implementado   |
+| Catálogo Maestro             | CAT        | 1         | ✅ Implementado   |
+| Inventario                   | INV        | 2         | ✅ Implementado   |
+| Recepción                    | REC        | 2         | ✅ Implementado   |
+| Producción y Despacho        | PROD       | 2         | ✅ Implementado   |
+| Alertas y Notificaciones     | ALR        | 3         | ✅ Implementado   |
+| Indicadores y Reportes       | IND        | 3         | ✅ Implementado   |
+| Auditoría y Trazabilidad     | AUD        | 3         | ✅ Implementado   |
 
 **Trazabilidad por corte:**
 
@@ -271,8 +271,8 @@ El cliente tiene 13+ formatos manuales físicos. El sistema los reemplaza progre
 | Autenticación           | **SimpleJWT**        | Estándar JWT para DRF                                   |
 | Protección fuerza bruta | **Django-Axes**      | RF-AUT-01: bloqueo tras 5 intentos                      |
 | WebSockets              | **Django Channels**  | Tiempo real para alertas e inventario                   |
-| Tareas async            | **Celery**           | Notificaciones WhatsApp/email sin bloquear requests     |
-| Message broker          | **Redis**            | Broker para Celery + channel layer para Django Channels |
+| Tareas async            | ~~Celery~~ No implementado | Notificaciones son síncronas en el request actual (aceptable para MVP 10 usuarios) |
+| Channel layer           | **InMemoryChannelLayer** | Channels WebSocket en desarrollo y producción single-container. Migrar a Redis si hay múltiples réplicas. |
 | Base de datos           | **PostgreSQL**       | ACID, transacciones atómicas (requisito explícito SRS)  |
 | Docs API                | **drf-spectacular**  | Swagger/OpenAPI automático                              |
 
@@ -299,7 +299,7 @@ El cliente tiene 13+ formatos manuales físicos. El sistema los reemplaza progre
 - **Decoupled (Desacoplada):** API REST + SPA React independiente
 - **Layered dentro del backend:** Capa API → Capa de Servicios → Capa de Dominio
 - **Clean Architecture + SOLID + KISS**
-- **RBAC** mediante grupos Django
+- **RBAC** mediante campo `role` CharField en el modelo User (no grupos Django)
 - **API Versioning:** URL-based /api/v1/ (única forma correcta para este proyecto)
 
 **❌ Tecnologías DESCARTADAS y por qué**
@@ -311,43 +311,42 @@ El cliente tiene 13+ formatos manuales físicos. El sistema los reemplaza progre
 
 **9\. ESTRUCTURA DEL PROYECTO**
 
-daluzed_inventory/
-
+```
+PN-daluzed/
 ├── manage.py
-
 ├── requirements.txt
-
-├── .env
-
+├── Dockerfile                  ← imagen producción (Python 3.12, Daphne ASGI)
+├── docker-compose.yml          ← stack local: backend + PostgreSQL
+├── railway.json                ← config Railway: healthcheck /api/v1/auth/health/
 ├── core/
+│   ├── settings.py             ← DB, CORS, JWT, Channels, Axes desde env vars
+│   ├── asgi.py                 ← ProtocolTypeRouter (HTTP + WebSocket /ws/alertas/)
+│   └── urls.py                 ← rutas /api/v1/*, /api/schema/, /api/docs/
+├── apps/
+│   ├── authentication/         ← User, JWT, permisos, UserViewSet, seed commands
+│   ├── catalogo/               ← MateriaPrima, ProductoTerminado, Proveedor,
+│   │                              UnidadMedida, Presentacion — importación Excel
+│   ├── inventario/             ← Bodega, ZonaBodega, Lote, MovimientoInventario
+│   │                              FEFO, kardex, trazabilidad, stock comprometido PDP
+│   ├── recepcion/              ← OrdenCompra, DetalleOrdenCompra, RecepcionMercancia
+│   │                              recepción parcial, conversión presentación→unidad base, PDF
+│   ├── produccion/             ← Batido, DetalleBatido, LoteProductoTerminado,
+│   │                              MovimientoCompensatorio — FEFO consumo, FIFO despacho
+│   ├── alertas/                ← Alerta, ConfiguracionAlerta — WebSocket, Twilio, email
+│   ├── indicadores/            ← vistas read-only — KPIs, exportar PDF/XLSX,
+│   │                              utilización bodega, reporte semanal, resumen dashboard
+│   └── auditoria/              ← BitacoraOperacion — 8 operaciones auditadas
+└── frontend/
+    ├── src/
+    │   ├── pages/              ← 46 páginas JSX en 8 módulos + auth
+    │   ├── store/              ← authStore.js (JWT en memoria), alertasStore.js (WebSocket)
+    │   ├── api/                ← axiosClient.js (interceptores JWT) + 9 módulos API
+    │   └── components/         ← RoleGate, ProtectedRoute, AppLayout, Avatar, etc.
+    ├── vercel.json             ← rewrite SPA + headers seguridad
+    └── package.json            ← React 19, Vite 8, Tailwind 4, Zustand 5, Recharts
+```
 
-│ ├── settings.py
-
-│ ├── urls.py
-
-│ └── wsgi.py
-
-└── apps/
-
-└── authentication/
-
-├── apps.py
-
-├── models.py
-
-└── api/
-
-└── v1/
-
-├── serializers.py
-
-├── views.py
-
-└── urls.py
-
-└── services.py
-
-**Convención de módulos:** apps.authentication.api.v1 **Todos los endpoints:** /api/v1/{modulo}/{accion}/
+**Convención de módulos:** `apps.{modulo}.api.v1` — **Todos los endpoints:** `/api/v1/{modulo}/{accion}/`
 
 **Diseño de Login (Figma):**
 
@@ -455,4 +454,4 @@ server: { proxy: { '/api': { target: '<http://localhost:8000>', changeOrigin: tr
 - **Con el porqué:** explicar decisiones técnicas para que pueda defenderlas en sustentación
 - **Emojis:** los usa ocasionalmente, de forma natural, sin exagerar
 
-_Documento generado a partir de una sesión extendida de desarrollo colaborativo. Última actualización: Mayo 2026. El sistema está en Corte 1 activo._
+_Documento generado a partir de una sesión extendida de desarrollo colaborativo. Última actualización: **Junio 2026** — todos los módulos implementados y desplegados en Railway + Vercel._
