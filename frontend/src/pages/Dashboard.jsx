@@ -22,6 +22,8 @@ const ROLE_LABEL = {
   INVENTARIO: 'Inventario',
 };
 
+const CAT_LABEL = { GALLETERIA: 'Galletería', TORTA: 'Torta', BIZCOCHO: 'Bizcocho', GENERAL: 'General' };
+
 function countOf(data) {
   if (data == null) return null;
   if (typeof data.count === 'number') return data.count;
@@ -99,7 +101,10 @@ export default function Dashboard() {
   });
 
   // ── Derived metrics ───────────────────────────────────────────────
-  const stockBP = stockData?.stock_por_bodega?.filter((r) => r.bodega_tipo === 'PRINCIPAL') ?? [];
+  const stockBP = useMemo(
+    () => stockData?.stock_por_bodega?.filter((r) => r.bodega_tipo === 'PRINCIPAL') ?? [],
+    [stockData],
+  );
   const totalStockBP = stockBP.reduce((s, r) => s + parseFloat(r.cantidad_total), 0);
   const lotesVencer = vencData?.lotes_por_vencer ?? [];
 
@@ -118,7 +123,6 @@ export default function Dashboard() {
     });
   }, [batidosData]);
 
-  const CAT_LABEL = { GALLETERIA: 'Galletería', TORTA: 'Torta', BIZCOCHO: 'Bizcocho', GENERAL: 'General' };
   const stockPorCategoria = useMemo(() => {
     const mpsArr = Array.isArray(mpsData) ? mpsData : (mpsData?.results ?? []);
     const catMap = Object.fromEntries(mpsArr.map((m) => [m.nombre, m.categoria ?? 'GENERAL']));
