@@ -2,8 +2,13 @@
 import os
 from pathlib import Path
 from datetime import timedelta
+from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Carga variables de entorno desde .env (desarrollo local).
+# En producción (Railway) las vars se inyectan directamente — .env no existe allí.
+load_dotenv(BASE_DIR / '.env')
 
 # ── Seguridad fundamental ──────────────────────────────────────────────────────
 # En producción DJANGO_SECRET_KEY DEBE estar seteada como variable de entorno.
