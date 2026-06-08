@@ -38,9 +38,10 @@ class InventarioService:
     def sugerir_fefo(materia_prima_id, bodega_id, excluir_vencidos=False):
         qs = Lote.objects.filter(
             materia_prima_id=materia_prima_id,
-            bodega_id=bodega_id,
             cantidad__gt=0,
         ).order_by('fecha_vencimiento')
+        if bodega_id:
+            qs = qs.filter(bodega_id=bodega_id)
         if excluir_vencidos:
             qs = qs.filter(fecha_vencimiento__gte=date.today())
         lotes = list(qs)

@@ -24,7 +24,7 @@ class RecepcionCreateSerializer(serializers.Serializer):
         queryset=OrdenCompra.objects.filter(estado__in=['PENDIENTE', 'PARCIAL']),
         source='orden_compra',
     )
-    justificacion_vencimiento = serializers.CharField(required=False, default='')
+    justificacion_vencimiento = serializers.CharField(required=False, default='', allow_blank=True)
     detalles = DetalleRecepcionSerializer(many=True, min_length=1)
 
     # ── Campos de inspección de calidad — opcionales al crear ─────────
@@ -67,11 +67,13 @@ class RecepcionMercanciaSerializer(serializers.ModelSerializer):
 
 class DetalleOrdenCompraSerializer(serializers.ModelSerializer):
     materia_prima_nombre = serializers.CharField(source='materia_prima.nombre', read_only=True)
+    presentacion_nombre = serializers.CharField(source='presentacion.nombre', read_only=True)
     saldo_pendiente = serializers.SerializerMethodField()
 
     class Meta:
         model = DetalleOrdenCompra
-        fields = ['id', 'materia_prima', 'materia_prima_nombre', 'presentacion',
+        fields = ['id', 'materia_prima', 'materia_prima_nombre',
+                  'presentacion', 'presentacion_nombre',
                   'cantidad_presentacion', 'cantidad_recibida', 'saldo_pendiente']
 
     def get_saldo_pendiente(self, obj):

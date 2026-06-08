@@ -173,9 +173,10 @@ class OrdenCompraViewSet(
             .select_related('proveedor')
             .order_by('-fecha_creacion')
         )
-        estado = self.request.query_params.get('estado')
-        if estado:
-            qs = qs.filter(estado=estado)
+        estado = self.request.query_params.get('estado', '')
+        estados = [e.strip() for e in estado.split(',') if e.strip()]
+        if estados:
+            qs = qs.filter(estado__in=estados)
         return qs
 
     @transaction.atomic
