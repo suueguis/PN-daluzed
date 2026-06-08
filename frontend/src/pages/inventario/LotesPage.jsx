@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useLotes, useBodegas, useTrazabilidad } from '../../hooks/inventario/useInventario';
 import { getVencimientoTone, getVencimientoLabel } from '../../utils/vencimiento';
 import { useApiQuery } from '../../hooks/useApi';
@@ -194,8 +194,8 @@ export default function LotesPage() {
                 {lotes.map((lote) => {
                   const isExpanded = expandedLoteId === lote.id;
                   return (
-                    <>
-                      <tr key={lote.id} className="border-t border-peach-200/60 hover:bg-cream-50">
+                    <React.Fragment key={lote.id}>
+                      <tr className="border-t border-peach-200/60 hover:bg-cream-50">
                         <td className="px-4 py-3 tabular-nums text-wine-700">
                           {lote.numero_lote || `#${lote.id}`}
                         </td>
@@ -231,13 +231,13 @@ export default function LotesPage() {
                         </td>
                       </tr>
                       {isExpanded && (
-                        <tr key={`${lote.id}-expansion`} className="border-t border-peach-200/60 bg-cream-50/60">
+                        <tr className="border-t border-peach-200/60 bg-cream-50/60">
                           <td colSpan={COL_COUNT} className="p-0">
                             <LoteExpandido lote={lote} />
                           </td>
                         </tr>
                       )}
-                    </>
+                    </React.Fragment>
                   );
                 })}
               </tbody>

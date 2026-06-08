@@ -185,15 +185,15 @@ export default function NuevaRecepcionPage() {
   });
   const { fields, append, remove, replace } = useFieldArray({ control, name: 'detalles' });
 
-  // Órdenes de compra pendientes
+  // Órdenes de compra pendientes o con recepción parcial
   const { data: ordenesData } = useQuery({
-    queryKey: ['recepcion', 'ordenes', 'PENDIENTE'],
-    queryFn:  () => ordenesAPI.list({ estado: 'PENDIENTE' }).then((r) => r.data),
+    queryKey: ['recepcion', 'ordenes', 'PENDIENTE,PARCIAL'],
+    queryFn:  () => ordenesAPI.list({ estado: 'PENDIENTE,PARCIAL' }).then((r) => r.data),
   });
   const ordenes   = ordenesData?.results ?? ordenesData ?? [];
   const ocOptions = ordenes.map((o) => ({
     value: String(o.id),
-    label: `OC-${o.id} — ${o.proveedor_nombre ?? o.proveedor}`,
+    label: `OC-${o.id} — ${o.proveedor_nombre ?? o.proveedor}${o.estado === 'PARCIAL' ? ' (parcial)' : ''}`,
   }));
 
   // Materias primas — ya incluyen presentaciones anidadas (MateriaPrimaSerializer)
@@ -215,9 +215,9 @@ export default function NuevaRecepcionPage() {
     if (oc?.detalles?.length) {
       replace(
         oc.detalles.map((d) => ({
-          materia_prima_id:      String(d.materia_prima_id),
-          presentacion_id:       String(d.presentacion_id),
-          cantidad_presentacion: String(d.cantidad_presentacion),
+          materia_prima_id:      String(d.materia_prima),
+          presentacion_id:       String(d.presentacion),
+          cantidad_presentacion: String(d.saldo_pendiente ?? d.cantidad_presentacion),
           fecha_vencimiento:     '',
           numero_lote:           '',
           _mp_nombre:            d.materia_prima_nombre,
@@ -240,7 +240,10 @@ export default function NuevaRecepcionPage() {
       navigate('/recepcion/recepciones');
     } catch (err) {
       const detail = err?.response?.data?.detail ?? '';
-      if (err?.response?.status === 400 && detail.includes('justificacion_vencimiento')) {
+      const isVidaUtil = err?.response?.status === 400 && (
+        detail.includes('justificacion_vencimiento') || detail.includes('Vida útil insuficiente')
+      );
+      if (isVidaUtil) {
         setPendingForm(formData);
         setJustifOpen(true);
       } else {

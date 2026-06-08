@@ -27,6 +27,16 @@ const schema = z.object({
       }),
     )
     .min(1, 'Agrega al menos un ingrediente'),
+  numero_lote: z.string().optional(),
+  observacion: z.string().optional(),
+  fecha_recepcion_huevo: z.string().optional().nullable(),
+  desglose_lote: z.object({
+    cup_cake:             z.coerce.number().nonnegative().optional().nullable(),
+    porcionada:           z.coerce.number().nonnegative().optional().nullable(),
+    planchas:             z.coerce.number().int().nonnegative().optional().nullable(),
+    cantidades_por_talla: z.record(z.coerce.number().int().nonnegative()).optional(),
+    observacion:          z.string().optional(),
+  }).optional(),
 });
 
 export default function NuevoBatidoPage() {
