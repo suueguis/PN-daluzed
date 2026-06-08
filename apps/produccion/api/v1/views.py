@@ -54,6 +54,10 @@ class BatidoViewSet(
                 hora_inicio=vd['hora_inicio'],
                 ingredientes=vd['ingredientes'],
                 usuario=request.user if request.user.is_authenticated else None,
+                numero_lote=vd.get('numero_lote', ''),
+                observacion=vd.get('observacion', ''),
+                fecha_recepcion_huevo=vd.get('fecha_recepcion_huevo'),
+                desglose_lote=vd.get('desglose_lote'),
             )
         except (StockInsuficienteError, LimiteBatidosError) as exc:
             return Response({'detail': str(exc)}, status=status.HTTP_400_BAD_REQUEST)

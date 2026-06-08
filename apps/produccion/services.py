@@ -33,7 +33,9 @@ class ProduccionService:
     @staticmethod
     @transaction.atomic
     def registrar_batido(producto_terminado, fecha_produccion, hora_inicio,
-                         ingredientes, usuario):
+                         ingredientes, usuario,
+                         numero_lote='', observacion='', fecha_recepcion_huevo=None,
+                         desglose_lote=None):
         """Crea un Batido COMPLETADO + LoteProductoTerminado EN_ESPERA.
 
         Valida límite de batidos simultáneos del mismo producto y stock
@@ -67,6 +69,9 @@ class ProduccionService:
             hora_inicio=hora_inicio,
             estado='COMPLETADO',
             usuario=usuario,
+            numero_lote=numero_lote,
+            observacion=observacion,
+            fecha_recepcion_huevo=fecha_recepcion_huevo,
         )
 
         total_ingredientes = Decimal('0')
@@ -83,6 +88,7 @@ class ProduccionService:
             )
             total_ingredientes += cantidad
 
+        desglose = desglose_lote or {}
         LoteProductoTerminado.objects.create(
             batido=batido,
             estado='EN_ESPERA',
@@ -91,6 +97,11 @@ class ProduccionService:
             fecha_vencimiento=fecha_produccion + timedelta(
                 days=producto_terminado.vida_util_dias
             ),
+            cup_cake=desglose.get('cup_cake'),
+            porcionada=desglose.get('porcionada'),
+            planchas=desglose.get('planchas'),
+            cantidades_por_talla=desglose.get('cantidades_por_talla', {}),
+            observacion=desglose.get('observacion', ''),
         )
         return batido
 

@@ -25,6 +25,11 @@ class Batido(models.Model):
     )
     fecha_registro = models.DateTimeField(auto_now_add=True)
 
+    # ── Campos de seguimiento (Planilla de producción) ────────────────
+    numero_lote           = models.CharField(max_length=50, blank=True)
+    observacion           = models.TextField(blank=True)
+    fecha_recepcion_huevo = models.DateField(null=True, blank=True)
+
     class Meta:
         ordering = ['-fecha_produccion', 'hora_inicio']
 
@@ -58,6 +63,13 @@ class LoteProductoTerminado(models.Model):
     fecha_produccion = models.DateField()
     fecha_vencimiento = models.DateField()
     fecha_despacho = models.DateField(null=True, blank=True)
+
+    # ── Desglose por presentación (Planilla de producción) ────────────
+    cup_cake             = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    porcionada           = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    planchas             = models.PositiveIntegerField(null=True, blank=True)
+    cantidades_por_talla = models.JSONField(default=dict, blank=True)
+    observacion          = models.TextField(blank=True)
 
     class Meta:
         ordering = ['fecha_produccion']  # FIFO para despacho

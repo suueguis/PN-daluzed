@@ -14,7 +14,8 @@ class RecepcionService:
 
     @staticmethod
     @transaction.atomic
-    def registrar_recepcion(orden_compra, detalles, usuario, justificacion_vencimiento=''):
+    def registrar_recepcion(orden_compra, detalles, usuario,
+                            justificacion_vencimiento='', campos_inspeccion=None):
         hoy = date.today()
 
         # Validate each detail's expiry against dias_minimos_vencimiento
@@ -58,6 +59,7 @@ class RecepcionService:
             usuario=usuario,
             confirmada=True,
             justificacion_vencimiento=justificacion_vencimiento,
+            **(campos_inspeccion or {}),
         )
 
         # Update cantidad_recibida on matching OC details and derive new OC state
