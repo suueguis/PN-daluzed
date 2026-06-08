@@ -52,7 +52,7 @@ class InventarioService:
 
     @staticmethod
     @transaction.atomic
-    def registrar_traslado(lote, bodega_destino, cantidad, usuario):
+    def registrar_traslado(lote, bodega_destino, cantidad, usuario, notas=''):
         if lote.cantidad < cantidad:
             raise ValueError("Stock insuficiente en el lote de origen.")
         bodega_origen = lote.bodega
@@ -64,6 +64,8 @@ class InventarioService:
             cantidad=cantidad,
             fecha_vencimiento=lote.fecha_vencimiento,
             fecha_entrada=date.today(),
+            numero_lote=lote.numero_lote,
+            proveedor=lote.proveedor,
         )
         return MovimientoInventario.objects.create(
             tipo='TRASLADO',
@@ -72,6 +74,7 @@ class InventarioService:
             bodega_destino=bodega_destino,
             cantidad=cantidad,
             usuario=usuario,
+            notas=notas,
         )
 
     @staticmethod
