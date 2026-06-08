@@ -21,6 +21,44 @@ const ACCION_TONE = {
   USUARIO_DESACTIVADO: 'danger',
 };
 
+const ACCION_LABEL = {
+  LOGIN:               'Inicio de sesión',
+  LOGOUT:              'Cierre de sesión',
+  RECEPCION_CREADA:    'Recepción registrada',
+  TRASLADO:            'Traslado de lote',
+  BATIDO_CREADO:       'Batido registrado',
+  COMPENSATORIO:       'Movimiento compensatorio',
+  DESPACHO:            'Despacho a punto de venta',
+  USUARIO_DESACTIVADO: 'Usuario desactivado',
+};
+
+const KEY_LABEL = {
+  email:                'Correo',
+  recepcion_id:         'Recepción #',
+  oc_id:                'OC #',
+  movimiento_id:        'Mov. #',
+  lote_id:              'Lote #',
+  batido_id:            'Batido #',
+  producto:             'Producto',
+  compensatorio_id:     'Comp. #',
+  tipo_afectado:        'Tipo',
+  lote_pt_id:           'Lote PT #',
+  usuario_desactivado:  'Usuario',
+};
+
+function formatDetalle(accion, detalle) {
+  if (!detalle || typeof detalle !== 'object') return '—';
+  const parts = Object.entries(detalle)
+    .filter(([, v]) => v != null && v !== '')
+    .map(([k, v]) => {
+      const label = KEY_LABEL[k];
+      if (!label) return null;
+      return `${label}${v}`;
+    })
+    .filter(Boolean);
+  return parts.length ? parts.join(' · ') : '—';
+}
+
 export default function BitacoraPage() {
   const [accion, setAccion]   = useState('');
   const [desde, setDesde]     = useState('');
@@ -60,7 +98,7 @@ export default function BitacoraPage() {
             className="rounded-xl border border-peach-300 bg-white px-3 py-2 text-sm text-wine-900 focus:outline-none focus:ring-2 focus:ring-rose-300"
           >
             {ACCIONES.map((a) => (
-              <option key={a} value={a}>{a || 'Todas las acciones'}</option>
+              <option key={a} value={a}>{a ? (ACCION_LABEL[a] ?? a) : 'Todas las acciones'}</option>
             ))}
           </select>
         </div>
@@ -71,7 +109,6 @@ export default function BitacoraPage() {
             type="date"
             value={desde}
             onChange={(e) => setDesde(e.target.value)}
-            placeholder="ej. 2026-06-01"
             className="rounded-xl border border-peach-300 bg-white px-3 py-2 text-sm text-wine-900 focus:outline-none focus:ring-2 focus:ring-rose-300"
           />
         </div>
@@ -82,7 +119,6 @@ export default function BitacoraPage() {
             type="date"
             value={hasta}
             onChange={(e) => setHasta(e.target.value)}
-            placeholder="ej. 2026-06-05"
             className="rounded-xl border border-peach-300 bg-white px-3 py-2 text-sm text-wine-900 focus:outline-none focus:ring-2 focus:ring-rose-300"
           />
         </div>
@@ -90,17 +126,18 @@ export default function BitacoraPage() {
       </div>
 
       {/* Tabla */}
-      {isLoading ? (
-        <div className="flex justify-center py-10"><Spinner /></div>
-      ) : isError ? (
+      {isLoading && <div className="flex justify-center py-10"><Spinner /></div>}
+      {!isLoading && isError && (
         <p className="rounded-2xl border border-peach-200 bg-cream-50 px-5 py-4 text-sm text-wine-700">
           No se pudo cargar la bitácora.
         </p>
-      ) : entradas.length === 0 ? (
+      )}
+      {!isLoading && !isError && entradas.length === 0 && (
         <p className="rounded-2xl border border-peach-200 bg-cream-50 px-5 py-4 text-sm text-wine-700">
           Sin entradas en el rango seleccionado.
         </p>
-      ) : (
+      )}
+      {!isLoading && !isError && entradas.length > 0 && (
         <div className="overflow-x-auto rounded-2xl border border-peach-200 bg-white">
           <table className="w-full text-sm" aria-label="Bitácora de operaciones">
             <thead className="bg-cream-100">
@@ -122,19 +159,21 @@ export default function BitacoraPage() {
                     {new Date(e.fecha).toLocaleString('es-CO')}
                   </td>
                   <td className="px-4 py-2">
-                    <Badge tone={ACCION_TONE[e.accion] ?? 'neutral'}>{e.accion}</Badge>
+                    <Badge tone={ACCION_TONE[e.accion] ?? 'neutral'}>
+                      {ACCION_LABEL[e.accion] ?? e.accion}
+                    </Badge>
                   </td>
                   <td className="px-4 py-2 text-wine-900">{e.usuario ?? '—'}</td>
                   <td className="px-4 py-2 tabular-nums text-wine-700">{e.ip ?? '—'}</td>
-                  <td className="px-4 py-2 text-wine-700 font-mono text-xs max-w-xs truncate">
-                    {JSON.stringify(e.detalle)}
+                  <td className="px-4 py-2 text-wine-700 text-xs max-w-xs">
+                    {formatDetalle(e.accion, e.detalle)}
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
           <p className="px-4 py-2 text-xs text-wine-700/60">
-            Mostrando {entradas.length} {entradas.length === 500 ? '(máx. 500)' : ''} entradas.
+            Mostrando {entradas.length} entradas{entradas.length === 500 && ' (máx. 500)'}.
           </p>
         </div>
       )}
