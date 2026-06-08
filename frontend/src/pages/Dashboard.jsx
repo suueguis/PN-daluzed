@@ -50,6 +50,10 @@ export default function Dashboard() {
   const [exportDesde, setExportDesde] = useState('');
   const [exportHasta, setExportHasta] = useState('');
 
+  // ── Role guards — defined before queries so they can be used in `enabled` ──
+  const canSeeCharts  = ['ADMIN', 'GERENTE'].includes(user?.role);
+  const canSeeBatidos = ['ADMIN', 'GERENTE', 'PRODUCCION'].includes(user?.role);
+
   // ── KPIs con refresh cada 60 s ────────────────────────────────────
   const { data: mpsData, isLoading: mpsLoading } = useQuery({
     queryKey: ['dashboard', 'mps'],
@@ -70,6 +74,7 @@ export default function Dashboard() {
     queryFn: () => produccionAPI.listBatidos({ fecha: today }).then((r) => r.data),
     staleTime: 30_000,
     refetchInterval: 60_000,
+    enabled: canSeeBatidos,
   });
 
   const { data: stockData, isLoading: stockLoading } = useQuery({
@@ -77,6 +82,7 @@ export default function Dashboard() {
     queryFn: async () => { const { data } = await kpisAPI.stock(); return data; },
     staleTime: 60_000,
     refetchInterval: 60_000,
+    enabled: canSeeCharts,
   });
 
   const { data: vencData, isLoading: vencLoading } = useQuery({
@@ -84,6 +90,7 @@ export default function Dashboard() {
     queryFn: async () => { const { data } = await kpisAPI.vencimientos(7); return data; },
     staleTime: 60_000,
     refetchInterval: 60_000,
+    enabled: canSeeCharts,
   });
 
   const { data: utilizacionData, isLoading: utilizacionLoading } = useQuery({
@@ -91,6 +98,7 @@ export default function Dashboard() {
     queryFn: indicadoresAPI.utilizacionBodega,
     staleTime: 60_000,
     refetchInterval: 60_000,
+    enabled: canSeeCharts,
   });
 
   const { data: resumenData, isLoading: resumenLoading } = useQuery({
@@ -98,6 +106,7 @@ export default function Dashboard() {
     queryFn: indicadoresAPI.resumen,
     staleTime: 60_000,
     refetchInterval: 60_000,
+    enabled: canSeeCharts,
   });
 
   // ── Derived metrics ───────────────────────────────────────────────
@@ -107,8 +116,6 @@ export default function Dashboard() {
   );
   const totalStockBP = stockBP.reduce((s, r) => s + parseFloat(r.cantidad_total), 0);
   const lotesVencer = vencData?.lotes_por_vencer ?? [];
-
-  const canSeeCharts = ['ADMIN', 'GERENTE'].includes(user?.role);
 
   const batidosPorDia = useMemo(() => {
     const list = Array.isArray(batidosData) ? batidosData : (batidosData?.results ?? []);
@@ -169,7 +176,7 @@ export default function Dashboard() {
     {
       key:   'stock-bp',
       label: 'Stock Bodega Principal',
-      value: stockLoading ? '…' : formatDecimal(totalStockBP, 0),
+      value: stockLoading ? '…' : (stockData ? formatDecimal(totalStockBP, 0) : '—'),
       hint:  'gramos / unidades totales',
       link:  '/inventario/lotes',
       tone:  'bg-rose-100/60 border-rose-200',
@@ -379,8 +386,8 @@ export default function Dashboard() {
         )}
       </section>
 
-      {/* ── Exportar reporte ─────────────────────────────────────── */}
-      <section aria-label="Exportar reporte">
+      {/* ── Exportar reporte — solo ADMIN / GERENTE ──────────────── */}
+      {canSeeCharts && <section aria-label="Exportar reporte">
         <h2 className="mb-3 font-crushed text-xl text-wine-900">Exportar inventario</h2>
         <div className="flex flex-wrap items-end gap-3 rounded-2xl border border-peach-200 bg-cream-50 p-4">
           <div className="flex flex-col gap-1">
@@ -412,7 +419,7 @@ export default function Dashboard() {
             {exportando ? '…' : 'PDF'}
           </Button>
         </div>
-      </section>
+      </section>}
     </div>
   );
 }

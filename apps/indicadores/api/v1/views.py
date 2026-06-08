@@ -4,17 +4,19 @@ from datetime import date, timedelta
 from django.db.models import Count, Sum
 from django.db.models.functions import TruncWeek
 from django.http import HttpResponse
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from apps.authentication.permissions import allow_roles
 from apps.inventario.models import Lote, MovimientoInventario
 from apps.produccion.models import Batido, LoteProductoTerminado
 from apps.recepcion.models import OrdenCompra, RecepcionMercancia
 
+_IND_ROLES = ('ADMIN', 'GERENTE')
+
 
 class KpisView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [allow_roles(*_IND_ROLES)]
 
     def get(self, request):
         tipo = request.query_params.get('tipo', 'stock')
@@ -87,7 +89,7 @@ class KpisView(APIView):
 
 
 class ExportarView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [allow_roles(*_IND_ROLES)]
 
     def get(self, request):
         formato = request.query_params.get('formato', 'xlsx')
@@ -191,7 +193,7 @@ class ExportarView(APIView):
 
 
 class UtilizacionBodegaView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [allow_roles(*_IND_ROLES)]
 
     def get(self, request):
         from decimal import Decimal
@@ -237,7 +239,7 @@ class UtilizacionBodegaView(APIView):
 
 
 class ReporteSemanalView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [allow_roles(*_IND_ROLES)]
 
     def get(self, request):
         try:
@@ -356,7 +358,7 @@ class ResumenView(APIView):
     lotes próximos a vencer y OC pendientes/parciales.
     RF-IND-01, RF-IND-07
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [allow_roles(*_IND_ROLES)]
 
     def get(self, request):
         hoy = date.today()
