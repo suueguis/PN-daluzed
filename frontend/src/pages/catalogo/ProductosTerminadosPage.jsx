@@ -6,6 +6,7 @@ import Modal from '../../components/ui/Modal';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Select from '../../components/ui/Select';
+import Confirm from '../../components/ui/Confirm';
 import {
   useProductosQuery,
   useCreateProducto,
@@ -33,6 +34,7 @@ export default function ProductosTerminadosPage() {
 
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(emptyForm());
+  const [confirmToggle, setConfirmToggle] = useState(null);
 
   const open = (row) => {
     setEditing(row || { id: null });
@@ -79,17 +81,6 @@ export default function ProductosTerminadosPage() {
     }
   };
 
-  const toggleActivo = (row) => {
-    updateM.mutate(
-      { id: row.id, data: { activo: !row.activo } },
-      {
-        onSuccess: () =>
-          toast.success(row.activo ? 'Producto desactivado' : 'Producto activado'),
-        onError: (err) => toast.error(formatApiError(err, 'No se pudo cambiar el estado')),
-      },
-    );
-  };
-
   return (
     <>
       <Toolbar
@@ -116,7 +107,7 @@ export default function ProductosTerminadosPage() {
             render: (r) => (
               <ActionsCell
                 onEdit={() => open(r)}
-                onDelete={() => toggleActivo(r)}
+                onDelete={() => setConfirmToggle(r)}
                 deleteLabel={r.activo ? 'Desactivar' : 'Activar'}
               />
             ),
@@ -172,6 +163,34 @@ export default function ProductosTerminadosPage() {
           </label>
         </form>
       </Modal>
+
+      <Confirm
+        open={!!confirmToggle}
+        onClose={() => setConfirmToggle(null)}
+        loading={updateM.isPending}
+        title={confirmToggle?.activo ? 'Desactivar producto' : 'Activar producto'}
+        message={
+          confirmToggle?.activo
+            ? `¿Desactivar "${confirmToggle?.nombre}"? El producto dejará de estar disponible para producción.`
+            : `¿Activar "${confirmToggle?.nombre}"?`
+        }
+        confirmLabel={confirmToggle?.activo ? 'Desactivar' : 'Activar'}
+        onConfirm={() =>
+          updateM.mutate(
+            { id: confirmToggle.id, data: { activo: !confirmToggle.activo } },
+            {
+              onSuccess: () => {
+                toast.success(confirmToggle.activo ? 'Producto desactivado' : 'Producto activado');
+                setConfirmToggle(null);
+              },
+              onError: (err) => {
+                toast.error(formatApiError(err, 'No se pudo cambiar el estado'));
+                setConfirmToggle(null);
+              },
+            },
+          )
+        }
+      />
     </>
   );
 }
