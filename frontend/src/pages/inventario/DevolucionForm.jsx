@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -6,6 +7,7 @@ import { useCreateDevolucion } from '../../hooks/inventario/useInventario';
 import { useApiQuery } from '../../hooks/useApi';
 import Select from '../../components/ui/Select';
 import Button from '../../components/ui/Button';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { formatDecimal, formatDate } from '../../utils/formatters';
 import { formatApiError } from '../../utils/formatApiError';
 
@@ -15,15 +17,23 @@ const schema = z.object({
 });
 
 export default function DevolucionForm({ lote, onSuccess, onCancel }) {
-  const { register, handleSubmit, formState: { errors } } = useForm({
+  const { register, handleSubmit, getValues, formState: { errors } } = useForm({
     resolver: zodResolver(schema),
     defaultValues: { proveedor_id: '', motivo: '' },
   });
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const { data: proveedores = [] } = useApiQuery(['catalogo', 'proveedores'], '/catalogo/proveedores/');
   const createMut = useCreateDevolucion();
 
-  async function onSubmit(values) {
+  const loteCode = lote.numero_lote || `#${lote.id}`;
+
+  function onSubmit() {
+    setConfirmOpen(true);
+  }
+
+  async function actuallyDevolver() {
+    const values = getValues();
     try {
       await createMut.mutateAsync({
         lote_id: lote.id,
@@ -31,6 +41,7 @@ export default function DevolucionForm({ lote, onSuccess, onCancel }) {
         motivo: values.motivo,
       });
       toast.success('Devolución registrada');
+      setConfirmOpen(false);
       onSuccess?.();
     } catch (err) {
       toast.error(formatApiError(err, 'No se pudo registrar la devolución'));
@@ -77,6 +88,17 @@ export default function DevolucionForm({ lote, onSuccess, onCancel }) {
           {createMut.isPending ? 'Registrando…' : 'Registrar Devolución'}
         </Button>
       </div>
+
+      <ConfirmDialog
+        open={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        onConfirm={actuallyDevolver}
+        title="Confirmar devolución"
+        description={`El lote ${loteCode} (${formatDecimal(lote.cantidad)}) será devuelto al proveedor y eliminado del inventario. Esta acción no se puede deshacer.`}
+        confirmWord={loteCode}
+        confirmLabel="Confirmar devolución"
+        loading={createMut.isPending}
+      />
     </form>
   );
 }

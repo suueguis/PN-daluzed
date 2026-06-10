@@ -24,7 +24,7 @@ const schema = z.object({
 });
 
 export default function TrasladoForm({ defaultMpId, onSuccess, onCancel }) {
-  const { register, handleSubmit, control, setValue, formState: { errors } } = useForm({
+  const { register, handleSubmit, control, setValue, reset, formState: { errors } } = useForm({
     resolver: zodResolver(schema),
     defaultValues: { materia_prima: defaultMpId ?? '', lote_id: '', bodega_destino: '', cantidad: '', notas: '' },
   });
@@ -68,6 +68,7 @@ export default function TrasladoForm({ defaultMpId, onSuccess, onCancel }) {
         notas: values.notas || '',
       });
       toast.success('Traslado registrado');
+      reset({ materia_prima: defaultMpId ?? '', lote_id: '', bodega_destino: '', cantidad: '', notas: '' });
       onSuccess?.();
     } catch (err) {
       toast.error(formatApiError(err, 'No se pudo registrar el traslado'));

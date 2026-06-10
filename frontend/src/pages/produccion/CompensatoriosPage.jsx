@@ -17,6 +17,21 @@ import { produccionAPI } from '../../api/produccionAPI';
 import { formatDateTime } from '../../utils/formatters';
 import { formatApiError } from '../../utils/formatApiError';
 
+function KVDisplay({ data }) {
+  if (!data || typeof data !== 'object') return <span className="text-wine-700/50">—</span>;
+  const entries = Object.entries(data);
+  if (!entries.length) return <span className="text-wine-700/50">—</span>;
+  return (
+    <ul className="max-w-xs space-y-0.5 text-xs text-wine-700">
+      {entries.map(([k, v]) => (
+        <li key={k}>
+          <span className="font-semibold">{k}:</span> {String(v)}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 const isValidJSON = (val) => {
   try {
     JSON.parse(val);
@@ -86,20 +101,12 @@ export default function CompensatoriosPage() {
     {
       key: 'datos_originales',
       header: 'Datos originales',
-      render: (row) => (
-        <code className="block max-w-xs truncate text-xs text-wine-700">
-          {JSON.stringify(row.datos_originales)}
-        </code>
-      ),
+      render: (row) => <KVDisplay data={row.datos_originales} />,
     },
     {
       key: 'datos_corregidos',
       header: 'Datos corregidos',
-      render: (row) => (
-        <code className="block max-w-xs truncate text-xs text-wine-700">
-          {JSON.stringify(row.datos_corregidos)}
-        </code>
-      ),
+      render: (row) => <KVDisplay data={row.datos_corregidos} />,
     },
     { key: 'descripcion', header: 'Descripción', cellClassName: 'max-w-sm' },
     {

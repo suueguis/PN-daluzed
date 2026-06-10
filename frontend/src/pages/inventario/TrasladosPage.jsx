@@ -24,7 +24,7 @@ export default function TrasladosPage() {
     <div className="space-y-6">
       {/* Formulario de traslado */}
       <div className="rounded-2xl border border-peach-200 bg-white p-5">
-        <h2 className="mb-4 text-base font-bold text-wine-900">Nuevo Traslado BP → PDP</h2>
+        <h2 className="mb-4 text-base font-bold text-wine-900">Nuevo Traslado</h2>
         <TrasladoForm defaultMpId={defaultMpId} />
       </div>
 
