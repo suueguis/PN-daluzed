@@ -39,7 +39,7 @@ class CreateUserSerializer(serializers.ModelSerializer):
 class PatchUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['role']
+        fields = ['role', 'is_active']
 
 
 class LoginSerializer(serializers.Serializer):

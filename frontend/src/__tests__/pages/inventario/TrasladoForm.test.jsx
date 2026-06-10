@@ -75,7 +75,7 @@ describe('TrasladoForm', () => {
   it('muestra spinner mientras carga FEFO', async () => {
     useFefo.mockReturnValue({ data: null, isLoading: true });
     render(<TrasladoForm defaultMpId="10" />, { wrapper });
-    expect(screen.getByText(/Cargando sugerencia FEFO/i)).toBeInTheDocument();
+    expect(screen.getByText(/Cargando lotes disponibles/i)).toBeInTheDocument();
   });
 
   it('llama mutateAsync con los datos correctos al enviar', async () => {
@@ -99,6 +99,7 @@ describe('TrasladoForm', () => {
         lote_id: 5,
         bodega_destino: 2,
         cantidad: 500,
+        notas: '',
       });
     });
   });

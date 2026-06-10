@@ -98,9 +98,9 @@ describe('UsuariosPage — crear usuario', () => {
     await screen.findByText('inv@daluzed.com');
 
     await user.click(screen.getByRole('button', { name: /nuevo usuario/i }));
-    expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/correo electrónico/i)).toBeInTheDocument();
 
-    await user.type(screen.getByLabelText(/email/i), 'nuevo@daluzed.com');
+    await user.type(screen.getByLabelText(/correo electrónico/i), 'nuevo@daluzed.com');
     await user.type(screen.getByLabelText(/contraseña temporal/i), 'Daluzed2026!');
     await user.click(screen.getByRole('button', { name: /crear usuario/i }));
 

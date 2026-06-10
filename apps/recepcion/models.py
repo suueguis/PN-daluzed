@@ -51,5 +51,18 @@ class RecepcionMercancia(models.Model):
     confirmada = models.BooleanField(default=True)
     justificacion_vencimiento = models.TextField(blank=True)
 
+    # ── Campos de inspección de calidad (Planilla de entrada MP) ──────
+    fecha_ingreso_planta      = models.DateField(null=True, blank=True)
+    rotulacion_adecuada       = models.BooleanField(null=True, blank=True)
+    libre_material_extrano    = models.BooleanField(null=True, blank=True)
+    sin_aperturas_rupturas    = models.BooleanField(null=True, blank=True)
+    libre_infestacion         = models.BooleanField(null=True, blank=True)
+    accion_correctiva         = models.TextField(blank=True)
+    cantidad_rechazada        = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    producto_aplicado         = models.TextField(blank=True)
+    observacion               = models.TextField(blank=True)
+    responsable_proceso       = models.CharField(max_length=150, blank=True)
+    responsable_verificacion  = models.CharField(max_length=150, blank=True)
+
     def __str__(self):
         return f"Recepción #{self.pk} — OC {self.orden_compra_id} ({self.fecha})"

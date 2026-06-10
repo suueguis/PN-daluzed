@@ -173,9 +173,10 @@ class OrdenCompraViewSet(
             .select_related('proveedor')
             .order_by('-fecha_creacion')
         )
-        estado = self.request.query_params.get('estado')
-        if estado:
-            qs = qs.filter(estado=estado)
+        estado = self.request.query_params.get('estado', '')
+        estados = [e.strip() for e in estado.split(',') if e.strip()]
+        if estados:
+            qs = qs.filter(estado__in=estados)
         return qs
 
     @transaction.atomic
@@ -226,12 +227,20 @@ class RecepcionViewSet(
         serializer = RecepcionCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         vd = serializer.validated_data
+        _qc_keys = [
+            'fecha_ingreso_planta', 'rotulacion_adecuada', 'libre_material_extrano',
+            'sin_aperturas_rupturas', 'libre_infestacion', 'accion_correctiva',
+            'cantidad_rechazada', 'producto_aplicado', 'observacion',
+            'responsable_proceso', 'responsable_verificacion',
+        ]
+        campos_inspeccion = {k: vd[k] for k in _qc_keys if k in vd}
         try:
             recepcion = RecepcionService.registrar_recepcion(
                 orden_compra=vd['orden_compra'],
                 detalles=vd['detalles'],
                 usuario=request.user,
                 justificacion_vencimiento=vd.get('justificacion_vencimiento', ''),
+                campos_inspeccion=campos_inspeccion,
             )
         except VidaUtilInsuficienteError as exc:
             return Response({'detail': str(exc)}, status=status.HTTP_400_BAD_REQUEST)

@@ -11,7 +11,10 @@ import Input from '../../components/ui/Input';
 import Select from '../../components/ui/Select';
 import Modal from '../../components/ui/Modal';
 
+const CN_VALUES = { '': null, 'true': true, 'false': false };
+
 function buildPayload(formData, justificacion = '') {
+  const qc = formData.inspeccion ?? {};
   return {
     orden_compra_id:          Number(formData.orden_compra_id),
     justificacion_vencimiento: justificacion,
@@ -22,6 +25,18 @@ function buildPayload(formData, justificacion = '') {
       fecha_vencimiento:     d.fecha_vencimiento,
       numero_lote:           d.numero_lote || '',
     })),
+    // Campos de inspección de calidad (todos opcionales)
+    ...(qc.fecha_ingreso_planta && { fecha_ingreso_planta: qc.fecha_ingreso_planta }),
+    rotulacion_adecuada:      CN_VALUES[qc.rotulacion_adecuada ?? ''],
+    libre_material_extrano:   CN_VALUES[qc.libre_material_extrano ?? ''],
+    sin_aperturas_rupturas:   CN_VALUES[qc.sin_aperturas_rupturas ?? ''],
+    libre_infestacion:        CN_VALUES[qc.libre_infestacion ?? ''],
+    accion_correctiva:        qc.accion_correctiva || '',
+    ...(qc.cantidad_rechazada && { cantidad_rechazada: qc.cantidad_rechazada }),
+    producto_aplicado:        qc.producto_aplicado || '',
+    observacion:              qc.observacion || '',
+    responsable_proceso:      qc.responsable_proceso || '',
+    responsable_verificacion: qc.responsable_verificacion || '',
   };
 }
 
@@ -170,15 +185,15 @@ export default function NuevaRecepcionPage() {
   });
   const { fields, append, remove, replace } = useFieldArray({ control, name: 'detalles' });
 
-  // Órdenes de compra pendientes
+  // Órdenes de compra pendientes o con recepción parcial
   const { data: ordenesData } = useQuery({
-    queryKey: ['recepcion', 'ordenes', 'PENDIENTE'],
-    queryFn:  () => ordenesAPI.list({ estado: 'PENDIENTE' }).then((r) => r.data),
+    queryKey: ['recepcion', 'ordenes', 'PENDIENTE,PARCIAL'],
+    queryFn:  () => ordenesAPI.list({ estado: 'PENDIENTE,PARCIAL' }).then((r) => r.data),
   });
   const ordenes   = ordenesData?.results ?? ordenesData ?? [];
   const ocOptions = ordenes.map((o) => ({
     value: String(o.id),
-    label: `OC-${o.id} — ${o.proveedor_nombre ?? o.proveedor}`,
+    label: `OC-${o.id} — ${o.proveedor_nombre ?? o.proveedor}${o.estado === 'PARCIAL' ? ' (parcial)' : ''}`,
   }));
 
   // Materias primas — ya incluyen presentaciones anidadas (MateriaPrimaSerializer)
@@ -200,9 +215,9 @@ export default function NuevaRecepcionPage() {
     if (oc?.detalles?.length) {
       replace(
         oc.detalles.map((d) => ({
-          materia_prima_id:      String(d.materia_prima_id),
-          presentacion_id:       String(d.presentacion_id),
-          cantidad_presentacion: String(d.cantidad_presentacion),
+          materia_prima_id:      String(d.materia_prima),
+          presentacion_id:       String(d.presentacion),
+          cantidad_presentacion: String(d.saldo_pendiente ?? d.cantidad_presentacion),
           fecha_vencimiento:     '',
           numero_lote:           '',
           _mp_nombre:            d.materia_prima_nombre,
@@ -225,7 +240,10 @@ export default function NuevaRecepcionPage() {
       navigate('/recepcion/recepciones');
     } catch (err) {
       const detail = err?.response?.data?.detail ?? '';
-      if (err?.response?.status === 400 && detail.includes('justificacion_vencimiento')) {
+      const isVidaUtil = err?.response?.status === 400 && (
+        detail.includes('justificacion_vencimiento') || detail.includes('Vida útil insuficiente')
+      );
+      if (isVidaUtil) {
         setPendingForm(formData);
         setJustifOpen(true);
       } else {
@@ -319,6 +337,92 @@ export default function NuevaRecepcionPage() {
               selectedOC={selectedOC}
             />
           ))}
+        </div>
+
+        {/* Inspección de calidad */}
+        <div className="rounded-2xl border border-peach-200 bg-white p-5 space-y-4">
+          <h3 className="font-semibold text-wine-900">Inspección de calidad <span className="text-xs font-normal text-wine-600">(opcional)</span></h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Input
+              label="Fecha ingreso a planta"
+              type="date"
+              {...register('inspeccion.fecha_ingreso_planta')}
+            />
+            <Input
+              label="Cantidad rechazada"
+              type="number"
+              step="0.01"
+              min="0"
+              placeholder="ej. 5.00"
+              {...register('inspeccion.cantidad_rechazada')}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {[
+              { name: 'inspeccion.rotulacion_adecuada',    label: 'Rotulación adecuada' },
+              { name: 'inspeccion.libre_material_extrano', label: 'Libre de material extraño' },
+              { name: 'inspeccion.sin_aperturas_rupturas', label: 'Sin aperturas/rupturas' },
+              { name: 'inspeccion.libre_infestacion',      label: 'Libre de infestación' },
+            ].map(({ name, label }) => (
+              <div key={name} className="flex flex-col gap-1">
+                <label className="text-xs font-semibold uppercase tracking-wide text-wine-700">{label}</label>
+                <select
+                  className="rounded-xl border border-peach-300 bg-white px-3 py-2 text-sm text-wine-900 focus:outline-none focus:ring-2 focus:ring-rose-300"
+                  {...register(name)}
+                  defaultValue=""
+                >
+                  <option value="">Sin revisar</option>
+                  <option value="true">C — Conforme</option>
+                  <option value="false">NC — No conforme</option>
+                </select>
+              </div>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold uppercase tracking-wide text-wine-700">Acción correctiva</label>
+              <textarea
+                rows={2}
+                placeholder="Describe la acción correctiva tomada…"
+                className="rounded-xl border border-peach-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-300"
+                {...register('inspeccion.accion_correctiva')}
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold uppercase tracking-wide text-wine-700">Producto aplicado</label>
+              <textarea
+                rows={2}
+                placeholder="Producto correctivo aplicado…"
+                className="rounded-xl border border-peach-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-300"
+                {...register('inspeccion.producto_aplicado')}
+              />
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-semibold uppercase tracking-wide text-wine-700">Observación</label>
+            <textarea
+              rows={2}
+              placeholder="Observaciones adicionales…"
+              className="rounded-xl border border-peach-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-300"
+              {...register('inspeccion.observacion')}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Input
+              label="Responsable del proceso"
+              placeholder="Nombre del responsable…"
+              {...register('inspeccion.responsable_proceso')}
+            />
+            <Input
+              label="Responsable de verificación"
+              placeholder="Nombre del verificador…"
+              {...register('inspeccion.responsable_verificacion')}
+            />
+          </div>
         </div>
 
         <div className="flex justify-end gap-2">

@@ -272,12 +272,12 @@ class UserViewSet(viewsets.GenericViewSet):
         user = serializer.save()
         return Response(UserSerializer(user).data, status=status.HTTP_201_CREATED)
 
-    @extend_schema(summary="Editar rol de usuario", tags=["Usuarios"])
+    @extend_schema(summary="Editar rol o estado de usuario", tags=["Usuarios"])
     def partial_update(self, request, pk=None):
         user = self.get_object()
         if user == request.user:
             return Response(
-                {"detail": "No puedes cambiar tu propio rol."},
+                {"detail": "No puedes editar tu propia cuenta desde aquí."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         serializer = PatchUserSerializer(user, data=request.data, partial=True)

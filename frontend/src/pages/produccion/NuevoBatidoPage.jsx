@@ -27,6 +27,16 @@ const schema = z.object({
       }),
     )
     .min(1, 'Agrega al menos un ingrediente'),
+  numero_lote: z.string().optional(),
+  observacion: z.string().optional(),
+  fecha_recepcion_huevo: z.string().optional().nullable(),
+  desglose_lote: z.object({
+    cup_cake:             z.coerce.number().nonnegative().optional().nullable(),
+    porcionada:           z.coerce.number().nonnegative().optional().nullable(),
+    planchas:             z.coerce.number().int().nonnegative().optional().nullable(),
+    cantidades_por_talla: z.record(z.coerce.number().int().nonnegative()).optional(),
+    observacion:          z.string().optional(),
+  }).optional(),
 });
 
 export default function NuevoBatidoPage() {
@@ -332,6 +342,71 @@ export default function NuevoBatidoPage() {
               </table>
             </div>
           )}
+        </div>
+
+        {/* Datos de producción y desglose */}
+        <div className="rounded-2xl border border-peach-200 bg-white p-5 space-y-4">
+          <h3 className="font-semibold text-wine-900">Datos de producción <span className="text-xs font-normal text-wine-600">(opcional)</span></h3>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <input
+              type="text"
+              placeholder="Número de lote ej. LOTE-001"
+              className="rounded-xl border border-peach-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-300"
+              aria-label="Número de lote"
+              {...register('numero_lote')}
+            />
+            <input
+              type="date"
+              className="rounded-xl border border-peach-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-300"
+              aria-label="Fecha recepción huevo utilizado"
+              {...register('fecha_recepcion_huevo')}
+            />
+            <textarea
+              rows={1}
+              placeholder="Observación del batido…"
+              className="rounded-xl border border-peach-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-300"
+              aria-label="Observación"
+              {...register('observacion')}
+            />
+          </div>
+
+          <h4 className="text-sm font-semibold text-wine-800 pt-2">Desglose del lote</h4>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {[
+              { name: 'desglose_lote.cup_cake',  label: 'Cup cake',  step: '0.01' },
+              { name: 'desglose_lote.porcionada', label: 'Porcionada', step: '0.01' },
+              { name: 'desglose_lote.planchas',   label: 'Planchas',   step: '1' },
+            ].map(({ name, label, step }) => (
+              <div key={name} className="flex flex-col gap-1">
+                <label className="text-xs font-semibold uppercase tracking-wide text-wine-700">{label}</label>
+                <input
+                  type="number"
+                  step={step}
+                  min="0"
+                  placeholder="ej. 10"
+                  className="rounded-xl border border-peach-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-300"
+                  {...register(name)}
+                />
+              </div>
+            ))}
+          </div>
+
+          <p className="text-xs font-semibold uppercase tracking-wide text-wine-700">Cantidades por talla</p>
+          <div className="grid grid-cols-5 sm:grid-cols-10 gap-2">
+            {[2, 4, 8, 12, 16, 20, 25, 30, 45, 60].map((talla) => (
+              <div key={talla} className="flex flex-col items-center gap-1">
+                <label className="text-xs text-wine-600">×{talla}</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  placeholder="0"
+                  className="w-full rounded-xl border border-peach-300 bg-white px-2 py-1.5 text-center text-sm focus:outline-none focus:ring-2 focus:ring-rose-300"
+                  {...register(`desglose_lote.cantidades_por_talla.${talla}`)}
+                />
+              </div>
+            ))}
+          </div>
         </div>
 
         <div className="flex justify-end gap-3">

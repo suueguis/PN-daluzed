@@ -136,6 +136,7 @@ class TrasladoViewSet(
                 bodega_destino=serializer.validated_data['bodega_destino'],
                 cantidad=serializer.validated_data['cantidad'],
                 usuario=request.user,
+                notas=serializer.validated_data.get('notas', ''),
             )
         except ValueError as exc:
             return Response({'detail': str(exc)}, status=status.HTTP_400_BAD_REQUEST)

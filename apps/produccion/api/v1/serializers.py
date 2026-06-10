@@ -21,6 +21,15 @@ class IngredienteSerializer(serializers.Serializer):
     )
 
 
+class DesgloseLotelSerializer(serializers.Serializer):
+    """Desglose opcional de cantidades por presentación en el LotePT."""
+    cup_cake             = serializers.DecimalField(max_digits=10, decimal_places=2, required=False, allow_null=True)
+    porcionada           = serializers.DecimalField(max_digits=10, decimal_places=2, required=False, allow_null=True)
+    planchas             = serializers.IntegerField(required=False, allow_null=True)
+    cantidades_por_talla = serializers.DictField(child=serializers.IntegerField(), required=False, default=dict)
+    observacion          = serializers.CharField(required=False, default='', allow_blank=True)
+
+
 class BatidoCreateSerializer(serializers.Serializer):
     producto_terminado_id = serializers.PrimaryKeyRelatedField(
         queryset=ProductoTerminado.objects.all(), source='producto_terminado',
@@ -28,6 +37,12 @@ class BatidoCreateSerializer(serializers.Serializer):
     fecha_produccion = serializers.DateField()
     hora_inicio = serializers.TimeField()
     ingredientes = IngredienteSerializer(many=True, min_length=1)
+
+    # ── Campos de seguimiento opcionales ──────────────────────────────
+    numero_lote           = serializers.CharField(required=False, default='', allow_blank=True)
+    observacion           = serializers.CharField(required=False, default='', allow_blank=True)
+    fecha_recepcion_huevo = serializers.DateField(required=False, allow_null=True)
+    desglose_lote         = DesgloseLotelSerializer(required=False)
 
 
 class BatidoSerializer(serializers.ModelSerializer):
@@ -40,6 +55,7 @@ class BatidoSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'producto_terminado', 'producto_terminado_nombre',
             'fecha_produccion', 'hora_inicio', 'estado', 'usuario', 'fecha_registro',
+            'numero_lote', 'observacion', 'fecha_recepcion_huevo',
         ]
 
 
@@ -49,6 +65,7 @@ class LoteProductoTerminadoSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'batido', 'estado', 'cantidad',
             'fecha_produccion', 'fecha_vencimiento', 'fecha_despacho',
+            'cup_cake', 'porcionada', 'planchas', 'cantidades_por_talla', 'observacion',
         ]
 
 

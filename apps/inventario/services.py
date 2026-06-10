@@ -38,9 +38,10 @@ class InventarioService:
     def sugerir_fefo(materia_prima_id, bodega_id, excluir_vencidos=False):
         qs = Lote.objects.filter(
             materia_prima_id=materia_prima_id,
-            bodega_id=bodega_id,
             cantidad__gt=0,
         ).order_by('fecha_vencimiento')
+        if bodega_id:
+            qs = qs.filter(bodega_id=bodega_id)
         if excluir_vencidos:
             qs = qs.filter(fecha_vencimiento__gte=date.today())
         lotes = list(qs)
@@ -51,7 +52,7 @@ class InventarioService:
 
     @staticmethod
     @transaction.atomic
-    def registrar_traslado(lote, bodega_destino, cantidad, usuario):
+    def registrar_traslado(lote, bodega_destino, cantidad, usuario, notas=''):
         if lote.cantidad < cantidad:
             raise ValueError("Stock insuficiente en el lote de origen.")
         bodega_origen = lote.bodega
@@ -63,6 +64,8 @@ class InventarioService:
             cantidad=cantidad,
             fecha_vencimiento=lote.fecha_vencimiento,
             fecha_entrada=date.today(),
+            numero_lote=lote.numero_lote,
+            proveedor=lote.proveedor,
         )
         return MovimientoInventario.objects.create(
             tipo='TRASLADO',
@@ -71,6 +74,7 @@ class InventarioService:
             bodega_destino=bodega_destino,
             cantidad=cantidad,
             usuario=usuario,
+            notas=notas,
         )
 
     @staticmethod

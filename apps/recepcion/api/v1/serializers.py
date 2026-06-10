@@ -24,23 +24,56 @@ class RecepcionCreateSerializer(serializers.Serializer):
         queryset=OrdenCompra.objects.filter(estado__in=['PENDIENTE', 'PARCIAL']),
         source='orden_compra',
     )
-    justificacion_vencimiento = serializers.CharField(required=False, default='')
+    justificacion_vencimiento = serializers.CharField(required=False, default='', allow_blank=True)
     detalles = DetalleRecepcionSerializer(many=True, min_length=1)
+
+    # ── Campos de inspección de calidad — opcionales al crear ─────────
+    fecha_ingreso_planta     = serializers.DateField(required=False, allow_null=True)
+    rotulacion_adecuada      = serializers.BooleanField(required=False, allow_null=True)
+    libre_material_extrano   = serializers.BooleanField(required=False, allow_null=True)
+    sin_aperturas_rupturas   = serializers.BooleanField(required=False, allow_null=True)
+    libre_infestacion        = serializers.BooleanField(required=False, allow_null=True)
+    accion_correctiva        = serializers.CharField(required=False, default='', allow_blank=True)
+    cantidad_rechazada       = serializers.DecimalField(
+        max_digits=12, decimal_places=2, required=False, allow_null=True
+    )
+    producto_aplicado        = serializers.CharField(required=False, default='', allow_blank=True)
+    observacion              = serializers.CharField(required=False, default='', allow_blank=True)
+    responsable_proceso      = serializers.CharField(
+        max_length=150, required=False, default='', allow_blank=True
+    )
+    responsable_verificacion = serializers.CharField(
+        max_length=150, required=False, default='', allow_blank=True
+    )
+
+
+_QC_FIELDS = [
+    'fecha_ingreso_planta', 'rotulacion_adecuada', 'libre_material_extrano',
+    'sin_aperturas_rupturas', 'libre_infestacion', 'accion_correctiva',
+    'cantidad_rechazada', 'producto_aplicado', 'observacion',
+    'responsable_proceso', 'responsable_verificacion',
+]
 
 
 class RecepcionMercanciaSerializer(serializers.ModelSerializer):
     class Meta:
         model = RecepcionMercancia
-        fields = ['id', 'orden_compra', 'fecha', 'usuario', 'confirmada', 'justificacion_vencimiento']
+        fields = [
+            'id', 'orden_compra', 'fecha', 'usuario', 'confirmada',
+            'justificacion_vencimiento',
+            *_QC_FIELDS,
+        ]
 
 
 class DetalleOrdenCompraSerializer(serializers.ModelSerializer):
     materia_prima_nombre = serializers.CharField(source='materia_prima.nombre', read_only=True)
+    presentacion_nombre = serializers.CharField(source='presentacion.nombre', read_only=True)
     saldo_pendiente = serializers.SerializerMethodField()
 
     class Meta:
         model = DetalleOrdenCompra
-        fields = ['id', 'materia_prima', 'materia_prima_nombre', 'presentacion',
+        fields = ['id', 'materia_prima', 'materia_prima_nombre',
+                  'presentacion', 'presentacion_nombre',
                   'cantidad_presentacion', 'cantidad_recibida', 'saldo_pendiente']
 
     def get_saldo_pendiente(self, obj):

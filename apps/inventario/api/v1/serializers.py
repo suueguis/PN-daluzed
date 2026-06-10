@@ -75,6 +75,7 @@ class TrasladoCreateSerializer(serializers.Serializer):
     lote_id = serializers.PrimaryKeyRelatedField(queryset=Lote.objects.all())
     bodega_destino = serializers.PrimaryKeyRelatedField(queryset=Bodega.objects.all())
     cantidad = serializers.DecimalField(max_digits=12, decimal_places=2, min_value=Decimal('0.01'))
+    notas = serializers.CharField(required=False, default='', allow_blank=True, max_length=500)
 
 
 # ── Devolución ────────────────────────────────────────────────────────────────
