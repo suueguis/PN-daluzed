@@ -27,3 +27,5 @@ channels-redis==4.2.0
 daphne==4.1.0
 # Exportación de reportes (RF-IND-05)
 reportlab==4.5.1
+# Variables de entorno desde archivo .env (desarrollo local)
+python-dotenv==1.1.1

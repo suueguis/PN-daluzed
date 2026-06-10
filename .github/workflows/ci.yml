@@ -43,6 +43,13 @@ jobs:
           --health-timeout 5s
           --health-retries 5
 
+    env:
+      DB_NAME: daluzed_db
+      DB_USER: postgres
+      DB_PASSWORD: "1234"
+      DB_HOST: localhost
+      DB_PORT: "5432"
+
     steps:
       - name: Checkout código
         uses: actions/checkout@v4
@@ -59,18 +66,6 @@ jobs:
       - name: Correr migraciones
         run: python manage.py migrate --no-input
 
-      # ── Módulos implementados ──────────────────────────────────────────
-      # Agrega una línea por módulo a medida que lo implementes:
-      #
-      #   apps.authentication  ← ya implementado ✅
-      #   apps.catalogo        ← ya implementado ✅
-      #   apps.inventario      ← agregar cuando implementes Corte 2
-      #   apps.recepcion       ← agregar cuando implementes Corte 2
-      #   apps.produccion      ← agregar cuando implementes Corte 2
-      #   apps.alertas         ← agregar cuando implementes Corte 3
-      #   apps.indicadores     ← agregar cuando implementes Corte 3
-      #   apps.auditoria       ← agregar cuando implementes Corte 3
-      # ──────────────────────────────────────────────────────────────────
       - name: Ejecutar tests con cobertura
         run: |
           coverage run manage.py test \
@@ -81,6 +76,7 @@ jobs:
             apps.produccion \
             apps.alertas \
             apps.indicadores \
+            apps.auditoria \
             --verbosity=2
           coverage report \
             --fail-under=70 \

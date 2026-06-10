@@ -1,16 +1,25 @@
-# core/settings.py  — versión corregida completa
+# core/settings.py
 import os
 from pathlib import Path
 from datetime import timedelta
+from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.environ.get(
-    'DJANGO_SECRET_KEY',
-    'django-insecure-du%@q$=_rmt$=9d%(-5w+3exfi34b@nz*e8ch#7y%7mea!hwm&',
-)
+# Carga variables de entorno desde .env (desarrollo local).
+# En producción (Railway) las vars se inyectan directamente — .env no existe allí.
+load_dotenv(BASE_DIR / '.env')
 
+# ── Seguridad fundamental ──────────────────────────────────────────────────────
+# En producción DJANGO_SECRET_KEY DEBE estar seteada como variable de entorno.
+# No hay fallback inseguro — si falta, el arranque falla de forma explícita.
 DEBUG = os.environ.get('DEBUG', 'True').lower() not in ('false', '0', 'no')
+
+SECRET_KEY = (
+    os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-local-dev-only-change-in-prod-!!!!')
+    if DEBUG
+    else os.environ['DJANGO_SECRET_KEY']   # producción: KeyError explícito si no está seteada
+)
 
 _allowed = os.environ.get('ALLOWED_HOSTS', '')
 ALLOWED_HOSTS = [h.strip() for h in _allowed.split(',') if h.strip()] if _allowed else ['*'] if DEBUG else []
@@ -28,8 +37,8 @@ INSTALLED_APPS = [
     # Terceros
     'channels',
     'rest_framework',
-    'rest_framework_simplejwt',                  # ✅ AÑADIDO
-    'rest_framework_simplejwt.token_blacklist',  # ✅ AÑADIDO (necesario para logout)
+    'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
     'axes',
     'drf_spectacular',
@@ -61,7 +70,7 @@ CHANNEL_LAYERS = {
 # AxesMiddleware después de SessionMiddleware.
 # ──────────────────────────────────────────────
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',              # ✅ subido al inicio
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -97,7 +106,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME':     os.environ.get('DB_NAME',     'daluzed_db'),
         'USER':     os.environ.get('DB_USER',     'postgres'),
-        'PASSWORD': os.environ.get('DB_PASSWORD', '1234'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', ''),
         'HOST':     os.environ.get('DB_HOST',     'localhost'),
         'PORT':     os.environ.get('DB_PORT',     '5432'),
     }
@@ -121,7 +130,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',  
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
@@ -133,8 +142,8 @@ REST_FRAMEWORK = {
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME':  timedelta(minutes=30),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
-    'ROTATE_REFRESH_TOKENS':  True,   # nuevo refresh en cada uso
-    'BLACKLIST_AFTER_ROTATION': True,  # invalida el anterior
+    'ROTATE_REFRESH_TOKENS':  True,
+    'BLACKLIST_AFTER_ROTATION': True,
     'UPDATE_LAST_LOGIN': True,
     'AUTH_HEADER_TYPES': ('Bearer',),
     'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
@@ -145,9 +154,8 @@ AXES_FAILURE_LIMIT   = 5
 AXES_COOLOFF_TIME    = 1   # horas de bloqueo
 AXES_LOCKOUT_TEMPLATE = None
 AXES_ENABLE_ADMIN    = True
-
 AXES_USERNAME_FORM_FIELD   = 'email'
-AXES_LOCKOUT_PARAMETERS    = ['username', 'ip_address'] 
+AXES_LOCKOUT_PARAMETERS    = ['username', 'ip_address']
 
 
 SPECTACULAR_SETTINGS = {
@@ -178,3 +186,35 @@ USE_TZ        = True
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# ── Cabeceras de seguridad HTTP (OWASP A05 — Security Misconfiguration) ───────
+# Activas solo en producción para no romper el flujo local de desarrollo.
+if not DEBUG:
+    # Fuerza HTTPS y declara HSTS por 1 año con subdomains
+    SECURE_SSL_REDIRECT             = True
+    SECURE_HSTS_SECONDS             = 31_536_000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS  = True
+    SECURE_HSTS_PRELOAD             = True
+    # Previene que el browser interprete archivos con tipo MIME incorrecto
+    SECURE_CONTENT_TYPE_NOSNIFF     = True
+    # Cookie de sesión solo viaja por HTTPS
+    SESSION_COOKIE_SECURE           = True
+    SESSION_COOKIE_HTTPONLY         = True
+    SESSION_COOKIE_SAMESITE         = 'None'
+    # Cookie CSRF solo viaja por HTTPS
+    CSRF_COOKIE_SECURE              = True
+    CSRF_COOKIE_HTTPONLY            = True
+    CSRF_COOKIE_SAMESITE            = 'None'
+    # Protección contra clickjacking
+    X_FRAME_OPTIONS                 = 'DENY'
+    # Requiere que el SECRET_KEY esté seteado explícitamente en producción
+    if os.environ.get('DJANGO_SECRET_KEY', '').startswith('django-insecure'):
+        raise RuntimeError(
+            'DJANGO_SECRET_KEY no puede usar el valor inseguro por defecto en producción. '
+            'Configura la variable de entorno DJANGO_SECRET_KEY en Railway.'
+        )
+else:
+    # Desarrollo local: evita problemas cross-origin con cookies
+    SESSION_COOKIE_SAMESITE = 'Lax'
+    CSRF_COOKIE_SAMESITE    = 'Lax'
+    X_FRAME_OPTIONS         = 'SAMEORIGIN'
