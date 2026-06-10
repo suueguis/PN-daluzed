@@ -190,8 +190,11 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # ── Cabeceras de seguridad HTTP (OWASP A05 — Security Misconfiguration) ───────
 # Activas solo en producción para no romper el flujo local de desarrollo.
 if not DEBUG:
-    # Fuerza HTTPS y declara HSTS por 1 año con subdomains
-    SECURE_SSL_REDIRECT             = True
+    # Railway (and similar PaaS) terminates TLS at the edge proxy, so the app
+    # receives plain HTTP internally. Do NOT set SECURE_SSL_REDIRECT = True —
+    # it would 301-redirect Railway's internal healthcheck requests and break
+    # deployments. HSTS headers are still safe to set.
+    SECURE_SSL_REDIRECT             = False
     SECURE_HSTS_SECONDS             = 31_536_000
     SECURE_HSTS_INCLUDE_SUBDOMAINS  = True
     SECURE_HSTS_PRELOAD             = True
