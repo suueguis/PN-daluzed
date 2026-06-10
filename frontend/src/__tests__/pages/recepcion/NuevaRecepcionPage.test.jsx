@@ -90,7 +90,7 @@ async function fillBaseForm() {
   // useWatch in DetalleLinea re-renders the presentation select after MP changes
   await waitFor(() => expect(screen.getByText('Bulto 50kg')).toBeInTheDocument());
   await userEvent.selectOptions(screen.getAllByRole('combobox')[2], '10'); // Presentación
-  await userEvent.type(screen.getByLabelText(/cantidad/i), '5');
+  await userEvent.type(screen.getByPlaceholderText(/ej\. 10/i), '5');
   await userEvent.type(screen.getByLabelText(/fecha de vencimiento/i), daysFromNow(10));
 }
 
