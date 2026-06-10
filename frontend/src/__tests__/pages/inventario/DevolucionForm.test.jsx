@@ -39,6 +39,22 @@ function wrapper({ children }) {
   );
 }
 
+// Helper: fills the form and completes the two-step ConfirmDialog
+async function fillAndConfirm() {
+  await userEvent.selectOptions(screen.getByLabelText(/Proveedor/i), '1');
+  await userEvent.type(screen.getByPlaceholderText(/Describe el motivo/i), 'Lote vencido por error de recepción');
+  await userEvent.click(screen.getByRole('button', { name: /Registrar Devolución/i }));
+
+  // Stage 1: warn → click Continuar
+  await waitFor(() => expect(screen.getByRole('button', { name: /Continuar/i })).toBeInTheDocument());
+  await userEvent.click(screen.getByRole('button', { name: /Continuar/i }));
+
+  // Stage 2: type confirmWord (loteCode = 'L-003') then click confirmLabel
+  await waitFor(() => expect(screen.getByPlaceholderText('L-003')).toBeInTheDocument());
+  await userEvent.type(screen.getByPlaceholderText('L-003'), 'L-003');
+  await userEvent.click(screen.getByRole('button', { name: /Confirmar devolución/i }));
+}
+
 describe('DevolucionForm', () => {
   beforeEach(() => {
     createMutate.mockReset();
@@ -64,9 +80,7 @@ describe('DevolucionForm', () => {
     createMutate.mockResolvedValue({});
     render(<DevolucionForm lote={LOTE} />, { wrapper });
 
-    await userEvent.selectOptions(screen.getByLabelText(/Proveedor/i), '1');
-    await userEvent.type(screen.getByPlaceholderText(/Describe el motivo/i), 'Lote vencido por error de recepción');
-    await userEvent.click(screen.getByRole('button', { name: /Registrar Devolución/i }));
+    await fillAndConfirm();
 
     await waitFor(() => {
       expect(createMutate).toHaveBeenCalledWith({
@@ -82,9 +96,7 @@ describe('DevolucionForm', () => {
     createMutate.mockRejectedValue({ response: { data: { detail: 'Error de servidor' } } });
     render(<DevolucionForm lote={LOTE} />, { wrapper });
 
-    await userEvent.selectOptions(screen.getByLabelText(/Proveedor/i), '1');
-    await userEvent.type(screen.getByPlaceholderText(/Describe el motivo/i), 'Lote vencido por error de recepción');
-    await userEvent.click(screen.getByRole('button', { name: /Registrar Devolución/i }));
+    await fillAndConfirm();
 
     await waitFor(() => expect(toastError).toHaveBeenCalled());
   });
